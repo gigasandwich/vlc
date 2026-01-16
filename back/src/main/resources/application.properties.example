@@ -1,1 +1,10 @@
 spring.application.name=vlc
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/vlc
+spring.datasource.username=username
+spring.datasource.password=password
+
+spring.jpa.hibernate.ddl-auto=none 
+spring.jpa.show-sql=false
+
+spring.sql.init.mode=never
