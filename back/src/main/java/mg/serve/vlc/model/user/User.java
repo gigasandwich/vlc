@@ -68,11 +68,16 @@ public class User {
 
     @Transactional(rollbackOn = Exception.class)
     public void update(String email, String password, String username) throws BusinessLogicException {
+        // Control
         if (!this.email.equals(email)) {
             throw new BusinessLogicException("Email cannot be changed");
         }
+
+        // Business logic
         this.setPassword(password);
         this.setUsername(username);
+
+        // Persistence
         RepositoryProvider.userRepository.save(this);
         this.saveHistoric();
     }

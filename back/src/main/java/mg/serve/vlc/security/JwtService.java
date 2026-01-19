@@ -38,11 +38,11 @@ public class JwtService {
         }
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String email) {
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(expirationSeconds);
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(email)
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(exp))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -61,5 +61,13 @@ public class JwtService {
     public Instant getExpiryFromNow() {
         System.out.println("[CONFIG] getExpiryFromNow: " + expirationSeconds);
         return Instant.now().plusSeconds(expirationSeconds);
+    }
+
+    public String getTokenEmailFromHeader(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Missing or invalid Authorization header");
+        }
+        String token = authHeader.substring(7);
+        return validateAndGetSubject(token);
     }
 }
