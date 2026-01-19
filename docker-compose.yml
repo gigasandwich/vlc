@@ -9,7 +9,8 @@ services:
       - "6543:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-      - ./back/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./back/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./back/src/main/resources/data.sql:/docker-entrypoint-initdb.d/02-data.sql:ro
 
   backend:
     build:
