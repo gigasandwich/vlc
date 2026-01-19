@@ -4,7 +4,6 @@ services:
     working_dir: /app
     volumes:
       - ./back:/app
-      - ./m2:/root/.m2
     ports:
       - "1234:8080"
     environment:
