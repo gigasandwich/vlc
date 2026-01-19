@@ -117,7 +117,7 @@ CREATE TABLE point_historic(
    date_ TIMESTAMP NOT NULL,
    surface DOUBLE PRECISION NOT NULL,
    budget DOUBLE PRECISION NOT NULL,
-   coordinates GEOGRAPHY NOT NULL,
+   coordinates GEOMETRY(POINT, 4326) NOT NULL,
    point_id INTEGER NOT NULL,
    point_state_id INTEGER NOT NULL,
    PRIMARY KEY(id),
