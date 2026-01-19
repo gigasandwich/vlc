@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import mg.serve.vlc.controller.response.*;
 import mg.serve.vlc.exception.BusinessLogicException;
-import mg.serve.vlc.model.User;
+import mg.serve.vlc.model.user.User;
 
 @RestController
 @RequestMapping("/auth/sign-up")

@@ -1,19 +1,22 @@
-package mg.serve.vlc.model;
+package mg.serve.vlc.model.user;
 
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.repository.UserRepository;
 import mg.serve.vlc.util.RepositoryProvider;
+import java.time.*;
 
 @Entity
 @Table(name = "user_")
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,24 +40,24 @@ public class User {
     @Transactional(rollbackOn = Exception.class)
     public void signUp() throws BusinessLogicException {
         // Control
-        signUpControl();
-
-        // Business logic (= persistence for this case so we skip)
-        
-        // Persistence
-        RepositoryProvider.userRepository.save(this);
-    }
-
-    /**
-     * Existing user
-     */
-    private void signUpControl() throws BusinessLogicException {
         UserRepository repo = RepositoryProvider.userRepository;
         
         User existingUser = repo.findByEmail(this.email);
         if (existingUser != null) {
             throw new BusinessLogicException("User with email " + this.email + " already exists");
         }
+
+        // Business logic (Historic insertion)
+        
+        
+        // Persistence
+        User savedUser = RepositoryProvider.userRepository.save(this);
+        savedUser.saveHistoric();
+    }
+
+    private void saveHistoric() throws BusinessLogicException {
+        UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.id);
+        RepositoryProvider.userHistoricRepository.save(userHistoric);
     }
 
     /****************************
