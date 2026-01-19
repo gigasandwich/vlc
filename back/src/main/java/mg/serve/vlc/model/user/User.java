@@ -10,6 +10,9 @@ import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.repository.UserRepository;
 import mg.serve.vlc.util.RepositoryProvider;
 import java.time.*;
+import java.util.HashSet;
+import java.util.Set;
+import mg.serve.vlc.model.*;
 
 @Entity
 @Table(name = "user_")
@@ -31,6 +34,14 @@ public class User {
     @Column(length = 50)
     private String username;
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_role",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<mg.serve.vlc.model.Role> roles = new HashSet<>();
+
     public User(String email, String password, String username) throws BusinessLogicException {
         this.setEmail(email);
         this.setPassword(password);
@@ -41,15 +52,15 @@ public class User {
     public void signUp() throws BusinessLogicException {
         // Control
         UserRepository repo = RepositoryProvider.userRepository;
-        
         User existingUser = repo.findByEmail(this.email);
         if (existingUser != null) {
             throw new BusinessLogicException("User with email " + this.email + " already exists");
         }
 
-        // Business logic (Historic insertion)
-        
-        
+        // Business logic (Role)
+        Role userRole = RepositoryProvider.roleRepository.findByLabel("USER");
+        this.roles.add(userRole);
+
         // Persistence
         User savedUser = RepositoryProvider.userRepository.save(this);
         savedUser.saveHistoric();
