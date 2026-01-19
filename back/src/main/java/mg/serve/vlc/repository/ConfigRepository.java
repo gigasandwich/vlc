@@ -9,4 +9,8 @@ import mg.serve.vlc.model.Config;
 
 @Repository
 public interface ConfigRepository extends CrudRepository<Config, Long> {
+    @Query(
+        value = "SELECT value_ FROM config WHERE key = :key ORDER BY date_ DESC LIMIT 1",
+        nativeQuery = true)
+    String getLastValueByKey(@Param("key") String key);
 }

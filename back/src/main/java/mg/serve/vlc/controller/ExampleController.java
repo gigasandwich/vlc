@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import mg.serve.vlc.controller.response.ApiResponse;
 import mg.serve.vlc.model.Example;
 
 import java.util.*;
@@ -31,5 +32,11 @@ class ExampleController {
     ResponseEntity<List<Example>> someEndpoint() {
         List<Example> all = new Example().listAll();
         return ResponseEntity.ok(all);
+    }
+
+    @GetMapping("/protected-endpoint")
+    ResponseEntity<ApiResponse> anotherEndpoint() {
+        ApiResponse response = new ApiResponse("success", "You have accessed a protected endpoint", null);
+        return ResponseEntity.ok(response);
     }
 }
