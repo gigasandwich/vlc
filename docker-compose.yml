@@ -42,6 +42,20 @@ services:
     depends_on:
       - backend
 
+  
+  mobile:
+    build:
+      context: ./mobile
+      dockerfile: Dockerfile
+    volumes:
+      - ./mobile:/app
+      - /app/node_modules
+    ports:
+      - "9876:8100"
+    environment:
+      CHOKIDAR_USEPOLLING: 'true'
+    depends_on:
+      - backend
 volumes:
   db_data:
   m2:
