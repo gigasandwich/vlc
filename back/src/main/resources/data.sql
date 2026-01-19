@@ -10,17 +10,21 @@ INSERT INTO role(label) VALUES
 ('USER'),
 ('ADMIN');
 
+INSERT INTO user_state (label) VALUES
+('ACTIVE'),
+('INACTIVE');
+
 -- ===============================
 -- Users
 -- ===============================
 
-INSERT INTO user_(email, password, username) VALUES
-('user1@gmail.com', 'pass1', 'user1'),
-('user2@gmail.com', 'pass2', 'user2');
+INSERT INTO user_(email, password, username, user_state_id) VALUES
+('user1@gmail.com', 'pass1', 'user1', 1),
+('user2@gmail.com', 'pass2', 'user2', 1);
 
-INSERT INTO user_historic (email, password, username, date_, user_id) VALUES
-('user1@gmail.com', 'pass1', 'user1', NOW(), 1),
-('user2@gmail.com', 'pass2', 'user2', NOW(), 2);
+INSERT INTO user_historic (email, password, username, date_, user_state_id, user_id) VALUES
+('user1@gmail.com', 'pass1', 'user1', NOW(), 1, 1),
+('user2@gmail.com', 'pass2', 'user2', NOW(), 1, 2);
 
 INSERT INTO user_role (role_id, user_id) VALUES
 (1, 1),
