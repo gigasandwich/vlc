@@ -23,7 +23,7 @@ public class Example {
 
     // Never use getAll in an entity xD
     public List<Example> listAll() {
-        return RepositoryProvider.getExampleRepository().findAll();
+        return RepositoryProvider.exampleRepository.findAll();
     }
 
     public Example goodMethod() {
@@ -33,6 +33,6 @@ public class Example {
 
         // Persistence
 
-        return RepositoryProvider.getExampleRepository().save(this);
+        return RepositoryProvider.exampleRepository.save(this);
     }
 }
