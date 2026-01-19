@@ -34,3 +34,4 @@ build/
 
 ### Own
 application.properties
+*.lo1
