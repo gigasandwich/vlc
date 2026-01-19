@@ -1,0 +1,11 @@
+target
+**/target
+.m2
+.git
+.idea
+.vscode
+node_modules
+*.log
+.classpath
+.project
+/.settings/

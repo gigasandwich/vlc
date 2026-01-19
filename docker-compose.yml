@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgis/postgis:14-3.3
+    environment:
+      POSTGRES_DB: vlc
+      POSTGRES_USER: vlc
+      POSTGRES_PASSWORD: vlc
+    ports:
+      - "6543:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./back/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
+  backend:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    volumes:
+      - ./back:/app
+      - ./m2:/root/.m2
+    ports:
+      - "1234:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/vlc
+      SPRING_DATASOURCE_USERNAME: vlc
+      SPRING_DATASOURCE_PASSWORD: vlc
+      SPRING_PROFILES_ACTIVE: dev
+    depends_on:
+      - db
+
+volumes:
+  db_data:
+  m2:

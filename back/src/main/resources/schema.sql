@@ -1,9 +1,9 @@
-\c postgres;
-DROP DATABASE IF EXISTS vlc;
-CREATE DATABASE vlc;
-\c vlc;
+-- \c postgres;
+-- DROP DATABASE IF EXISTS vlc;
+-- CREATE DATABASE vlc;
+-- \c vlc;
 
-CREATE EXTENSION POSTGIS;
+-- CREATE EXTENSION POSTGIS;
 
 CREATE TABLE example (
     id SERIAL PRIMARY KEY,
