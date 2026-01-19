@@ -28,6 +28,20 @@ services:
     depends_on:
       - db
 
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    volumes:
+      - ./front:/app
+      - /app/node_modules
+    ports:
+      - "4321:5173"
+    environment:
+      CHOKIDAR_USEPOLLING: 'true'
+    depends_on:
+      - backend
+
 volumes:
   db_data:
   m2:

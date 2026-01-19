@@ -24,4 +24,10 @@ class ExampleController {
 
         return ResponseEntity.ok(data);
     }
+
+    @GetMapping("/some-endpoint")
+    ResponseEntity<List<Example>> someEndpoint() {
+        List<Example> all = new Example().listAll();
+        return ResponseEntity.ok(all);
+    }
 }
