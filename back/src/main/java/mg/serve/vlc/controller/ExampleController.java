@@ -17,10 +17,12 @@ class ExampleController {
         data.put("key1", "value1");
         
         data.put("key2", "value2");
+
+        data.put("key3", "value3");
         
         // Normally unnecessary but needed to prove that models can initiate connections (with Spring Boot)
         List<Example> all = new Example().listAll();
-        data.put("test", all);
+        data.put("examples-list", all);
 
         return ResponseEntity.ok(data);
     }
