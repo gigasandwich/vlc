@@ -66,6 +66,17 @@ public class User {
         savedUser.saveHistoric();
     }
 
+    @Transactional(rollbackOn = Exception.class)
+    public void update(String email, String password, String username) throws BusinessLogicException {
+        if (!this.email.equals(email)) {
+            throw new BusinessLogicException("Email cannot be changed");
+        }
+        this.setPassword(password);
+        this.setUsername(username);
+        RepositoryProvider.userRepository.save(this);
+        this.saveHistoric();
+    }
+
     private void saveHistoric() throws BusinessLogicException {
         UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.id);
         RepositoryProvider.userHistoricRepository.save(userHistoric);
