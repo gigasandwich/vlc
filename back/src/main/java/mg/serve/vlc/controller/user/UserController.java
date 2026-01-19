@@ -37,4 +37,27 @@ public class UserController {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }
     }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<ApiResponse> deleteUser(@RequestParam String email, @RequestHeader("Authorization") String authHeader) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(401).body(new ApiResponse("error", null, "Missing or invalid Authorization header"));
+            }
+            String tokenEmail = jwtService.getTokenEmailFromHeader(authHeader);
+            if (!email.equals(tokenEmail)) {
+                return ResponseEntity.status(403).body(new ApiResponse("error", null, "You can only delete your own account"));
+            }
+
+            UserRepository userRepository = RepositoryProvider.userRepository;
+            User user = userRepository.findByEmail(email);
+            if (user == null) {
+                return ResponseEntity.badRequest().body(new ApiResponse("error", null, "User not found"));
+            }
+            user.delete();
+            return ResponseEntity.ok(new ApiResponse("success", "User deleted (state updated)", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
 }
