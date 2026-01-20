@@ -4,7 +4,10 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.repository.ConfigRepository;
+import mg.serve.vlc.util.RepositoryProvider;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -19,8 +22,6 @@ public class JwtService {
     private final SecretKey key;
     private long expirationSeconds;
 
-    private final ConfigRepository configRepository;
-
     @Autowired
     public JwtService(
         @Value("${app.security.jwt.secret}") String secret,
@@ -28,9 +29,8 @@ public class JwtService {
     ) {
         byte[] bytes = secret.length() % 4 == 0 ? Decoders.BASE64.decode(secret) : secret.getBytes();
         this.key = Keys.hmacShaKeyFor(bytes);
-        this.configRepository = configRepository;
 
-        String expStr = configRepository.getLastValueByKey("token_expiration");
+        String expStr = configRepository.getLastValueByKey("TOKEN_EXPIRATION");
         try {
             this.expirationSeconds = Integer.parseInt(expStr);
         } catch (Exception e) {
@@ -73,5 +73,11 @@ public class JwtService {
         }
         String token = authHeader.substring(7);
         return validateAndGetSubject(token);
+    }
+
+    public User getUserFromAuthHeader(String authHeader) {
+        String email = getTokenEmailFromHeader(authHeader);
+        System.out.println("Email from header: " + email);
+        return RepositoryProvider.userRepository.findByEmail(email);
     }
 }
