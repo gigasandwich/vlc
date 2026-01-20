@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class RepositoryProvider {
     public static ExampleRepository exampleRepository;
-    public static UserRepository userRepository;
     public static UserHistoricRepository userHistoricRepository;
     public static RoleRepository roleRepository;
     public static UserLogRepository userLogRepository;
@@ -28,7 +27,6 @@ public class RepositoryProvider {
             ActionRepository actionRepository
         ) {
         RepositoryProvider.exampleRepository = exampleRepository;
-        RepositoryProvider.userRepository = userRepository;
         RepositoryProvider.userHistoricRepository = userHistoricRepository;
         RepositoryProvider.roleRepository = roleRepository;
         RepositoryProvider.userLogRepository = userLogRepository;

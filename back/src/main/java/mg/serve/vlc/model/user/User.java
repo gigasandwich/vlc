@@ -91,7 +91,7 @@ public class User {
         this.setUsername(username);
 
         // Persistence
-        User updated = RepositoryProvider.userRepository.save(this);
+        User updated = RepositoryProvider.getUserRepository().save(this);
         updated.saveHistoric();
     }
 
@@ -113,7 +113,7 @@ public class User {
         this.setUserStateId(2);
 
         // Persistence
-        User deleted = RepositoryProvider.userRepository.save(this);
+        User deleted = RepositoryProvider.getUserRepository().save(this);
         deleted.saveHistoric();
     }
 
@@ -142,7 +142,7 @@ public class User {
         System.out.println("Wrong attempts for user id " + this.id + ": " + wrongAttempts);
         if (wrongAttempts >= loginAttemptLimit) {
             this.setUserStateId(3); // Blocked
-            User updated = RepositoryProvider.userRepository.save(this);
+            User updated = RepositoryProvider.getUserRepository().save(this);
             updated.saveHistoric();
         }
     }
