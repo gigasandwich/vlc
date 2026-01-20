@@ -29,7 +29,8 @@ public interface UserLogRepository extends JpaRepository<UserLog, Integer> {
         LocalDateTime lastReset = LocalDateTime.of(1970, 1, 1, 0, 0);
         for (UserLog log : findAll()) {
             if (
-                log.getUserFrom().getId().equals(userId) 
+                log.getUserTo() != null
+                && log.getUserTo().getId().equals(userId)
                 && log.getAction().getLabel().equals("LOGIN_ATTEMPT_RESET")
             ) {
                 if (log.getDate().isAfter(lastReset)) {
