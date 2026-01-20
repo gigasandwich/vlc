@@ -4,7 +4,12 @@ INSERT INTO example (column1) VALUES
 (null);
 
 INSERT INTO config (key, value_, type, date_) VALUES
-('token_expiration', '180', 'integer', NOW());
+('token_expiration', '180', 'integer', NOW()),
+('login_attempt_limit', '3', 'integer', NOW());
+
+INSERT INTO action(label) VALUES
+('WRONG_LOGIN'),
+('LOGIN_ATTEMPT_RESET');
 
 INSERT INTO role(label) VALUES
 ('USER'),
@@ -12,7 +17,8 @@ INSERT INTO role(label) VALUES
 
 INSERT INTO user_state (label) VALUES
 ('ACTIVE'),
-('INACTIVE');
+('INACTIVE'),
+('BLOCKED');
 
 -- ===============================
 -- Users
