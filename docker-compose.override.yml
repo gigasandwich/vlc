@@ -1,0 +1,16 @@
+services:
+  backend:
+    image: maven:3.9.4-eclipse-temurin-21
+    working_dir: /app
+    volumes:
+      - ./back:/app
+    ports:
+      - "1234:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/vlc
+      SPRING_DATASOURCE_USERNAME: vlc
+      SPRING_DATASOURCE_PASSWORD: vlc
+      SPRING_PROFILES_ACTIVE: dev
+    command: mvn spring-boot:run -Dspring-boot.run.fork=false
+    depends_on:
+      - db

@@ -8,3 +8,7 @@ spring.jpa.hibernate.ddl-auto=none
 spring.jpa.show-sql=false
 
 spring.sql.init.mode=never
+
+server.port=1234
+
+app.security.jwt.secret=iamthestormthatisapproachingu8Qwz9vK3pL6sT1xY2bV4nP7rQ8wZ1eR5tU6yI9oP0aS3dF7gH2jK5lM8qN0rT4vB
