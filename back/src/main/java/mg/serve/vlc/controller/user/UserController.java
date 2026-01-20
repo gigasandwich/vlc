@@ -3,7 +3,7 @@ package mg.serve.vlc.controller.user;
 import mg.serve.vlc.controller.response.ApiResponse;
 import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.user.User;
-import mg.serve.vlc.repository.UserRepository;
+import mg.serve.vlc.repository.user.UserRepository;
 import mg.serve.vlc.util.RepositoryProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +26,8 @@ public class UserController {
                 return ResponseEntity.status(403).body(new ApiResponse("error", null, "You can only update your own account"));
             }
 
-            UserRepository userRepository = RepositoryProvider.userRepository;
-            User user = userRepository.findByEmail(email);
+            UserRepository userRepository = RepositoryProvider.getUserRepository();
+            User user = userRepository.findByEmail(email).get();
             if (user == null) {
                 return ResponseEntity.badRequest().body(new ApiResponse("error", null, "User not found"));
             }
@@ -50,7 +50,7 @@ public class UserController {
             }
 
             UserRepository userRepository = RepositoryProvider.userRepository;
-            User user = userRepository.findByEmail(email);
+            User user = userRepository.findByEmail(email).get();
             if (user == null) {
                 return ResponseEntity.badRequest().body(new ApiResponse("error", null, "User not found"));
             }

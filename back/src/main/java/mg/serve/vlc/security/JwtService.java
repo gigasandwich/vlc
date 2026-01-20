@@ -78,6 +78,6 @@ public class JwtService {
     public User getUserFromAuthHeader(String authHeader) {
         String email = getTokenEmailFromHeader(authHeader);
         System.out.println("Email from header: " + email);
-        return RepositoryProvider.userRepository.findByEmail(email);
+        return RepositoryProvider.getUserRepository().findByEmail(email).get();
     }
 }

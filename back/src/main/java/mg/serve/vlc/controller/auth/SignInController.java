@@ -7,7 +7,7 @@ import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.model.UserLog;
 import mg.serve.vlc.repository.ActionRepository;
 import mg.serve.vlc.repository.UserLogRepository;
-import mg.serve.vlc.repository.UserRepository;
+import mg.serve.vlc.repository.user.UserRepository;
 import mg.serve.vlc.security.*;
 import mg.serve.vlc.util.RepositoryProvider;
 
@@ -97,7 +97,7 @@ public class SignInController {
                 throw new BusinessLogicException("Only admins can reset user blocks");
             }
 
-            User userToReset = RepositoryProvider.userRepository.findById(userId)
+            User userToReset = RepositoryProvider.getUserRepository().findById(userId)
                     .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
             if (userToReset.getUserStateId() != 3) {

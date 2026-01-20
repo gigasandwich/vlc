@@ -22,6 +22,6 @@ public class UserHistoric {
     private String username;
     @Column(name = "date_")
     private LocalDateTime date;
-    private int userId;
-    private int userStateId;
+    private Integer userId;
+    private Integer userStateId;
 }
