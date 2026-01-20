@@ -13,12 +13,14 @@ public class RepositoryProvider {
     public static RoleRepository roleRepository;
     public static UserLogRepository userLogRepository;
     public static ConfigRepository configRepository;
+    public static ActionRepository actionRepository;
 
     @Autowired
     public RepositoryProvider(
             ExampleRepository exampleRepository, UserRepository userRepository,
             UserHistoricRepository userHistoricRepository, RoleRepository roleRepository,
-            UserLogRepository userLogRepository, ConfigRepository configRepository
+            UserLogRepository userLogRepository, ConfigRepository configRepository,
+            ActionRepository actionRepository
         ) {
         RepositoryProvider.exampleRepository = exampleRepository;
         RepositoryProvider.userRepository = userRepository;
@@ -26,5 +28,6 @@ public class RepositoryProvider {
         RepositoryProvider.roleRepository = roleRepository;
         RepositoryProvider.userLogRepository = userLogRepository;
         RepositoryProvider.configRepository = configRepository;
+        RepositoryProvider.actionRepository = actionRepository;
     }
 }

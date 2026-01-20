@@ -21,7 +21,7 @@ public class UserLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false)
+    @Column(name = "date_", nullable = false)
     private LocalDateTime date;
 
     @Column(nullable = false)
