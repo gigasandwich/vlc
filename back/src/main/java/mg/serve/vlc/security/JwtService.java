@@ -30,7 +30,7 @@ public class JwtService {
         this.key = Keys.hmacShaKeyFor(bytes);
         this.configRepository = configRepository;
 
-        String expStr = configRepository.getLastValueByKey("token_expiration");
+        String expStr = configRepository.getLastValueByKey("TOKEN_EXPIRATION");
         try {
             this.expirationSeconds = Integer.parseInt(expStr);
         } catch (Exception e) {

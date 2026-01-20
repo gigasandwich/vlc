@@ -4,8 +4,8 @@ INSERT INTO example (column1) VALUES
 (null);
 
 INSERT INTO config (key, value_, type, date_) VALUES
-('token_expiration', '180', 'integer', NOW()),
-('login_attempt_limit', '3', 'integer', NOW());
+('TOKEN_EXPIRATION', '180', 'integer', NOW()),
+('LOGIN_ATTEMPT_LIMIT', '3', 'integer', NOW());
 
 INSERT INTO action(label) VALUES
 ('WRONG_LOGIN'),
