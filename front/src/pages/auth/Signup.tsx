@@ -1,14 +1,20 @@
 import { useState } from 'react'
 import { backendURL } from '../../constant'
 
-export default function Signup() {
+interface SignupProps {
+  onResponse: (data: any, type: 'success' | 'error') => void
+}
+
+export default function Signup({ onResponse }: SignupProps) {
+  const [username, setUsername] = useState('newusername')
   const [email, setEmail] = useState('newuser@gmail.com')
   const [password, setPassword] = useState('newpass')
-  const [username, setUsername] = useState('newusername')
-  const [resp, setResp] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
+    setIsLoading(true)
+
     try {
       const r = await fetch(`${backendURL}/auth/sign-up`, {
         method: 'POST',
@@ -16,32 +22,59 @@ export default function Signup() {
         body: new URLSearchParams({ email, password, username }).toString(),
       })
       const j = await r.json()
-      setResp(j)
+      if (j.status === 'success') {
+        onResponse(j, 'success')
+      } else {
+        onResponse(j, 'error')
+      }
     } catch (err) {
-      setResp({ error: String(err) })
+      onResponse({ error: String(err) }, 'error')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <div>
-      <h2>Sign Up</h2>
-      <form onSubmit={submit}>
-        <div>
-          <label>Username: <input value={username} onChange={(e) => setUsername(e.target.value)} /></label>
+    <div className="auth-view">
+      <h2 style={{ marginBottom: '16px', textAlign: 'center' }}>Create Account</h2>
+      <form onSubmit={submit} className="auth-form">
+        <div className="form-group">
+          <label htmlFor="signup-username">Username</label>
+          <input
+            id="signup-username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            placeholder="johndoe"
+          />
         </div>
-        <div>
-          <label>Email: <input value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+        <div className="form-group">
+          <label htmlFor="signup-email">Email Address</label>
+          <input
+            id="signup-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="name@example.com"
+          />
         </div>
-        <div>
-          <label>Password: <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+        <div className="form-group">
+          <label htmlFor="signup-password">Password</label>
+          <input
+            id="signup-password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="••••••••"
+          />
         </div>
-        <div>
-          <button type="submit">Create account</button>
-        </div>
+        <button type="submit" className="btn-submit" disabled={isLoading}>
+          {isLoading ? 'Creating Account...' : 'Create Account'}
+        </button>
       </form>
-
-      <h3>Response</h3>
-      <pre>{resp ? JSON.stringify(resp, null, 2) : 'No response yet'}</pre>
     </div>
   )
 }
