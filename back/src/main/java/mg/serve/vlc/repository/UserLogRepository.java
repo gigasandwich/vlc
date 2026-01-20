@@ -11,19 +11,32 @@ public interface UserLogRepository extends JpaRepository<UserLog, Integer> {
 
     default int countWrongAttemptsSinceLastReset(Integer userId) {
         LocalDateTime lastReset = findLastResetDate(userId);
-        return (int) findAll().stream()
-            .filter(log -> log.getUserFrom().equals(userId))
-            .filter(log -> log.getAction().equals("WRONG_LOGIN"))
-            .filter(log -> log.getDate().isAfter(lastReset))
-            .count();
+        int count = 0;
+        for (UserLog log : findAll()) {
+            if (
+                log.getUserFrom().getId().equals(userId) 
+                && log.getAction().getLabel().equals("WRONG_LOGIN") 
+                && log.getDate().isAfter(lastReset)
+            ) {
+                count++;
+            }
+        }
+        return count;
     }
 
+    // Max algo with dates
     default LocalDateTime findLastResetDate(Integer userId) {
-        return findAll().stream()
-            .filter(log -> log.getUserFrom().getId().equals(userId))
-            .filter(log -> log.getAction().getLabel().equals("LOGIN_ATTEMPT_RESET"))
-            .map(UserLog::getDate)
-            .max(LocalDateTime::compareTo)
-            .orElse(LocalDateTime.of(1970, 1, 1, 0, 0));
+        LocalDateTime lastReset = LocalDateTime.of(1970, 1, 1, 0, 0);
+        for (UserLog log : findAll()) {
+            if (
+                log.getUserFrom().getId().equals(userId) 
+                && log.getAction().getLabel().equals("LOGIN_ATTEMPT_RESET")
+            ) {
+                if (log.getDate().isAfter(lastReset)) {
+                    lastReset = log.getDate();
+                }
+            }
+        }
+        return lastReset;
     }
 }

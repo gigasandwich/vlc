@@ -51,6 +51,13 @@ public class User {
         this.setUsername(username);
     }
 
+    public User(String email, String password, String username, Integer userStateId) throws BusinessLogicException {
+        this.setEmail(email);
+        this.setPassword(password);
+        this.setUsername(username);
+        this.userStateId = userStateId;
+    }
+
     @Transactional(rollbackOn = Exception.class)
     public void signUp() throws BusinessLogicException {
         // Control
@@ -106,6 +113,36 @@ public class User {
         // Persistence
         User deleted = RepositoryProvider.userRepository.save(this);
         deleted.saveHistoric();
+    }
+
+    @Transactional(rollbackOn = Exception.class)
+    public void logWrongAttempt() throws BusinessLogicException {
+        // Control
+        Action wrongLoginAction = RepositoryProvider.actionRepository.findByLabel("WRONG_LOGIN");
+        if (wrongLoginAction == null) {
+            throw new BusinessLogicException("Action 'WRONG_LOGIN' not found in the database");
+        }
+
+        // Business logic
+        UserLog userLog = new UserLog(null, LocalDateTime.now(), 0.0, null, this, wrongLoginAction);
+        
+        // Persistence
+        RepositoryProvider.userLogRepository.save(userLog);
+
+
+        /****************************
+         * Blocking
+         ****************************/
+
+        String limitStr = RepositoryProvider.configRepository.getLastValueByKey("LOGIN_ATTEMPT_LIMIT");
+        int loginAttemptLimit = Integer.parseInt(limitStr);
+        int wrongAttempts = RepositoryProvider.userLogRepository.countWrongAttemptsSinceLastReset(this.id);
+
+        if (wrongAttempts >= loginAttemptLimit) {
+            this.setUserStateId(3); // Blocked
+            User updated = RepositoryProvider.userRepository.save(this);
+            updated.saveHistoric();
+        }
     }
 
     /****************************
