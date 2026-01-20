@@ -4,8 +4,6 @@ import lombok.*;
 import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.util.RepositoryProvider;
 
-import org.locationtech.jts.geom.Point;
-
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
@@ -32,7 +30,7 @@ public class Point {
 
     // PostGIS geometry column
     @Column(name = "coordinates", columnDefinition = "geometry(Point,4326)", nullable = false)
-    private Point coordinates;
+    private org.locationtech.jts.geom.Point coordinates;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

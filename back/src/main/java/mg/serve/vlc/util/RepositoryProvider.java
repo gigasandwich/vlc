@@ -14,13 +14,19 @@ public class RepositoryProvider {
     public static UserLogRepository userLogRepository;
     public static ConfigRepository configRepository;
     public static ActionRepository actionRepository;
+    public static PointRepository pointRepository;
+    public static PointHistoricRepository pointHistoricRepository;
+    public static PointStateRepository pointStateRepository;
+    public static PointTypeRepository pointTypeRepository;
 
     @Autowired
     public RepositoryProvider(
             ExampleRepository exampleRepository, UserRepository userRepository,
             UserHistoricRepository userHistoricRepository, RoleRepository roleRepository,
             UserLogRepository userLogRepository, ConfigRepository configRepository,
-            ActionRepository actionRepository
+            ActionRepository actionRepository, PointRepository pointRepository,
+            PointHistoricRepository pointHistoricRepository,
+            PointStateRepository pointStateRepository, PointTypeRepository pointTypeRepository
         ) {
         RepositoryProvider.exampleRepository = exampleRepository;
         RepositoryProvider.userRepository = userRepository;
@@ -29,5 +35,9 @@ public class RepositoryProvider {
         RepositoryProvider.userLogRepository = userLogRepository;
         RepositoryProvider.configRepository = configRepository;
         RepositoryProvider.actionRepository = actionRepository;
+        RepositoryProvider.pointRepository = pointRepository;
+        RepositoryProvider.pointHistoricRepository = pointHistoricRepository;
+        RepositoryProvider.pointStateRepository = pointStateRepository;
+        RepositoryProvider.pointTypeRepository = pointTypeRepository;
     }
 }
