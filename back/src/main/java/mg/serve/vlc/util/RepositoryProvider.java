@@ -38,11 +38,14 @@ public class RepositoryProvider {
     }
 
     public static UserRepository getUserRepository() {
-        if (checkFirebaseConnection()) {
-            return new FirebaseUserRepository();
-        } else {
-            return jpaUserRepository;
-        }
+        return jpaUserRepository;
+
+        // Local test for now
+        // if (checkFirebaseConnection()) {
+        //     return new FirebaseUserRepository();
+        // } else {
+        //     return jpaUserRepository;
+        // }
     }
 
     private static boolean checkFirebaseConnection() {
