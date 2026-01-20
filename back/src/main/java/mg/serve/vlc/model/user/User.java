@@ -60,9 +60,11 @@ public class User {
             throw new BusinessLogicException("User with email " + this.email + " already exists");
         }
 
-        // Business logic (Role)
+        // Business logic (Role + State)
         Role userRole = RepositoryProvider.roleRepository.findByLabel("USER");
         this.roles.add(userRole);
+
+        this.userStateId = 1;
 
         // Persistence
         User savedUser = RepositoryProvider.userRepository.save(this);
