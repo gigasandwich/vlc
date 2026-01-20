@@ -1,7 +1,7 @@
--- \c postgres;
--- DROP DATABASE IF EXISTS vlc;
--- CREATE DATABASE vlc;
--- \c vlc;
+\c postgres;
+DROP DATABASE IF EXISTS vlc;
+CREATE DATABASE vlc;
+\c vlc;
 
 CREATE EXTENSION IF NOT EXISTS POSTGIS;
 
@@ -79,7 +79,6 @@ CREATE TABLE user_log(
    user_from INTEGER NOT NULL,
    action_id INTEGER NOT NULL,
    PRIMARY KEY(id),
-   UNIQUE(user_to),
    FOREIGN KEY(user_to) REFERENCES user_(id),
    FOREIGN KEY(user_from) REFERENCES user_(id),
    FOREIGN KEY(action_id) REFERENCES action(id)
