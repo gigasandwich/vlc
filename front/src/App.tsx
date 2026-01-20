@@ -1,33 +1,30 @@
-import { useEffect, useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react'
+import LoginUser from './pages/auth/LoginUser'
+import LoginAdmin from './pages/auth/LoginAdmin'
+import Signup from './pages/auth/Signup'
+
+type Route = 'user-login' | 'admin-login' | 'signup'
 
 function App() {
-  const [count, setCount] = useState(0)
-  const [examples, setExamples] = useState<Array<{id: number; column1?: string}>>([])
-
-  useEffect(() => {
-    fetch('http://localhost:1234/some-endpoint')
-      .then((r) => r.json())
-      .then(setExamples)
-      .catch((e) => console.error('fetch /some-endpoint failed', e))
-  }, [])
+  const [route, setRoute] = useState<Route>('user-login')
 
   return (
-    <>
-      <div>
-        
-        <div>
-          <h2>Examples from backend</h2>
-          <ul>
-            {examples.map((ex) => (
-              <li key={ex.id}>{ex.column1 ?? `#${ex.id}`}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </>
+    <div>
+      <header>
+        <h1>Auth demo</h1>
+        <nav>
+          <button onClick={() => setRoute('user-login')}>User Login</button>{' '}
+          <button onClick={() => setRoute('admin-login')}>Admin Login</button>{' '}
+          <button onClick={() => setRoute('signup')}>Signup</button>
+        </nav>
+      </header>
+
+      <main>
+        {route === 'user-login' && <LoginUser />}
+        {route === 'admin-login' && <LoginAdmin />}
+        {route === 'signup' && <Signup />}
+      </main>
+    </div>
   )
 }
 
