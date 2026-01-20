@@ -72,6 +72,7 @@ CREATE TABLE point_state(
    id SERIAL,
    label VARCHAR(50) NOT NULL,
    order_ DOUBLE PRECISION NOT NULL,
+   progress DOUBLE PRECISION NOT NULL DEFAULT 0.0,
    PRIMARY KEY(id),
    UNIQUE(label)
 );
