@@ -2,11 +2,13 @@ package mg.serve.vlc.repository.user;
 
 import mg.serve.vlc.model.user.User;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.auth.UserRecord.CreateRequest;
+import com.google.firebase.auth.ExportedUserRecord;
 
 public class FirebaseUserRepository implements UserRepository {
 
@@ -56,7 +58,23 @@ public class FirebaseUserRepository implements UserRepository {
 
     @Override
     public List<User> findAll() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findAll'");
+        try {
+            System.out.println("Fetching all users from Firebase");
+
+            Iterable<ExportedUserRecord> userRecords = FirebaseAuth.getInstance().listUsers(null).getValues();
+            List<User> users = new ArrayList<>();
+
+            for (ExportedUserRecord userRecord : userRecords) {
+                User user = new User();
+                user.setEmail(userRecord.getEmail());
+                user.setUsername(userRecord.getDisplayName());
+                users.add(user);
+            }
+
+            return users;
+        } catch (Exception e) {
+            System.err.println("Error fetching users from Firebase: " + e.getMessage());
+            throw new RuntimeException("Failed to fetch users from Firebase", e);
+        }
     }
 }

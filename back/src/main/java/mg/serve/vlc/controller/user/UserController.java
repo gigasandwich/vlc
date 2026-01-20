@@ -49,7 +49,7 @@ public class UserController {
                 return ResponseEntity.status(403).body(new ApiResponse("error", null, "You can only delete your own account"));
             }
 
-            UserRepository userRepository = RepositoryProvider.userRepository;
+            UserRepository userRepository = RepositoryProvider.getUserRepository();
             User user = userRepository.findByEmail(email).get();
             if (user == null) {
                 return ResponseEntity.badRequest().body(new ApiResponse("error", null, "User not found"));

@@ -5,15 +5,11 @@ import mg.serve.vlc.controller.response.ApiResponse;
 import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.model.UserLog;
-import mg.serve.vlc.repository.ActionRepository;
-import mg.serve.vlc.repository.UserLogRepository;
 import mg.serve.vlc.repository.user.UserRepository;
 import mg.serve.vlc.security.*;
 import mg.serve.vlc.util.RepositoryProvider;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -47,7 +43,7 @@ public class SignInController {
                 );
             }
 
-            UserRepository userRepository = RepositoryProvider.userRepository;
+            UserRepository userRepository = RepositoryProvider.getUserRepository();
 
             User foundUser = null;
             for (User user : userRepository.findAll()) {
@@ -116,7 +112,7 @@ public class SignInController {
             log.setUserTo(userToReset);
 
             // Persistence
-            RepositoryProvider.userRepository.save(userToReset);
+            RepositoryProvider.getUserRepository().save(userToReset);
             RepositoryProvider.userLogRepository.save(log);
             userToReset.saveHistoric();
 

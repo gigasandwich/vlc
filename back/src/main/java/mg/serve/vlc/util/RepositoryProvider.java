@@ -18,13 +18,15 @@ public class RepositoryProvider {
     public static UserLogRepository userLogRepository;
     public static ConfigRepository configRepository;
     public static ActionRepository actionRepository;
+    private static JpaUserRepository jpaUserRepository;
 
     @Autowired
     public RepositoryProvider(
             ExampleRepository exampleRepository, UserRepository userRepository,
             UserHistoricRepository userHistoricRepository, RoleRepository roleRepository,
             UserLogRepository userLogRepository, ConfigRepository configRepository,
-            ActionRepository actionRepository
+            ActionRepository actionRepository,
+            JpaUserRepository jpaUserRepository
         ) {
         RepositoryProvider.exampleRepository = exampleRepository;
         RepositoryProvider.userHistoricRepository = userHistoricRepository;
@@ -32,10 +34,8 @@ public class RepositoryProvider {
         RepositoryProvider.userLogRepository = userLogRepository;
         RepositoryProvider.configRepository = configRepository;
         RepositoryProvider.actionRepository = actionRepository;
+        RepositoryProvider.jpaUserRepository = jpaUserRepository;
     }
-
-    @Autowired
-    private static JpaUserRepository jpaUserRepository;
 
     public static UserRepository getUserRepository() {
         if (checkFirebaseConnection()) {
@@ -50,7 +50,7 @@ public class RepositoryProvider {
             FirebaseApp firebaseApp = FirebaseApp.getInstance();
             FirebaseAuth firebaseAuth = FirebaseAuth.getInstance(firebaseApp);
             firebaseAuth.listUsers(null);
-            System.out.println("Firebase connection OKKKKKKK ");
+            System.out.println("Firebase connection OKKKKKKK");
             return true;
         } catch (Exception e) {
             System.out.println("Firebase connection failed: " + e.getMessage());

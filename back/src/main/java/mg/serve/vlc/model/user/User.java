@@ -59,6 +59,7 @@ public class User {
         this.userStateId = userStateId;
     }
 
+    // Sign in is not handled by this Model class (only in SignInController)
     @Transactional(rollbackOn = Exception.class)
     public void signUp() throws BusinessLogicException {
         // Control
