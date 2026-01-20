@@ -23,4 +23,5 @@ public class UserHistoric {
     @Column(name = "date_")
     private LocalDateTime date;
     private int userId;
+    private int userStateId;
 }

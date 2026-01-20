@@ -34,6 +34,9 @@ public class User {
     @Column(length = 50)
     private String username;
 
+    @Column(name = "user_state_id")
+    private Integer userStateId;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_role",
@@ -57,18 +60,52 @@ public class User {
             throw new BusinessLogicException("User with email " + this.email + " already exists");
         }
 
-        // Business logic (Role)
+        // Business logic (Role + State)
         Role userRole = RepositoryProvider.roleRepository.findByLabel("USER");
         this.roles.add(userRole);
+
+        this.userStateId = 1;
 
         // Persistence
         User savedUser = RepositoryProvider.userRepository.save(this);
         savedUser.saveHistoric();
     }
 
+    @Transactional(rollbackOn = Exception.class)
+    public void update(String email, String password, String username) throws BusinessLogicException {
+        // Control
+        if (!this.email.equals(email)) {
+            throw new BusinessLogicException("Email cannot be changed");
+        }
+
+        // Business logic
+        this.setPassword(password);
+        this.setUsername(username);
+
+        // Persistence
+        User updated = RepositoryProvider.userRepository.save(this);
+        updated.saveHistoric();
+    }
+
     private void saveHistoric() throws BusinessLogicException {
-        UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.id);
+        UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.id, this.userStateId);
         RepositoryProvider.userHistoricRepository.save(userHistoric);
+        System.out.println("Historic saved for user id " + this.id);
+    }
+
+    @Transactional(rollbackOn = Exception.class)
+    public void delete() throws BusinessLogicException {
+        // Control
+        if (this.userStateId == 2) {
+            throw new BusinessLogicException("User is already deleted");
+        }
+
+        // Business logic
+        this.setUserStateId(2);
+
+        // Persistence
+        User deleted = RepositoryProvider.userRepository.save(this);
+        deleted.saveHistoric();
     }
 
     /****************************
