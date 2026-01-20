@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { backendURL } from '../../constant'
 
 export default function Signup() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('newuser@gmail.com')
+  const [password, setPassword] = useState('newpass')
+  const [username, setUsername] = useState('newusername')
   const [resp, setResp] = useState<any>(null)
 
   async function submit(e: React.FormEvent) {
@@ -12,8 +12,8 @@ export default function Signup() {
     try {
       const r = await fetch(`${backendURL}/auth/sign-up`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, username }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ email, password, username }).toString(),
       })
       const j = await r.json()
       setResp(j)
@@ -24,7 +24,7 @@ export default function Signup() {
 
   return (
     <div>
-      <h2>Signup</h2>
+      <h2>Sign Up</h2>
       <form onSubmit={submit}>
         <div>
           <label>Username: <input value={username} onChange={(e) => setUsername(e.target.value)} /></label>

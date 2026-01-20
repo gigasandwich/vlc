@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { backendURL } from '../../constant'
 
 export default function LoginUser() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('user1@gmail.com')
+  const [password, setPassword] = useState('user1')
   const [resp, setResp] = useState<any>(null)
 
   async function submit(e: React.FormEvent) {

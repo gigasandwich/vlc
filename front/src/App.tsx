@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import LoginUser from './pages/auth/LoginUser'
-import LoginAdmin from './pages/auth/LoginAdmin'
 import Signup from './pages/auth/Signup'
 
-type Route = 'user-login' | 'admin-login' | 'signup'
+type Route = 'user-login' | 'signup'
 
 function App() {
   const [route, setRoute] = useState<Route>('user-login')
@@ -11,17 +10,15 @@ function App() {
   return (
     <div>
       <header>
-        <h1>Auth demo</h1>
+        <h1>Authentication</h1>
         <nav>
-          <button onClick={() => setRoute('user-login')}>User Login</button>{' '}
-          <button onClick={() => setRoute('admin-login')}>Admin Login</button>{' '}
-          <button onClick={() => setRoute('signup')}>Signup</button>
+          <button onClick={() => setRoute('user-login')}>Sign In</button>{' '}
+          <button onClick={() => setRoute('signup')}>Sign Up</button>
         </nav>
       </header>
 
       <main>
         {route === 'user-login' && <LoginUser />}
-        {route === 'admin-login' && <LoginAdmin />}
         {route === 'signup' && <Signup />}
       </main>
     </div>
