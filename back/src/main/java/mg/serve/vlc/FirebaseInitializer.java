@@ -20,7 +20,7 @@ public class FirebaseInitializer {
         Logger logger = Logger.getLogger(FirebaseInitializer.class.getName());
         try {
             if (FirebaseApp.getApps().isEmpty()) {
-                InputStream serviceAccount = new ClassPathResource("serve-vlc-firebase-adminsdk-fbsvc-d8aabff390.json").getInputStream();
+                InputStream serviceAccount = new ClassPathResource("serve-vlc-firebase-adminsdk-fbsvc.json").getInputStream();
 
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(serviceAccount))

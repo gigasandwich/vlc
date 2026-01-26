@@ -19,7 +19,7 @@ services:
     volumes:
       - ./back:/app
     ports:
-      - "1234:8080"
+      - "1234:1234"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/vlc
       SPRING_DATASOURCE_USERNAME: vlc

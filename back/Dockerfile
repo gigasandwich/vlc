@@ -8,6 +8,6 @@ RUN mvn -B -f pom.xml -DskipTests dependency:go-offline
 
 COPY . .
 
-EXPOSE 8080
+EXPOSE 1234
 
 CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.fork=false"]
