@@ -1,13 +1,19 @@
 import { useState } from 'react'
 import { backendURL } from '../../constant'
 
-export default function LoginUser() {
+interface LoginUserProps {
+  onResponse: (data: any, type: 'success' | 'error') => void
+}
+
+export default function LoginUser({ onResponse }: LoginUserProps) {
   const [email, setEmail] = useState('user1@gmail.com')
   const [password, setPassword] = useState('user1')
-  const [resp, setResp] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
+    setIsLoading(true)
+
     try {
       const params = new URLSearchParams()
       params.append('email', email)
@@ -19,29 +25,48 @@ export default function LoginUser() {
         body: params.toString(),
       })
       const j = await r.json()
-      setResp(j)
+      if (j.status === 'success') {
+        onResponse(j, 'success')
+      } else {
+        onResponse(j, 'error')
+      }
     } catch (err) {
-      setResp({ error: String(err) })
+      onResponse({ error: String(err) }, 'error')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <div>
-      <h2>User login</h2>
-      <form onSubmit={submit}>
-        <div>
-          <label>Email: <input value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+    <div className="auth-view">
+      <h2 style={{ marginBottom: '16px', textAlign: 'center' }}>Welcome Back</h2>
+      <form onSubmit={submit} className="auth-form">
+        <div className="form-group">
+          <label htmlFor="login-email">Email Address</label>
+          <input
+            id="login-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="name@example.com"
+          />
         </div>
-        <div>
-          <label>Password: <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+        <div className="form-group">
+          <label htmlFor="login-password">Password</label>
+          <input
+            id="login-password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="••••••••"
+          />
         </div>
-        <div>
-          <button type="submit">Sign in</button>
-        </div>
+        <button type="submit" className="btn-submit" disabled={isLoading}>
+          {isLoading ? 'Signing In...' : 'Sign In'}
+        </button>
       </form>
-
-      <h3>Response</h3>
-      <pre>{resp ? JSON.stringify(resp, null, 2) : 'No response yet'}</pre>
     </div>
   )
 }
