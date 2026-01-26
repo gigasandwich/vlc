@@ -12,36 +12,24 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RepositoryProvider {
-    public static ExampleRepository exampleRepository;
-    public static UserHistoricRepository userHistoricRepository;
-    public static RoleRepository roleRepository;
-    public static UserLogRepository userLogRepository;
-    public static ConfigRepository configRepository;
-    public static ActionRepository actionRepository;
-    private static JpaUserRepository jpaUserRepository;
-    public static PointRepository pointRepository;
-    public static PointHistoricRepository pointHistoricRepository;
-
     @Autowired
-    public RepositoryProvider(
-            ExampleRepository exampleRepository, UserRepository userRepository,
-            UserHistoricRepository userHistoricRepository, RoleRepository roleRepository,
-            UserLogRepository userLogRepository, ConfigRepository configRepository,
-            ActionRepository actionRepository,
-            JpaUserRepository jpaUserRepository,
-            PointRepository pointRepository,
-            PointHistoricRepository pointHistoricRepository
-        ) {
-        RepositoryProvider.exampleRepository = exampleRepository;
-        RepositoryProvider.userHistoricRepository = userHistoricRepository;
-        RepositoryProvider.roleRepository = roleRepository;
-        RepositoryProvider.userLogRepository = userLogRepository;
-        RepositoryProvider.configRepository = configRepository;
-        RepositoryProvider.actionRepository = actionRepository;
-        RepositoryProvider.jpaUserRepository = jpaUserRepository;
-        RepositoryProvider.pointRepository = pointRepository;
-        RepositoryProvider.pointHistoricRepository = pointHistoricRepository;
-    }
+    public static ExampleRepository exampleRepository;
+    @Autowired
+    public static UserHistoricRepository userHistoricRepository;
+    @Autowired
+    public static RoleRepository roleRepository;
+    @Autowired
+    public static UserLogRepository userLogRepository;
+    @Autowired
+    public static ConfigRepository configRepository;
+    @Autowired
+    public static ActionRepository actionRepository;
+    @Autowired
+    private static JpaUserRepository jpaUserRepository;
+    @Autowired
+    public static PointRepository pointRepository;
+    @Autowired
+    public static PointHistoricRepository pointHistoricRepository;
 
     public static UserRepository getUserRepository() {
         return jpaUserRepository;
