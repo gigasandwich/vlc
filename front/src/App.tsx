@@ -3,7 +3,7 @@ import LoginUser from './pages/auth/LoginUser'
 import Signup from './pages/auth/Signup'
 import './App.css'
 
-type Route = 'user-login' | 'signup'
+type Route = 'user-login' | 'signup' | 'admin'
 
 function App() {
   const [route, setRoute] = useState<Route>('user-login')
@@ -17,6 +17,7 @@ function App() {
       if (route === 'user-login' && data.data?.token) {
         localStorage.setItem('token', data.data.token)
         setMessage('Login successful!')
+        setRoute('admin')
       } else if (route === 'signup') {
         setMessage(data.data || 'Signup successful!')
       }
