@@ -23,12 +23,13 @@ public class FirebaseUserRepository implements UserRepository {
                     .setDisplayName(user.getUsername());
 
             UserRecord userRecord = FirebaseAuth.getInstance().createUser(request);
-            String userId = userRecord.getUid();
+            String fbId = userRecord.getUid();
 
             System.out.println("Successfully created Firebase user: " + userRecord.getUid());
 
             Firestore firestore = FirestoreClient.getFirestore();
-            firestore.collection("users").document(userId).set(user.toMap()).get();
+            firestore.collection("users").document(fbId).set(user.toMap()).get();
+            user.setFbId(fbId); // So that the historic can still use it
 
             return user;
         } catch (Exception e) {
