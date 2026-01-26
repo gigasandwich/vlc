@@ -7,6 +7,9 @@ import mg.serve.vlc.repository.*;
 import mg.serve.vlc.repository.user.FirebaseUserRepository;
 import mg.serve.vlc.repository.user.JpaUserRepository;
 import mg.serve.vlc.repository.user.UserRepository;
+import mg.serve.vlc.repository.userHistoric.UserHistoricRepository;
+import mg.serve.vlc.repository.userHistoric.JpaUserHistoricRepository;
+import mg.serve.vlc.repository.userHistoric.FirebaseUserHistoricRepository;
 
 import mg.serve.vlc.repository.example.FirebaseExampleRepository;
 import mg.serve.vlc.repository.example.JpaExampleRepository;
@@ -21,7 +24,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RepositoryProvider {
     public static JpaExampleRepository jpaExampleRepository;
-    public static UserHistoricRepository userHistoricRepository;
+    public static JpaUserHistoricRepository jpaUserHistoricRepository;
     public static RoleRepository roleRepository;
     public static UserLogRepository userLogRepository;
     public static ConfigRepository configRepository;
@@ -33,7 +36,7 @@ public class RepositoryProvider {
     @Autowired
     public RepositoryProvider(
             JpaExampleRepository jpaExampleRepository, UserRepository userRepository,
-            UserHistoricRepository userHistoricRepository, RoleRepository roleRepository,
+            JpaUserHistoricRepository jpaUserHistoricRepository, RoleRepository roleRepository,
             UserLogRepository userLogRepository, ConfigRepository configRepository,
             ActionRepository actionRepository,
             JpaUserRepository jpaUserRepository,
@@ -41,7 +44,7 @@ public class RepositoryProvider {
             PointHistoricRepository pointHistoricRepository
         ) {
         RepositoryProvider.jpaExampleRepository = jpaExampleRepository;
-        RepositoryProvider.userHistoricRepository = userHistoricRepository;
+        RepositoryProvider.jpaUserHistoricRepository = jpaUserHistoricRepository;
         RepositoryProvider.roleRepository = roleRepository;
         RepositoryProvider.userLogRepository = userLogRepository;
         RepositoryProvider.configRepository = configRepository;
@@ -60,6 +63,9 @@ public class RepositoryProvider {
 
         firebaseRepositories.put(ExampleRepository.class, new FirebaseExampleRepository());
         jpaRepositories.put(ExampleRepository.class, jpaExampleRepository);
+
+        firebaseRepositories.put(UserHistoricRepository.class, new FirebaseUserHistoricRepository());
+        jpaRepositories.put(UserHistoricRepository.class, jpaUserHistoricRepository);
     }
 
     public static <T> T getRepository(Class<T> repositoryClass) {
