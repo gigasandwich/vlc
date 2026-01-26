@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.repository.ConfigRepository;
 import mg.serve.vlc.util.RepositoryProvider;
+import mg.serve.vlc.repository.user.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -78,6 +79,6 @@ public class JwtService {
     public User getUserFromAuthHeader(String authHeader) {
         String email = getTokenEmailFromHeader(authHeader);
         System.out.println("Email from header: " + email);
-        return RepositoryProvider.getUserRepository().findByEmail(email).get();
+        return RepositoryProvider.getRepository(UserRepository.class).findByEmail(email).get();
     }
 }
