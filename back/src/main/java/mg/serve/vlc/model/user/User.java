@@ -7,13 +7,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import mg.serve.vlc.exception.BusinessLogicException;
-import mg.serve.vlc.repository.UserRepository;
 import mg.serve.vlc.util.RepositoryProvider;
 import java.time.*;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import mg.serve.vlc.model.*;
+import mg.serve.vlc.repository.user.UserRepository;
 
 @Entity
 @Table(name = "user_")
@@ -59,11 +59,12 @@ public class User {
         this.userStateId = userStateId;
     }
 
+    // Sign in is not handled by this Model class (only in SignInController)
     @Transactional(rollbackOn = Exception.class)
     public void signUp() throws BusinessLogicException {
         // Control
-        UserRepository repo = RepositoryProvider.userRepository;
-        User existingUser = repo.findByEmail(this.email);
+        UserRepository repo = RepositoryProvider.getUserRepository();
+        User existingUser = repo.findByEmail(this.email).orElse(null);
         if (existingUser != null) {
             throw new BusinessLogicException("User with email " + this.email + " already exists");
         }
@@ -75,7 +76,7 @@ public class User {
         this.userStateId = 1;
 
         // Persistence
-        User savedUser = RepositoryProvider.userRepository.save(this);
+        User savedUser = repo.save(this);
         savedUser.saveHistoric();
     }
 
@@ -91,7 +92,7 @@ public class User {
         this.setUsername(username);
 
         // Persistence
-        User updated = RepositoryProvider.userRepository.save(this);
+        User updated = RepositoryProvider.getUserRepository().save(this);
         updated.saveHistoric();
     }
 
@@ -113,7 +114,7 @@ public class User {
         this.setUserStateId(2);
 
         // Persistence
-        User deleted = RepositoryProvider.userRepository.save(this);
+        User deleted = RepositoryProvider.getUserRepository().save(this);
         deleted.saveHistoric();
     }
 
@@ -142,7 +143,7 @@ public class User {
         System.out.println("Wrong attempts for user id " + this.id + ": " + wrongAttempts);
         if (wrongAttempts >= loginAttemptLimit) {
             this.setUserStateId(3); // Blocked
-            User updated = RepositoryProvider.userRepository.save(this);
+            User updated = RepositoryProvider.getUserRepository().save(this);
             updated.saveHistoric();
         }
     }

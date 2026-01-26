@@ -15,7 +15,7 @@ public class SignUpController {
             User user = new User(email, password, username);
             user.signUp();
 
-            Object data = "User " + email + " signed up successfully";
+            Object data = "New account of " + email + " signed up successfully";
             ApiResponse response = new ApiResponse("success", data, null);
             return ResponseEntity.ok().body(response);
         } catch (BusinessLogicException blex) {
