@@ -19,6 +19,8 @@ public class RepositoryProvider {
     public static ConfigRepository configRepository;
     public static ActionRepository actionRepository;
     private static JpaUserRepository jpaUserRepository;
+    public static PointRepository pointRepository;
+    public static PointHistoricRepository pointHistoricRepository;
 
     @Autowired
     public RepositoryProvider(
@@ -26,7 +28,9 @@ public class RepositoryProvider {
             UserHistoricRepository userHistoricRepository, RoleRepository roleRepository,
             UserLogRepository userLogRepository, ConfigRepository configRepository,
             ActionRepository actionRepository,
-            JpaUserRepository jpaUserRepository
+            JpaUserRepository jpaUserRepository,
+            PointRepository pointRepository,
+            PointHistoricRepository pointHistoricRepository
         ) {
         RepositoryProvider.exampleRepository = exampleRepository;
         RepositoryProvider.userHistoricRepository = userHistoricRepository;
@@ -35,6 +39,8 @@ public class RepositoryProvider {
         RepositoryProvider.configRepository = configRepository;
         RepositoryProvider.actionRepository = actionRepository;
         RepositoryProvider.jpaUserRepository = jpaUserRepository;
+        RepositoryProvider.pointRepository = pointRepository;
+        RepositoryProvider.pointHistoricRepository = pointHistoricRepository;
     }
 
     public static UserRepository getUserRepository() {
