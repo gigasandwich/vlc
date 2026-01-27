@@ -1,6 +1,11 @@
 services:
+
+  # ==========================
+  # DATABASE
+  # ==========================
   db:
     image: postgis/postgis:14-3.3
+    container_name: vlc_db
     environment:
       POSTGRES_DB: vlc
       POSTGRES_USER: vlc
@@ -12,10 +17,14 @@ services:
       - ./back/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./back/src/main/resources/data.sql:/docker-entrypoint-initdb.d/02-data.sql:ro
 
+  # ==========================
+  # BACKEND SPRING
+  # ==========================
   backend:
     build:
       context: ./back
       dockerfile: Dockerfile
+    container_name: vlc_backend
     volumes:
       - ./back:/app
     ports:
@@ -28,43 +37,72 @@ services:
     depends_on:
       - db
 
+  # ==========================
+  # FRONT REACT
+  # ==========================
   front:
     build:
       context: ./front
       dockerfile: Dockerfile
+    container_name: vlc_front
     volumes:
       - ./front:/app
       - /app/node_modules
     ports:
       - "4321:80"
     environment:
-      CHOKIDAR_USEPOLLING: 'true'
+      CHOKIDAR_USEPOLLING: "true"
     depends_on:
       - backend
+      - maps_server
 
-  
+  # ==========================
+  # MOBILE (Vue / Ionic)
+  # ==========================
   mobile:
     build:
       context: ./mobile
       dockerfile: Dockerfile
+    container_name: vlc_mobile
     volumes:
       - ./mobile:/app
       - /app/node_modules
     ports:
       - "9876:8100"
     environment:
-      CHOKIDAR_USEPOLLING: 'true'
+      CHOKIDAR_USEPOLLING: "true"
     depends_on:
       - backend
-    
 
-  tileserver:
-    image: maptiler/tileserver-gl:latest
+  # ==========================
+  # MAP DATA IMPORT (RUN ONCE)
+  # ==========================
+  map_import:
+    image: openmaptiles/import-data
+    container_name: vlc_map_import
     volumes:
-      - ./maps:/data 
+      - maps_data:/data
+    environment:
+      DOWNLOAD_PBF: https://download.geofabrik.de/africa/madagascar-latest.osm.pbf
+
+  # ==========================
+  # MAP SERVER (OFFLINE)
+  # ==========================
+  maps_server:
+    image: klokantech/tileserver-gl
+    container_name: signalement_maps
     ports:
-      - "8081:8080"
-    command: ["--mbtiles", "/data/osm-2020-02-10-v3.11_madagascar_antananarivo.mbtiles"]
+      - "8081:80"
+    volumes:
+      - maps_data:/data
+    restart: unless-stopped
+    depends_on:
+      - map_import
+
+# ==========================
+# VOLUMES
+# ==========================
 volumes:
   db_data:
+  maps_data:
   m2:

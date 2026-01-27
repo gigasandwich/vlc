@@ -4,7 +4,6 @@ import lombok.*;
 import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.util.RepositoryProvider;
 
-
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
