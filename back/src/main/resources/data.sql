@@ -38,3 +38,26 @@ INSERT INTO user_role (role_id, user_id) VALUES
 (2, 1),
 (1, 2),
 (1, 3);
+
+-- ===============================
+-- Point states (états des points) STEEVE
+-- ===============================
+INSERT INTO point_state (label, order_, progress) VALUES
+('nouveau', 1.0, 0.25),
+('en cours', 2.0, 0.5),
+('termine', 3.0, 1.0);
+
+-- ===============================
+-- Point types (échelle professionnelle)
+-- ===============================
+INSERT INTO point_type (label) VALUES
+('peu grave'),
+('grave'),
+('tres grave');
+
+-- ===============================
+-- Points (5 exemples)
+-- Remarque: seuls les utilisateurs avec le rôle USER (user_id 2 et 3)
+-- sont assignés ici conformément au fichier `data.sql` fourni.
+-- Coordinates are stored as PostGIS geometries (SRID 4326).
+-- ===============================
