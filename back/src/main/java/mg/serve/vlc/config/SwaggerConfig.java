@@ -20,4 +20,13 @@ public class SwaggerConfig {
                 )
                 .build();
     }
+
+    @Bean
+    public GroupedOpenApi pointsApi() {
+        return GroupedOpenApi.builder()
+                .group("points")
+                .pathsToMatch("/points/summary","/points/list")
+                .build();
+    }
+    
 }
