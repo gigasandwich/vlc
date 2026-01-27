@@ -43,42 +43,25 @@ public class SignInController {
                 );
             }
 
-            UserRepository userRepository = RepositoryProvider.getRepository(UserRepository.class);
+            User user = new User(email, password, null);
+            Map<String, String> signInResult = user.signIn(password);
+            
+            if ("firebase".equals(signInResult.get("provider"))) {
+                Map<String, String> data = new HashMap<>();
+                data.put("token", signInResult.get("token"));
+                data.put("provider", "firebase");
+                return ResponseEntity.ok(new ApiResponse("success", data, null));
+            } else {
+                // Local provider
+                String token = jwtService.generateToken(signInResult.get("email"));
+                Instant exp = jwtService.getExpiryFromNow();
 
-            User foundUser = null;
-            for (User user : userRepository.findAll()) {
-                /**
-                 * I know that adding one single if (email.equals(user.getEmail())) is enough
-                 * But I think this is more readable this way
-                 */
-                if (email.equals(user.getEmail())) {
-                    if (user.getUserStateId() == 3) {
-                        throw new BusinessLogicException("User account is blocked due to multiple wrong login attempts");
-                    }
-                }
-
-                if (email.equals(user.getEmail()) && !password.equals(user.getPassword())) {
-                    user.logWrongAttempt(); // Throws BusinessLogicException
-                }
-
-                if (email.equals(user.getEmail()) && password.equals(user.getPassword())) {
-                    foundUser = user;
-                    break;
-                }
+                Map<String, String> data = new HashMap<>();
+                data.put("token", token);
+                data.put("expiresAt", exp.toString());
+                data.put("provider", "local");
+                return ResponseEntity.ok(new ApiResponse("success", data, null));
             }
-            if (foundUser == null) {
-                return ResponseEntity.status(401).body(
-                    new ApiResponse("error", null, "Invalid email or password")
-                );
-            }
-
-            String token = jwtService.generateToken(email);
-            Instant exp = jwtService.getExpiryFromNow();
-
-            Map<String, String> data = new HashMap<>();
-            data.put("token", token);
-            data.put("expiresAt", exp.toString());
-            return ResponseEntity.ok(new ApiResponse("success", data, null));
         } catch (BusinessLogicException e) {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }
