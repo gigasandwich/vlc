@@ -25,7 +25,8 @@ public class SwaggerConfig {
     public GroupedOpenApi pointsApi() {
         return GroupedOpenApi.builder()
                 .group("points")
-                .pathsToMatch("/points/summary")
+                .pathsToMatch("/points/summary","/points/list")
                 .build();
     }
+    
 }
