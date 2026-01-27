@@ -25,16 +25,39 @@ INSERT INTO user_state (label) VALUES
 -- ===============================
 
 INSERT INTO user_(email, password, username, user_state_id) VALUES
-('admin@gmail.com', 'admin', 'admin', 1),
-('user1@gmail.com', 'pass1', 'user1', 1),
-('user2@gmail.com', 'pass2', 'user2', 1);
+('admin@gmail.com', 'admin123', 'admin', 1),
+('user1@gmail.com', 'pass123', 'user1', 1),
+('user2@gmail.com', 'pass123', 'user2', 1);
 
 INSERT INTO user_historic (email, password, username, date_, user_state_id, user_id) VALUES
-('admin@gmail.com', 'admin', 'admin', NOW(), 1, 1),
-('user1@gmail.com', 'pass1', 'user1', NOW(), 1, 2),
-('user2@gmail.com', 'pass2', 'user2', NOW(), 1, 3);
+('admin@gmail.com', 'admin123', 'admin', NOW(), 1, 1),
+('user1@gmail.com', 'pass123', 'user1', NOW(), 1, 2),
+('user2@gmail.com', 'pass123', 'user2', NOW(), 1, 3);
 
 INSERT INTO user_role (role_id, user_id) VALUES
 (2, 1),
 (1, 2),
 (1, 3);
+
+-- ===============================
+-- Point states (états des points) STEEVE
+-- ===============================
+INSERT INTO point_state (label, order_, progress) VALUES
+('nouveau', 1.0, 0.25),
+('en cours', 2.0, 0.5),
+('termine', 3.0, 1.0);
+
+-- ===============================
+-- Point types (échelle professionnelle)
+-- ===============================
+INSERT INTO point_type (label) VALUES
+('peu grave'),
+('grave'),
+('tres grave');
+
+-- ===============================
+-- Points (5 exemples)
+-- Remarque: seuls les utilisateurs avec le rôle USER (user_id 2 et 3)
+-- sont assignés ici conformément au fichier `data.sql` fourni.
+-- Coordinates are stored as PostGIS geometries (SRID 4326).
+-- ===============================

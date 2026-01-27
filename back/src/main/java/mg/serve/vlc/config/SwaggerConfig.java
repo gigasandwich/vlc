@@ -11,7 +11,13 @@ public class SwaggerConfig {
     public GroupedOpenApi authApi() {
         return GroupedOpenApi.builder()
                 .group("auth")
-                .pathsToMatch("/auth/sign-in","/auth/sign-up")
+                .pathsToMatch(
+                    "/auth/sign-in",
+                    "/auth/sign-up",
+                    "/auth/reset-block/{userId}",
+                    "/users/update",
+                    "/users/delete"
+                )
                 .build();
     }
 
