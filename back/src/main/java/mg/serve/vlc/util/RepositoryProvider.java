@@ -7,8 +7,6 @@ import mg.serve.vlc.repository.*;
 import mg.serve.vlc.repository.user.FirebaseUserRepository;
 import mg.serve.vlc.repository.user.JpaUserRepository;
 import mg.serve.vlc.repository.user.UserRepository;
-import mg.serve.vlc.repository.PointRepository;
-import mg.serve.vlc.repository.PointHistoricRepository;
 import mg.serve.vlc.repository.userHistoric.UserHistoricRepository;
 import mg.serve.vlc.repository.userHistoric.JpaUserHistoricRepository;
 import mg.serve.vlc.repository.userHistoric.FirebaseUserHistoricRepository;
@@ -34,6 +32,7 @@ public class RepositoryProvider {
     public static JpaUserRepository jpaUserRepository;
     public static PointRepository pointRepository;
     public static PointHistoricRepository pointHistoricRepository;
+    public static PointsSummaryRepository pointsSummaryRepository;
 
     @Autowired
     public RepositoryProvider(
@@ -43,7 +42,8 @@ public class RepositoryProvider {
             ActionRepository actionRepository,
             JpaUserRepository jpaUserRepository,
             PointRepository pointRepository,
-            PointHistoricRepository pointHistoricRepository
+            PointHistoricRepository pointHistoricRepository,
+            PointsSummaryRepository pointsSummaryRepository
         ) {
         RepositoryProvider.jpaExampleRepository = jpaExampleRepository;
         RepositoryProvider.jpaUserHistoricRepository = jpaUserHistoricRepository;
@@ -54,6 +54,7 @@ public class RepositoryProvider {
         RepositoryProvider.jpaUserRepository = jpaUserRepository;
         RepositoryProvider.pointRepository = pointRepository;
         RepositoryProvider.pointHistoricRepository = pointHistoricRepository;
+        RepositoryProvider.pointsSummaryRepository = pointsSummaryRepository;  
     }
 
     private static final Map<Class<?>, Object> firebaseRepositories = new HashMap<>();

@@ -4,7 +4,7 @@ spring.datasource.url=jdbc:postgresql://localhost:5432/vlc
 spring.datasource.username=username
 spring.datasource.password=password
 
-spring.jpa.hibernate.ddl-auto=none 
+spring.jpa.hibernate.ddl-auto=none
 spring.jpa.show-sql=false
 spring.jpa.open-in-view=false
 spring.jpa.properties.hibernate.transaction.jta.platform=org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform

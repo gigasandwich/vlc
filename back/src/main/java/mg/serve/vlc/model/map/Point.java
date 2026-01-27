@@ -8,6 +8,11 @@ import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+
 @Entity
 @Table(name = "point")
 @Getter
@@ -28,10 +33,13 @@ public class Point {
     @Column(nullable = false)
     private Double budget;
 
-    // PostGIS geometry column
-    @Column(name = "coordinates", columnDefinition = "geometry(Point,4326)", nullable = false)
+    @Column(
+        name = "coordinates",
+        nullable = false,
+        columnDefinition = "geometry(Point,4326)"
+    )
     private org.locationtech.jts.geom.Point coordinates;
-
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -47,6 +55,12 @@ public class Point {
     @Transactional(rollbackOn = Exception.class)
     public Point save() {
         return RepositoryProvider.pointRepository.save(this);
+    }
+
+    public void setCoordinates(double longitude, double latitude) {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        this.coordinates = geometryFactory.createPoint(new Coordinate(longitude, latitude));
+        this.coordinates.setSRID(4326); // Set SRID to match PostGIS column
     }
 
     @Transactional(rollbackOn = Exception.class)

@@ -2,7 +2,9 @@ package mg.serve.vlc.model.map;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.locationtech.jts.geom.Point;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -27,8 +29,12 @@ public class PointHistoric
     @Column(nullable = false)
     private Double budget;
 
-    @Column(columnDefinition = "geometry(Point,4326)", nullable = false)
-    private Point coordinates;
+    @Column(
+        name = "coordinates",
+        nullable = false,
+        columnDefinition = "geometry(Point,4326)"
+    )
+    private org.locationtech.jts.geom.Point coordinates;
 
     @Column(name = "point_id", nullable = false)
     private Integer pointId;

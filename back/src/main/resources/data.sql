@@ -61,9 +61,9 @@ INSERT INTO point_type (label) VALUES
 -- sont assignés ici conformément au fichier `data.sql` fourni.
 -- Coordinates are stored as PostGIS geometries (SRID 4326).
 -- ===============================
-INSERT INTO point (title, description, location, point_state_id, point_type_id, user_id, date_created) VALUES
-('Point 1', 'Description for point 1', ST_SetSRID(ST_MakePoint(-0.1276, 51.5074), 4326), 1, 1, 2, NOW()),
-('Point 2', 'Description for point 2', ST_SetSRID(ST_MakePoint(-74.0060, 40.7128), 4326), 2, 2, 3, NOW()),
-('Point 3', 'Description for point 3', ST_SetSRID(ST_MakePoint(2.3522, 48.8566), 4326), 3, 3, 2, NOW()),
-('Point 4', 'Description for point 4', ST_SetSRID(ST_MakePoint(139.6917, 35.6895), 4326), 1, 1, 3, NOW()),
-('Point 5', 'Description for point 5', ST_SetSRID(ST_MakePoint(151.2093, -33.8688), 4326), 2, 2, 2, NOW());
+INSERT INTO point (date_, surface, budget, coordinates, user_id, point_state_id, point_type_id) VALUES
+(NOW(), 3.2, 200.00, ST_GeomFromText('POINT(47.5260 -18.9095)', 4326), 2, (SELECT id FROM point_state WHERE label='nouveau'), (SELECT id FROM point_type WHERE label='peu grave')),
+(NOW() - INTERVAL '2 days', 10.5, 600.00, ST_GeomFromText('POINT(47.5235 -18.9110)', 4326), 3, (SELECT id FROM point_state WHERE label='en cours'), (SELECT id FROM point_type WHERE label='grave')),
+(NOW() - INTERVAL '7 days', 28.0, 1800.00, ST_GeomFromText('POINT(47.5280 -18.9120)', 4326), 2, (SELECT id FROM point_state WHERE label='en cours'), (SELECT id FROM point_type WHERE label='grave')),
+(NOW() - INTERVAL '14 days', 95.0, 7200.00, ST_GeomFromText('POINT(47.5210 -18.9070)', 4326), 3, (SELECT id FROM point_state WHERE label='termine'), (SELECT id FROM point_type WHERE label='tres grave')),
+(NOW() - INTERVAL '1 days', 6.8, 350.00, ST_GeomFromText('POINT(47.5255 -18.9130)', 4326), 2, (SELECT id FROM point_state WHERE label='nouveau'), (SELECT id FROM point_type WHERE label='peu grave'));
