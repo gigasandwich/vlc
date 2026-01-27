@@ -42,6 +42,9 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/swagger-ui.html"
                 ).permitAll()
+
+                .requestMatchers("/points/summary").permitAll()
+
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
