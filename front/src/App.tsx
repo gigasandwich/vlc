@@ -69,10 +69,10 @@ function App() {
 
   return (
     // CONTENEUR PRINCIPAL : Prend toute la hauteur de l'écran (fixe le bug de taille)
-    <div className="h-screen w-full flex flex-col bg-gray-100 font-sans">
+    <div className={`h-screen w-screen flex flex-col bg-gray-100 font-sans ${activeTab === 'map' ? 'overflow-hidden' : 'overflow-auto'}`}>
       
       {/* ZONE DE CONTENU (Flex-1 : prend tout l'espace sauf la barre du bas) */}
-      <div className="flex-1 overflow-hidden relative">
+      <div className={`flex-1 relative ${activeTab === 'map' ? 'overflow-hidden' : 'overflow-auto'}`}>
         
         {/* VUE CARTE */}
         {activeTab === 'map' && (
@@ -94,7 +94,7 @@ function App() {
       </div>
 
       {/* BOTTOM BAR (Navigation fixe en bas) */}
-      <nav className="bg-white border-t border-gray-200 h-16 shrink-0 flex justify-around items-center shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
+      <nav className="bg-white w-full border-t border-gray-200 h-16 shrink-0 flex justify-around items-center shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
         
         {/* Bouton Carte */}
         <button 
