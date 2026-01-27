@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import mg.serve.vlc.util.RepositoryProvider;
+import mg.serve.vlc.repository.example.ExampleRepository;
 
 @Entity
 @Table(name = "example")
@@ -19,11 +20,14 @@ public class Example {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Transient
+    private String fbId;
+
     private String column1;
 
     // Never use getAll in an entity xD
     public List<Example> listAll() {
-        return RepositoryProvider.exampleRepository.findAll();
+        return RepositoryProvider.getRepository(ExampleRepository.class).findAll();
     }
 
     public Example goodMethod() {
@@ -33,6 +37,6 @@ public class Example {
 
         // Persistence
 
-        return RepositoryProvider.exampleRepository.save(this);
+        return RepositoryProvider.getRepository(ExampleRepository.class).save(this);
     }
 }

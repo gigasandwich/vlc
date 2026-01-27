@@ -43,7 +43,7 @@ public class SignInController {
                 );
             }
 
-            UserRepository userRepository = RepositoryProvider.getUserRepository();
+            UserRepository userRepository = RepositoryProvider.getRepository(UserRepository.class);
 
             User foundUser = null;
             for (User user : userRepository.findAll()) {
@@ -93,7 +93,7 @@ public class SignInController {
                 throw new BusinessLogicException("Only admins can reset user blocks");
             }
 
-            User userToReset = RepositoryProvider.getUserRepository().findById(userId)
+            User userToReset = RepositoryProvider.getRepository(UserRepository.class).findById(userId)
                     .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
             if (userToReset.getUserStateId() != 3) {
@@ -112,7 +112,7 @@ public class SignInController {
             log.setUserTo(userToReset);
 
             // Persistence
-            RepositoryProvider.getUserRepository().save(userToReset);
+            RepositoryProvider.getRepository(UserRepository.class).save(userToReset);
             RepositoryProvider.userLogRepository.save(log);
             userToReset.saveHistoric();
 

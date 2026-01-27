@@ -144,5 +144,3 @@ CREATE TABLE point_factory(
    FOREIGN KEY(factory_id) REFERENCES factory(id),
    FOREIGN KEY(point_id) REFERENCES point(id)
 );
-
-ALTER TABLE point_state ADD COLUMN progress DOUBLE PRECISION NOT NULL DEFAULT 0.0;

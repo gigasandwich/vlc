@@ -9,11 +9,10 @@ import lombok.Setter;
 import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.util.RepositoryProvider;
 import java.time.*;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import mg.serve.vlc.model.*;
 import mg.serve.vlc.repository.user.UserRepository;
+import mg.serve.vlc.repository.userHistoric.UserHistoricRepository;
 
 @Entity
 @Table(name = "user_")
@@ -25,6 +24,9 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @Transient
+    private String fbId;
 
     @Column(nullable = false, unique = true, length = 50)
     private String email;
@@ -63,15 +65,14 @@ public class User {
     @Transactional(rollbackOn = Exception.class)
     public void signUp() throws BusinessLogicException {
         // Control
-        UserRepository repo = RepositoryProvider.getUserRepository();
+        UserRepository repo = RepositoryProvider.getRepository(UserRepository.class);
         User existingUser = repo.findByEmail(this.email).orElse(null);
         if (existingUser != null) {
             throw new BusinessLogicException("User with email " + this.email + " already exists");
         }
 
         // Business logic (Role + State)
-        Role userRole = RepositoryProvider.roleRepository.findByLabel("USER");
-        this.roles.add(userRole);
+        this.roles.add(new Role(1, "1", "USER")); // Too lazy to create RoleRepository
 
         this.userStateId = 1;
 
@@ -92,15 +93,15 @@ public class User {
         this.setUsername(username);
 
         // Persistence
-        User updated = RepositoryProvider.getUserRepository().save(this);
+        User updated = RepositoryProvider.getRepository(UserRepository.class).save(this);
         updated.saveHistoric();
     }
 
     @Transactional(rollbackOn = Exception.class)
     public void saveHistoric() throws BusinessLogicException {
-        UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.id, this.userStateId);
-        RepositoryProvider.userHistoricRepository.save(userHistoric);
-        System.out.println("Historic saved for user id " + this.id);
+        UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.id, this.fbId, this.userStateId); // fbId from User Creation
+        RepositoryProvider.getRepository(UserHistoricRepository.class).save(userHistoric);
+        System.out.println("Historic saved for user id " + this.fbId);
     }
 
     @Transactional(rollbackOn = Exception.class)
@@ -114,7 +115,7 @@ public class User {
         this.setUserStateId(2);
 
         // Persistence
-        User deleted = RepositoryProvider.getUserRepository().save(this);
+        User deleted = RepositoryProvider.getRepository(UserRepository.class).save(this);
         deleted.saveHistoric();
     }
 
@@ -143,7 +144,7 @@ public class User {
         System.out.println("Wrong attempts for user id " + this.id + ": " + wrongAttempts);
         if (wrongAttempts >= loginAttemptLimit) {
             this.setUserStateId(3); // Blocked
-            User updated = RepositoryProvider.getUserRepository().save(this);
+            User updated = RepositoryProvider.getRepository(UserRepository.class).save(this);
             updated.saveHistoric();
         }
     }
@@ -159,9 +160,26 @@ public class User {
     }
 
     public void setPassword(String password) throws BusinessLogicException {
-        if (password == null || password.length() < 4) {
-            throw new BusinessLogicException("Password must have at least 4 characters");
+        if (password == null || password.length() < 6) {
+            throw new BusinessLogicException("Password must have at least 6 characters");
         }
         this.password = password;
+    }
+
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> userMap = new HashMap<>();
+        userMap.put("id", this.id);
+        userMap.put("email", this.email);
+        userMap.put("username", this.username);
+        userMap.put("userStateId", this.userStateId);
+
+        List<Map<String, Object>> rolesList = new ArrayList<>();
+        for (Role role : this.roles) {
+            rolesList.add(role.toMap());
+        }
+        userMap.put("roles", rolesList);
+
+        return userMap;
     }
 }
