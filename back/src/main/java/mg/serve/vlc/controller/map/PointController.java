@@ -62,13 +62,7 @@ public class PointController {
                     lon = coords.getX();
                     lat = coords.getY();
                 }
-
-                Integer userId = null;
-                String username = null;
-                if (p.getUser() != null) {
-                    userId = p.getUser().getId();
-                    username = p.getUser().getUsername();
-                }
+             
 
                 String stateLabel = p.getPointState() != null ? p.getPointState().getLabel() : null;
                 String typeLabel = p.getPointType() != null ? p.getPointType().getLabel() : null;
@@ -80,8 +74,6 @@ public class PointController {
                         p.getBudget(),
                         lat,
                         lon,
-                        userId,
-                        username,
                         p.getPointState() != null ? p.getPointState().getId() : null,
                         stateLabel,
                         p.getPointType() != null ? p.getPointType().getId() : null,
@@ -118,13 +110,6 @@ public class PointController {
                 lat = coords.getY();
             }
 
-            Integer userId = null;
-            String username = null;
-            if (p.getUser() != null) {
-                userId = p.getUser().getId();
-                username = p.getUser().getUsername();
-            }
-
             String stateLabel = p.getPointState() != null ? p.getPointState().getLabel() : null;
             String typeLabel = p.getPointType() != null ? p.getPointType().getLabel() : null;
 
@@ -135,8 +120,6 @@ public class PointController {
                     p.getBudget(),
                     lat,
                     lon,
-                    userId,
-                    username,
                     p.getPointState() != null ? p.getPointState().getId() : null,
                     stateLabel,
                     p.getPointType() != null ? p.getPointType().getId() : null,
