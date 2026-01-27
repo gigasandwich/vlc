@@ -12,6 +12,9 @@ import java.time.*;
 import java.util.*;
 import mg.serve.vlc.model.*;
 import mg.serve.vlc.repository.user.UserRepository;
+import mg.serve.vlc.repository.user.FirebaseUserRepository;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserRecord;
 import mg.serve.vlc.repository.userHistoric.UserHistoricRepository;
 
 @Entity
@@ -59,6 +62,47 @@ public class User {
         this.setPassword(password);
         this.setUsername(username);
         this.userStateId = userStateId;
+    }
+
+    
+    @Transactional(rollbackOn = Exception.class)
+    public Map<String, String> signIn(String password) throws BusinessLogicException {
+        UserRepository repo = RepositoryProvider.getRepository(UserRepository.class);
+
+        if (repo instanceof FirebaseUserRepository) {
+            try {
+                UserRecord userRecord = FirebaseAuth.getInstance().getUserByEmail(this.email);
+                String customToken = FirebaseAuth.getInstance().createCustomToken(userRecord.getUid());
+
+                Map<String, String> result = new HashMap<>();
+                result.put("provider", "firebase");
+                result.put("token", customToken);
+                return result;
+            } catch (Exception e) {
+                throw new BusinessLogicException("Firebase sign-in failed: " + e.getMessage());
+            }
+        } else {
+            Optional<User> foundOpt = repo.findByEmail(this.email);
+            if (foundOpt.isEmpty()) {
+                throw new BusinessLogicException("Invalid email or password");
+            }
+
+            User found = foundOpt.get();
+
+            if (found.getUserStateId() != null && found.getUserStateId() == 3) {
+                throw new BusinessLogicException("User account is blocked due to multiple wrong login attempts");
+            }
+
+            if (!found.getPassword().equals(password)) {
+                found.logWrongAttempt();
+                throw new BusinessLogicException("Invalid email or password");
+            }
+
+            Map<String, String> result = new HashMap<>();
+            result.put("provider", "local");
+            result.put("email", found.getEmail());
+            return result;
+        }
     }
 
     // Sign in is not handled by this Model class (only in SignInController)
