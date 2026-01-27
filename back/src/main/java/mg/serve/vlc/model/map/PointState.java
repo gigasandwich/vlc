@@ -20,4 +20,6 @@ public class PointState
 
     @Column(name = "order_", nullable = false)
     private Double order;
+
+    private Double progress;
 }
