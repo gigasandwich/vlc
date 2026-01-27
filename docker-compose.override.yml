@@ -14,3 +14,18 @@ services:
     command: mvn spring-boot:run -Dspring-boot.run.fork=false
     depends_on:
       - db
+
+  front:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./front:/app
+      - /app/node_modules
+    ports:
+      - "4321:5173"
+    environment:
+      CHOKIDAR_USEPOLLING: 'true'
+      CHOKIDAR_INTERVAL: '1000'
+    command: sh -c "npm install --legacy-peer-deps && npm run dev -- --host 0.0.0.0 --port 5173"
+    depends_on:
+      - backend
