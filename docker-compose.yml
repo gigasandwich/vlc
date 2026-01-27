@@ -57,7 +57,6 @@ services:
     depends_on:
       - backend
     
-
   tileserver:
     image: maptiler/tileserver-gl:latest
     volumes:
@@ -65,6 +64,7 @@ services:
     ports:
       - "8081:8080"
     command: ["--mbtiles", "/data/osm-2020-02-10-v3.11_madagascar_antananarivo.mbtiles"]
+
 volumes:
   db_data:
   m2:
