@@ -7,6 +7,8 @@ import mg.serve.vlc.repository.*;
 import mg.serve.vlc.repository.user.FirebaseUserRepository;
 import mg.serve.vlc.repository.user.JpaUserRepository;
 import mg.serve.vlc.repository.user.UserRepository;
+import mg.serve.vlc.repository.PointRepository;
+import mg.serve.vlc.repository.PointHistoricRepository;
 import mg.serve.vlc.repository.userHistoric.UserHistoricRepository;
 import mg.serve.vlc.repository.userHistoric.JpaUserHistoricRepository;
 import mg.serve.vlc.repository.userHistoric.FirebaseUserHistoricRepository;

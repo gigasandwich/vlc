@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import LoginUser from './pages/auth/LoginUser'
 import Signup from './pages/auth/Signup'
+import MapPage from './components/Map'
 import './App.css'
 
 type Route = 'user-login' | 'signup' | 'admin'
@@ -33,35 +34,37 @@ function App() {
   }
 
   return (
-    <div className="app-container">
-      <header>
-        <h1>Authentication</h1>
-        <nav className="nav-tabs">
-          <button
-            className={`nav-tab ${route === 'user-login' ? 'active' : ''}`}
-            onClick={() => switchRoute('user-login')}
-          >
-            Sign In
-          </button>
-          <button
-            className={`nav-tab ${route === 'signup' ? 'active' : ''}`}
-            onClick={() => switchRoute('signup')}
-          >
-            Sign Up
-          </button>
-        </nav>
-      </header>
+    // <div className="app-container">
+    //   <header>
+    //     <h1>Authentication</h1>
+    //     <nav className="nav-tabs">
+    //       <button
+    //         className={`nav-tab ${route === 'user-login' ? 'active' : ''}`}
+    //         onClick={() => switchRoute('user-login')}
+    //       >
+    //         Sign In
+    //       </button>
+    //       <button
+    //         className={`nav-tab ${route === 'signup' ? 'active' : ''}`}
+    //         onClick={() => switchRoute('signup')}
+    //       >
+    //         Sign Up
+    //       </button>
+    //     </nav>
+    //   </header>
 
-      <main>
-        {message && (
-          <div className={`message ${messageType}`}>
-            {message}
-          </div>
-        )}
-        {route === 'user-login' && <LoginUser onResponse={handleResponse} />}
-        {route === 'signup' && <Signup onResponse={handleResponse} />}
-      </main>
-    </div>
+    //   <main>
+    //     {message && (
+    //       <div className={`message ${messageType}`}>
+    //         {message}
+    //       </div>
+    //     )}
+    //     {route === 'user-login' && <LoginUser onResponse={handleResponse} />}
+    //     {route === 'signup' && <Signup onResponse={handleResponse} />}
+    //   </main>
+    // </div>
+
+    <MapPage />
   )
 }
 
