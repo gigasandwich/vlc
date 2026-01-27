@@ -61,3 +61,9 @@ INSERT INTO point_type (label) VALUES
 -- sont assignés ici conformément au fichier `data.sql` fourni.
 -- Coordinates are stored as PostGIS geometries (SRID 4326).
 -- ===============================
+INSERT INTO point (title, description, location, point_state_id, point_type_id, user_id, date_created) VALUES
+('Point 1', 'Description for point 1', ST_SetSRID(ST_MakePoint(-0.1276, 51.5074), 4326), 1, 1, 2, NOW()),
+('Point 2', 'Description for point 2', ST_SetSRID(ST_MakePoint(-74.0060, 40.7128), 4326), 2, 2, 3, NOW()),
+('Point 3', 'Description for point 3', ST_SetSRID(ST_MakePoint(2.3522, 48.8566), 4326), 3, 3, 2, NOW()),
+('Point 4', 'Description for point 4', ST_SetSRID(ST_MakePoint(139.6917, 35.6895), 4326), 1, 1, 3, NOW()),
+('Point 5', 'Description for point 5', ST_SetSRID(ST_MakePoint(151.2093, -33.8688), 4326), 2, 2, 2, NOW());
