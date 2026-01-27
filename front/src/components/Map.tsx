@@ -74,7 +74,7 @@ const MapPage: React.FC = () => {
       
       {/* HEADER */}
       <header style={styles.header}>
-        <h2 style={{ margin: 0, color: '#333' }}>Antananarivo Map</h2>
+        <h2 style={{ margin: 0, color: '#333' }} className='bg-red-300'>Antananarivo Map</h2>
         <span style={{ color: '#666', fontSize: '0.9rem' }}>Mode Offline</span>
       </header>
 
