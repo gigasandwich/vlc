@@ -14,4 +14,12 @@ public class SwaggerConfig {
                 .pathsToMatch("/auth/sign-in","/auth/sign-up")
                 .build();
     }
+
+    @Bean
+    public GroupedOpenApi pointsApi() {
+        return GroupedOpenApi.builder()
+                .group("points")
+                .pathsToMatch("/points/summary")
+                .build();
+    }
 }
