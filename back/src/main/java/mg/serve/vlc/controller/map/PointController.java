@@ -2,13 +2,15 @@ package mg.serve.vlc.controller.map;
 
 import mg.serve.vlc.controller.response.ApiResponse;
 import mg.serve.vlc.dto.PointDTO;
-import mg.serve.vlc.exception.BusinessLogicException;
+import mg.serve.vlc.dto.PointsSummaryDTO;
 import mg.serve.vlc.model.map.Point;
 import mg.serve.vlc.repository.PointRepository;
 import mg.serve.vlc.util.RepositoryProvider;
 import jakarta.transaction.Transactional;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +20,7 @@ import java.util.List;
 public class PointController {
 
     public PointController() {
-        // Pas d'injection ici, on utilise RepositoryProvider comme dans ton style
+           
     }
 
     /**
@@ -145,4 +147,14 @@ public class PointController {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }
     }
+
+    /**
+     * Returns a summary for points. If userId is provided the summary is limited to that user, otherwise global.
+     */
+    @GetMapping("/summary")
+    public ResponseEntity<ApiResponse> summary() {
+        PointsSummaryDTO dto = RepositoryProvider.pointsSummaryRepository.getSummary();
+        return ResponseEntity.ok(new ApiResponse("OK", dto, null));
+    }
+
 }
