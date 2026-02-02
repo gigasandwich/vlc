@@ -32,6 +32,7 @@ public class RepositoryProvider {
     public static PointsSummaryRepository pointsSummaryRepository;
     public static PointStateRepository pointStateRepository;
     public static PointTypeRepository pointTypeRepository;
+    public static FactoryRepository factoryRepository;
 
     @Autowired
     public RepositoryProvider(
@@ -44,7 +45,8 @@ public class RepositoryProvider {
             PointHistoricRepository pointHistoricRepository,
             PointsSummaryRepository pointsSummaryRepository,
             PointStateRepository pointStateRepository,
-            PointTypeRepository pointTypeRepository
+            PointTypeRepository pointTypeRepository,
+            FactoryRepository factoryRepository
         ) {
         RepositoryProvider.jpaExampleRepository = jpaExampleRepository;
         RepositoryProvider.jpaUserHistoricRepository = jpaUserHistoricRepository;
@@ -58,6 +60,7 @@ public class RepositoryProvider {
         RepositoryProvider.pointsSummaryRepository = pointsSummaryRepository;
         RepositoryProvider.pointStateRepository = pointStateRepository;
         RepositoryProvider.pointTypeRepository = pointTypeRepository;
+        RepositoryProvider.factoryRepository = factoryRepository;
     }
 
     private static final Map<Class<?>, Object> firebaseRepositories = new HashMap<>();
@@ -77,6 +80,7 @@ public class RepositoryProvider {
         jpaRepositories.put(PointStateRepository.class, pointStateRepository);
 
         jpaRepositories.put(PointTypeRepository.class, RepositoryProvider.pointTypeRepository);
+        jpaRepositories.put(FactoryRepository.class, RepositoryProvider.factoryRepository);
     }
 
     public static <T> T getRepository(Class<T> repositoryClass) {

@@ -5,12 +5,11 @@ import mg.serve.vlc.dto.PointDTO;
 import mg.serve.vlc.dto.PointUpdateDTO;
 import mg.serve.vlc.dto.PointsSummaryDTO;
 import mg.serve.vlc.exception.BusinessLogicException;
-import mg.serve.vlc.model.map.Point;
-import mg.serve.vlc.model.map.PointState;
-import mg.serve.vlc.model.map.PointType;
-import mg.serve.vlc.model.user.User;
+import mg.serve.vlc.model.map.*;
+import mg.serve.vlc.model.user.*;
 import mg.serve.vlc.repository.PointRepository;
 import mg.serve.vlc.repository.PointTypeRepository;
+import mg.serve.vlc.repository.FactoryRepository;
 import mg.serve.vlc.repository.pointState.PointStateRepository;
 import mg.serve.vlc.security.JwtService;
 import mg.serve.vlc.util.RepositoryProvider;
@@ -25,8 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -230,6 +228,14 @@ public class PointController {
                 if (pointType != null) {
                     point.setPointType(pointType);
                 }
+            }
+
+            if (dto.getFactoryIds() != null) {
+                List<Factory> factories = dto.getFactoryIds().stream()
+                        .map(fid -> RepositoryProvider.getRepository(FactoryRepository.class).findById(fid).orElse(null))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+                point.setFactories(factories);
             }
 
             point.saveHistoric();

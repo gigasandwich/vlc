@@ -5,6 +5,7 @@ public class PointUpdateDTO {
     private Double budget;
     private Integer pointStateId;
     private Integer pointTypeId;
+    private java.util.List<Integer> factoryIds;
 
     public PointUpdateDTO() {}
 
@@ -45,5 +46,13 @@ public class PointUpdateDTO {
 
     public void setPointTypeId(Integer pointTypeId) {
         this.pointTypeId = pointTypeId;
+    }
+
+    public java.util.List<Integer> getFactoryIds() {
+        return factoryIds;
+    }
+
+    public void setFactoryIds(java.util.List<Integer> factoryIds) {
+        this.factoryIds = factoryIds;
     }
 }
