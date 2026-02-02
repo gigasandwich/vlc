@@ -139,7 +139,7 @@ CREATE TABLE point_factory(
    factory_id INTEGER,
    point_id INTEGER,
    id SERIAL,
-   date_modif TIMESTAMP NOT NULL,
+   date_modif TIMESTAMP NOT NULL DEFAULT NOW(),
    PRIMARY KEY(factory_id, point_id, id),
    FOREIGN KEY(factory_id) REFERENCES factory(id),
    FOREIGN KEY(point_id) REFERENCES point(id)

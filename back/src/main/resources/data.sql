@@ -61,3 +61,7 @@ INSERT INTO point (date_, surface, budget, coordinates, user_id, point_state_id,
 (NOW() - INTERVAL '7 days', null, null, ST_GeomFromText('POINT(47.5280 -18.9120)', 4326), 2, 1, (SELECT id FROM point_type WHERE label='grave')),
 (NOW() - INTERVAL '14 days', null, null, ST_GeomFromText('POINT(47.5210 -18.9070)', 4326), 3, 1, (SELECT id FROM point_type WHERE label='tres grave')),
 (NOW() - INTERVAL '1 days', null, null, ST_GeomFromText('POINT(47.5255 -18.9130)', 4326), 2, 1, (SELECT id FROM point_type WHERE label='peu grave'));
+
+INSERT INTO factory (label) VALUES
+('Factory A'),
+('Factory B');
