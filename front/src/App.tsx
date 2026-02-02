@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import LoginUser from './pages/auth/LoginUser'
 import MapPage from './components/MapPage'
+import AdminPage from './pages/admin/AdminPage'
 import './App.css'
 
-type Tab = 'map' | 'dashboard' | 'profile'
+type Tab = 'map' | 'dashboard' | 'profile' | 'admin'
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('map') 
@@ -56,6 +57,7 @@ function App() {
   const IconMap = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.553-.894L15 7m0 13V7" /></svg>
   const IconDash = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
   const IconUser = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+  const IconAdmin = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l2 5 5 .5-3.5 3 1 5L12 14l-4.5 2.5 1-5L5 7.5 10 7 12 2z" /></svg>
 
   const NavItem = ({ tab, label, icon: Icon }: { tab: Tab, label: string, icon: any }) => {
     const isActive = activeTab === tab;
@@ -80,21 +82,22 @@ function App() {
       {/* CONTENU PRINCIPAL */}
       <div className="flex-1 relative overflow-hidden">
         
-        {/* VUE MAP */}
         {activeTab === 'map' && (
           <div className="h-full w-full">
             <MapPage />
           </div>
         )}
 
-        {/* VUE DASHBOARD */}
         {activeTab === 'dashboard' && (
           <DashboardView />
         )}
 
-        {/* VUE PROFILE */}
         {activeTab === 'profile' && (
           <ProfileView />
+        )}
+
+        {activeTab === 'admin' && (
+          <AdminPage />
         )}
         
       </div>
@@ -103,6 +106,7 @@ function App() {
       <nav className="bg-white w-full border-t border-gray-200 h-16 shrink-0 flex justify-around items-center shadow-[0_-4px_15px_rgba(0,0,0,0.02)] z-[2000]">
         <NavItem tab="map" label="Carte" icon={IconMap} />
         <NavItem tab="dashboard" label="Tableau" icon={IconDash} />
+        <NavItem tab="admin" label="Admin" icon={IconAdmin} />
         <NavItem tab="profile" label="Profil" icon={IconUser} />
       </nav>
 

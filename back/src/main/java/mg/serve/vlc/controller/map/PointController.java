@@ -191,6 +191,62 @@ public class PointController {
     }
 
 
+    @GetMapping("/factories")
+    public ResponseEntity<ApiResponse> listFactories() {
+        try {
+            FactoryRepository factoryRepo = RepositoryProvider.getRepository(FactoryRepository.class);
+            List<Factory> factories = factoryRepo.findAll();
+            List<Map<String, Object>> payload = factories.stream()
+                .map(f -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", f.getId());
+                    map.put("label", f.getLabel());
+                    return map;
+                })
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(new ApiResponse("success", payload, null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
+
+    @GetMapping("/pointStates")
+    public ResponseEntity<ApiResponse> listPointStates() {
+        try {
+            PointStateRepository pointStateRepo = RepositoryProvider.getRepository(PointStateRepository.class);
+            List<PointState> pointStates = pointStateRepo.findAll();
+            List<Map<String, Object>> payload = pointStates.stream()
+                .map(ps -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", ps.getId());
+                    map.put("label", ps.getLabel());
+                    return map;
+                })
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(new ApiResponse("success", payload, null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
+
+    @GetMapping("/pointTypes")
+    public ResponseEntity<ApiResponse> listPointTypes() {
+        try {
+            PointTypeRepository pointTypeRepo = RepositoryProvider.getRepository(PointTypeRepository.class);
+            List<PointType> pointTypes = pointTypeRepo.findAll();
+            List<Map<String, Object>> payload = pointTypes.stream()
+                .map(pt -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", pt.getId());
+                    map.put("label", pt.getLabel());
+                    return map;
+                })
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(new ApiResponse("success", payload, null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
     
     /**
      * Admin only
