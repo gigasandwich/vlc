@@ -2,12 +2,25 @@ package mg.serve.vlc.controller.map;
 
 import mg.serve.vlc.controller.response.ApiResponse;
 import mg.serve.vlc.dto.PointDTO;
+import mg.serve.vlc.dto.PointUpdateDTO;
 import mg.serve.vlc.dto.PointsSummaryDTO;
+import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.map.Point;
+import mg.serve.vlc.model.map.PointState;
+import mg.serve.vlc.model.map.PointType;
+import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.repository.PointRepository;
+import mg.serve.vlc.repository.PointTypeRepository;
+import mg.serve.vlc.repository.pointState.PointStateRepository;
+import mg.serve.vlc.security.JwtService;
 import mg.serve.vlc.util.RepositoryProvider;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,11 +31,11 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/points")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class PointController {
-
-    public PointController() {
-           
-    }
+    @Autowired
+    private final JwtService jwtService;
 
     /**
      * Liste complète des points.
@@ -177,5 +190,56 @@ public class PointController {
         return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
     }
 
+    }
+
+
+    
+    /**
+     * Admin only
+     */
+    @PutMapping("/{id}")
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public ResponseEntity<ApiResponse> updatePoint(@PathVariable("id") Integer id, @RequestBody PointUpdateDTO dto, @RequestHeader("Authorization") String authHeader) {
+        try {
+            User user = jwtService.getUserFromAuthHeader(authHeader);
+            if (!user.isAdmin()) {
+                throw new BusinessLogicException("Only admins can update points");
+            }
+
+            Point point = RepositoryProvider.pointRepository.findById(id).orElse(null);
+            if (point == null) {
+                return ResponseEntity.badRequest().body(new ApiResponse("error", null, "Point not found"));
+            }
+
+            if (dto.getSurface() != null) {
+                point.setSurface(dto.getSurface());
+            }
+            if (dto.getBudget() != null) {
+                point.setBudget(dto.getBudget());
+            }
+            if (dto.getPointStateId() != null) {
+                PointStateRepository pointStateRepo = RepositoryProvider.getRepository(PointStateRepository.class);
+                PointState pointState = pointStateRepo.findById(dto.getPointStateId()).orElse(null);
+                if (pointState != null) {
+                    point.setPointState(pointState);
+                }
+            }
+            if (dto.getPointTypeId() != null) {
+                PointTypeRepository pointTypeRepo = RepositoryProvider.getRepository(PointTypeRepository.class);
+                PointType pointType = pointTypeRepo.findById(dto.getPointTypeId()).orElse(null);
+                if (pointType != null) {
+                    point.setPointType(pointType);
+                }
+            }
+
+            point.saveHistoric();
+            Point savedPoint = point.save();
+
+            return ResponseEntity.ok(new ApiResponse("success", savedPoint.getId(), null));
+        } catch (BusinessLogicException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
     }
 }
