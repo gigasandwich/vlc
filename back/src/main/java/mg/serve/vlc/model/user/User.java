@@ -226,4 +226,12 @@ public class User {
 
         return userMap;
     }
+
+    /****************************
+     * Util
+     ****************************/
+    
+    public boolean isAdmin() {
+        return this.getRoles().stream().anyMatch(role -> role.getLabel().equals("ADMIN"));
+    }
 }

@@ -72,7 +72,7 @@ public class SignInController {
         try {
             // Control
             User userFrom = jwtService.getUserFromAuthHeader(authHeader);
-            if (userFrom.getRoles().stream().noneMatch(role -> role.getLabel().equals("ADMIN"))) {
+            if (!userFrom.isAdmin()) {
                 throw new BusinessLogicException("Only admins can reset user blocks");
             }
 
