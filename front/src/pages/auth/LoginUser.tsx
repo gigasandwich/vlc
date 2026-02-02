@@ -6,8 +6,8 @@ interface LoginUserProps {
 }
 
 export default function LoginUser({ onResponse }: LoginUserProps) {
-  const [email, setEmail] = useState('user1@gmail.com')
-  const [password, setPassword] = useState('user1')
+  const [email, setEmail] = useState('admin@gmail.com')
+  const [password, setPassword] = useState('admin123')
   const [isLoading, setIsLoading] = useState(false)
 
   async function submit(e: React.FormEvent) {
@@ -26,6 +26,7 @@ export default function LoginUser({ onResponse }: LoginUserProps) {
       })
       const j = await r.json()
       if (j.status === 'success') {
+        localStorage.setItem('jwt', j.data.token)
         onResponse(j, 'success')
       } else {
         onResponse(j, 'error')
