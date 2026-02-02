@@ -20,12 +20,21 @@ function App() {
       setMessage(data.error || 'Erreur')
     }
   }
+  const handleRecapGlobResponse = (data:any,type:'success'|'error') => {
+    setMessageType(type)
+    if (type === 'success') {
+      } else {
+        setMessage(data.error || 'Erreur')
+        console.log('erreur dans le fetch du data')
+        setActiveTab('map') // Redirection auto vers la carte
+    }
+  }
 
   const DashboardView = () => (
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-50">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Tableau de bord</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <RecapGlob/>
+        <RecapGlob onResponse={handleRecapGlobResponse}/>
       </div>
     </div>
   )
