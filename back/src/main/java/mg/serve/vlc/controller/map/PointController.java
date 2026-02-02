@@ -149,7 +149,7 @@ public class PointController {
     @GetMapping("/summary")
     public ResponseEntity<ApiResponse> summary() {
         PointsSummaryDTO dto = RepositoryProvider.pointsSummaryRepository.getSummary();
-        return ResponseEntity.ok(new ApiResponse("OK", dto, null));
+        return ResponseEntity.ok(new ApiResponse("success", dto, null));
     }
 
     @GetMapping("/list")
@@ -181,7 +181,7 @@ public class PointController {
                     typeLabel
                 );
             })
-            .toList(); // Java 16+; use .collect(Collectors.toList()) if < Java 16
+            .toList();
 
         return ResponseEntity.ok(new ApiResponse("success", payload, null));
     } catch (Exception e) {

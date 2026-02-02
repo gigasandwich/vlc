@@ -11,7 +11,7 @@ public class PointsSummaryDTO {
     public PointsSummaryDTO(long nbPoints, double totalSurface, double avgProgress, double totalBudget) {
         this.nbPoints = nbPoints;
         this.totalSurface = totalSurface;
-        this.avgProgress = avgProgress;
+        this.avgProgress = avgProgress*100;
         this.totalBudget = totalBudget;
     }
 
