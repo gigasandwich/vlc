@@ -58,7 +58,7 @@ export default function RecapGlob({ onResponse }: recapGlobProps) {
           <tr>
             <td>{nbPoints}</td>
             <td>{totalSurface}</td>
-            <td>{avgProgress}</td>
+            <td>{avgProgress}%</td>
             <td>{totalBudget}</td>
           </tr>
         </tbody>
