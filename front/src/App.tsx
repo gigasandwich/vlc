@@ -33,9 +33,7 @@ function App() {
   const DashboardView = () => (
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-50">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Tableau de bord</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <RecapGlob onResponse={handleRecapGlobResponse}/>
-      </div>
+      <RecapGlob onResponse={handleRecapGlobResponse}/>
     </div>
   )
 
@@ -44,6 +42,7 @@ function App() {
       <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg border border-gray-200">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-slate-700">Connexion</h2>
+          <p className="text-gray-500 mt-2">Connectez-vous pour continuer</p>
         </div>
         {message && (
           <div className={`p-3 mb-4 rounded text-center ${
@@ -68,10 +67,10 @@ function App() {
       <button
         onClick={() => setActiveTab(tab)}
         className={`flex-1 flex flex-col items-center justify-center py-2 transition-all duration-200 ${
-          isActive ? 'text-blue-600 bg-blue-50/50' : 'text-gray-400 hover:text-gray-600'
+          isActive ? 'text-green-600 bg-green-50/50' : 'text-gray-400 hover:text-gray-600'
         }`}
       >
-        <div className={`p-1.5 rounded-full transition-transform duration-200 ${isActive ? '-translate-y-1 bg-blue-100 text-blue-600' : ''}`}>
+        <div className={`p-1.5 rounded-full transition-transform duration-200 ${isActive ? '-translate-y-1 bg-green-100 text-green-600' : ''}`}>
           <Icon />
         </div>
         <span className={`text-[10px] mt-1 font-medium ${isActive ? 'opacity-100' : 'opacity-70'}`}>{label}</span>

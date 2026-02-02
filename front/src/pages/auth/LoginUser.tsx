@@ -38,35 +38,34 @@ export default function LoginUser({ onResponse }: LoginUserProps) {
   }
 
   return (
-    <div className="auth-view">
-      <h2 style={{ marginBottom: '16px', textAlign: 'center' }}>Welcome Back</h2>
-      <form onSubmit={submit} className="auth-form">
-        <div className="form-group">
-          <label htmlFor="login-email">Email Address</label>
-          <input
-            id="login-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            placeholder="name@example.com"
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="login-password">Password</label>
-          <input
-            id="login-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            placeholder="••••••••"
-          />
-        </div>
-        <button type="submit" className="btn-submit" disabled={isLoading}>
-          {isLoading ? 'Signing In...' : 'Sign In'}
-        </button>
-      </form>
-    </div>
+    <form onSubmit={submit} className="space-y-4">
+      <div className="form-group">
+        <label htmlFor="login-email" className="text-sm font-medium text-gray-700">Email</label>
+        <input
+          id="login-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          placeholder="nom@example.com"
+          className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
+        />
+      </div>
+      <div className="form-group">
+        <label htmlFor="login-password"  className="text-sm font-medium text-gray-700">Mot de passe</label>
+        <input
+          id="login-password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          placeholder="••••••••"
+          className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
+        />
+      </div>
+      <button type="submit" className="w-full py-2.5 text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-300 ease-in-out disabled:bg-green-300" disabled={isLoading}>
+        {isLoading ? 'Connexion...' : 'Se connecter'}
+      </button>
+    </form>
   )
 }

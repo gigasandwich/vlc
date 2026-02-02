@@ -2,14 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root {
-	height: 100%;
-	width: 100%;
-	margin: 0;
-	padding: 0;
-}
-
 body {
-	-webkit-overflow-scrolling: touch;
-	overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
