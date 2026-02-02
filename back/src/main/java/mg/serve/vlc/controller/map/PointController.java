@@ -64,7 +64,7 @@ public class PointController {
                 points = pointRepository.findAll();
             }
 
-            List<PointDTO> payload = new ArrayList<>();
+            List<Map<String, Object>> payload = new ArrayList<>();
             for (Point p : points) {
                 org.locationtech.jts.geom.Point coords = p.getCoordinates();
                 Double lon = null;
@@ -77,21 +77,24 @@ public class PointController {
 
                 String stateLabel = p.getPointState() != null ? p.getPointState().getLabel() : null;
                 String typeLabel = p.getPointType() != null ? p.getPointType().getLabel() : null;
+                List<Integer> factoryIds = p.getFactories().stream().map(f -> f.getId()).collect(Collectors.toList());
+                String factoryLabels = p.getFactories().stream().map(f -> f.getLabel()).collect(Collectors.joining(", "));
 
-                PointDTO dto = new PointDTO(
-                        p.getId(),
-                        p.getDate(),
-                        p.getSurface(),
-                        p.getBudget(),
-                        lat,
-                        lon,
-                        p.getPointState() != null ? p.getPointState().getId() : null,
-                        stateLabel,
-                        p.getPointType() != null ? p.getPointType().getId() : null,
-                        typeLabel
-                );
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", p.getId());
+                map.put("date", p.getDate());
+                map.put("surface", p.getSurface());
+                map.put("budget", p.getBudget());
+                map.put("lat", lat);
+                map.put("lon", lon);
+                map.put("stateId", p.getPointState() != null ? p.getPointState().getId() : null);
+                map.put("stateLabel", stateLabel);
+                map.put("typeId", p.getPointType() != null ? p.getPointType().getId() : null);
+                map.put("typeLabel", typeLabel);
+                map.put("factoryIds", factoryIds);
+                map.put("factoryLabels", factoryLabels); // Lord forgive me
 
-                payload.add(dto);
+                payload.add(map);
             }
 
             return ResponseEntity.ok(new ApiResponse("success", payload, null));
@@ -137,7 +140,11 @@ public class PointController {
                     typeLabel
             );
 
-            return ResponseEntity.ok(new ApiResponse("success", dto, null));
+            Map<String, Object> data = new HashMap<>();
+            data.put("point", dto);
+            data.put("factoryIds", p.getFactories().stream().map(f -> f.getId()).collect(Collectors.toList()));
+
+            return ResponseEntity.ok(new ApiResponse("success", data, null));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }

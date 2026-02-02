@@ -23,10 +23,11 @@ export default function AdminPage() {
   const load = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${backendURL}/points/list`);
+      const res = await fetch(`${backendURL}/points`);
       const data = await res.json();
       if (data && data.data) {
         setPoints(data.data);
+        console.log(data);
       } else {
         setError('Invalid response');
       }
@@ -67,7 +68,7 @@ export default function AdminPage() {
       budget: point.budget || '',
       pointStateId: point.stateId || '',
       pointTypeId: point.typeId || '',
-      factoryIds: []
+      factoryIds: point.factoryIds || []
     });
     setIsEditing(true);
   };
@@ -133,8 +134,9 @@ export default function AdminPage() {
                 <th className="px-4 py-2">Date</th>
                 <th className="px-4 py-2">Surface</th>
                 <th className="px-4 py-2">Budget</th>
-                <th className="px-4 py-2">State</th>
-                <th className="px-4 py-2">Type</th>
+                <th className="px-4 py-2">Type</th>        
+                <th className="px-4 py-2">Entreprises</th>                
+                <th className="px-4 py-2">Etat</th>
                 <th className="px-4 py-2">Actions</th>
               </tr>
             </thead>
@@ -145,8 +147,9 @@ export default function AdminPage() {
                   <td className="px-4 py-2">{p.date}</td>
                   <td className="px-4 py-2">{p.surface}</td>
                   <td className="px-4 py-2">{p.budget}</td>
-                  <td className="px-4 py-2">{p.point_state_label}</td>
-                  <td className="px-4 py-2">{p.point_type_label}</td>
+                  <td className="px-4 py-2">{p.stateLabel}</td>
+                  <td className="px-4 py-2">{p.typeLabel}</td>
+                  <td className="px-4 py-2">{p.factoryLabels}</td>
                   <td className="px-4 py-2">
                     <button onClick={() => handleEdit(p)} className="px-2 py-1 bg-green-600 text-white rounded">Edit</button>
                   </td>
