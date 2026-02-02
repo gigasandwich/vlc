@@ -4,16 +4,13 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 
 import mg.serve.vlc.repository.*;
-import mg.serve.vlc.repository.user.FirebaseUserRepository;
-import mg.serve.vlc.repository.user.JpaUserRepository;
-import mg.serve.vlc.repository.user.UserRepository;
+import mg.serve.vlc.repository.user.*;
+import mg.serve.vlc.repository.userHistoric.*;
 import mg.serve.vlc.repository.userHistoric.UserHistoricRepository;
-import mg.serve.vlc.repository.userHistoric.JpaUserHistoricRepository;
-import mg.serve.vlc.repository.userHistoric.FirebaseUserHistoricRepository;
-
-import mg.serve.vlc.repository.example.FirebaseExampleRepository;
-import mg.serve.vlc.repository.example.JpaExampleRepository;
+import mg.serve.vlc.repository.example.*;
 import mg.serve.vlc.repository.example.ExampleRepository;
+import mg.serve.vlc.repository.pointState.*;
+import mg.serve.vlc.repository.example.*;
 
 import java.util.HashMap;
 
@@ -33,6 +30,9 @@ public class RepositoryProvider {
     public static PointRepository pointRepository;
     public static PointHistoricRepository pointHistoricRepository;
     public static PointsSummaryRepository pointsSummaryRepository;
+    public static PointStateRepository pointStateRepository;
+    public static PointTypeRepository pointTypeRepository;
+    public static FactoryRepository factoryRepository;
 
     @Autowired
     public RepositoryProvider(
@@ -43,7 +43,10 @@ public class RepositoryProvider {
             JpaUserRepository jpaUserRepository,
             PointRepository pointRepository,
             PointHistoricRepository pointHistoricRepository,
-            PointsSummaryRepository pointsSummaryRepository
+            PointsSummaryRepository pointsSummaryRepository,
+            PointStateRepository pointStateRepository,
+            PointTypeRepository pointTypeRepository,
+            FactoryRepository factoryRepository
         ) {
         RepositoryProvider.jpaExampleRepository = jpaExampleRepository;
         RepositoryProvider.jpaUserHistoricRepository = jpaUserHistoricRepository;
@@ -54,7 +57,10 @@ public class RepositoryProvider {
         RepositoryProvider.jpaUserRepository = jpaUserRepository;
         RepositoryProvider.pointRepository = pointRepository;
         RepositoryProvider.pointHistoricRepository = pointHistoricRepository;
-        RepositoryProvider.pointsSummaryRepository = pointsSummaryRepository;  
+        RepositoryProvider.pointsSummaryRepository = pointsSummaryRepository;
+        RepositoryProvider.pointStateRepository = pointStateRepository;
+        RepositoryProvider.pointTypeRepository = pointTypeRepository;
+        RepositoryProvider.factoryRepository = factoryRepository;
     }
 
     private static final Map<Class<?>, Object> firebaseRepositories = new HashMap<>();
@@ -69,14 +75,23 @@ public class RepositoryProvider {
 
         firebaseRepositories.put(UserHistoricRepository.class, new FirebaseUserHistoricRepository());
         jpaRepositories.put(UserHistoricRepository.class, jpaUserHistoricRepository);
+
+        firebaseRepositories.put(PointStateRepository.class, new FirebasePointStateRepository());
+        jpaRepositories.put(PointStateRepository.class, pointStateRepository);
+
+        jpaRepositories.put(PointTypeRepository.class, RepositoryProvider.pointTypeRepository);
+        jpaRepositories.put(FactoryRepository.class, RepositoryProvider.factoryRepository);
     }
 
     public static <T> T getRepository(Class<T> repositoryClass) {
-        if (checkFirebaseConnection()) {
-            return repositoryClass.cast(firebaseRepositories.get(repositoryClass));
-        } else {
-            return repositoryClass.cast(jpaRepositories.get(repositoryClass));
-        }
+        // if (checkFirebaseConnection()) {
+        //     return repositoryClass.cast(firebaseRepositories.get(repositoryClass));
+        // } else {
+        //     return repositoryClass.cast(jpaRepositories.get(repositoryClass));
+        // }
+
+        // For now, always use local repository for testing
+        return repositoryClass.cast(jpaRepositories.get(repositoryClass));
     }
     
     private static boolean checkFirebaseConnection() {

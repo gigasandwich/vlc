@@ -43,7 +43,7 @@ CREATE TABLE point_state(
    id SERIAL,
    label VARCHAR(50) NOT NULL,
    order_ DOUBLE PRECISION NOT NULL,
-   progress DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+   progress DOUBLE PRECISION NOT NULL,
    PRIMARY KEY(id),
    UNIQUE(label)
 );
@@ -110,8 +110,8 @@ CREATE TABLE user_role(
 CREATE TABLE point(
    id SERIAL,
    date_ TIMESTAMP NOT NULL,
-   surface DOUBLE PRECISION NOT NULL,
-   budget DOUBLE PRECISION NOT NULL,
+   surface DOUBLE PRECISION,
+   budget DOUBLE PRECISION,
    coordinates GEOMETRY(POINT, 4326) NOT NULL,
    user_id INTEGER NOT NULL,
    point_state_id INTEGER NOT NULL,
@@ -125,8 +125,8 @@ CREATE TABLE point(
 CREATE TABLE point_historic(
    id SERIAL,
    date_ TIMESTAMP NOT NULL,
-   surface DOUBLE PRECISION NOT NULL,
-   budget DOUBLE PRECISION NOT NULL,
+   surface DOUBLE PRECISION,
+   budget DOUBLE PRECISION,
    coordinates GEOMETRY(POINT, 4326) NOT NULL,
    point_id INTEGER NOT NULL,
    point_state_id INTEGER NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE point_factory(
    factory_id INTEGER,
    point_id INTEGER,
    id SERIAL,
-   date_modif TIMESTAMP NOT NULL,
+   date_modif TIMESTAMP NOT NULL DEFAULT NOW(),
    PRIMARY KEY(factory_id, point_id, id),
    FOREIGN KEY(factory_id) REFERENCES factory(id),
    FOREIGN KEY(point_id) REFERENCES point(id)

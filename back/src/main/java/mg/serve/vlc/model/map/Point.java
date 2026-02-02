@@ -3,6 +3,8 @@ package mg.serve.vlc.model.map;
 import lombok.*;
 import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.util.RepositoryProvider;
+import mg.serve.vlc.model.map.Factory;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
@@ -12,6 +14,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
+
+import java.util.*;
 
 @Entity
 @Table(name = "point")
@@ -52,6 +56,15 @@ public class Point {
     @JoinColumn(name = "point_type_id", nullable = false)
     private PointType pointType;
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "point_factory",
+        joinColumns = @JoinColumn(name = "point_id"),
+        inverseJoinColumns = @JoinColumn(name = "factory_id")
+    )
+    @JsonIgnore
+    private List<Factory> factories = new ArrayList<>();
+
     @Transactional(rollbackOn = Exception.class)
     public Point save() {
         return RepositoryProvider.pointRepository.save(this);
@@ -73,6 +86,22 @@ public class Point {
         Integer pointId = this.id;
         historic.setPointId(pointId);
         historic.setPointState( this.pointState );
-        RepositoryProvider.pointHistoricRepository.save(historic);
+        RepositoryProvider.pointHistoricRepository.save(historic); // TODO: add factories history too
+    }
+
+    /**
+     * Convenience setter to update the factories for this point
+     * It records a new PointFactory row per factory with the same timestamp
+     * so the newest timestamp identifies the current set of factories
+     */
+    @Transactional(rollbackOn = Exception.class)
+    public void setFactories(List<Factory> factories) {
+        this.factories.clear();
+        if (factories == null) return;
+        this.factories.addAll(factories);
+    }
+
+    public List<Factory> getFactories() {
+        return this.factories;
     }
 }

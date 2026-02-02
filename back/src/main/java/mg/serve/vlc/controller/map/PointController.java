@@ -2,27 +2,38 @@ package mg.serve.vlc.controller.map;
 
 import mg.serve.vlc.controller.response.ApiResponse;
 import mg.serve.vlc.dto.PointDTO;
+import mg.serve.vlc.dto.PointUpdateDTO;
 import mg.serve.vlc.dto.PointsSummaryDTO;
-import mg.serve.vlc.model.map.Point;
+import mg.serve.vlc.exception.BusinessLogicException;
+import mg.serve.vlc.model.map.*;
+import mg.serve.vlc.model.user.*;
 import mg.serve.vlc.repository.PointRepository;
+import mg.serve.vlc.repository.PointTypeRepository;
+import mg.serve.vlc.repository.FactoryRepository;
+import mg.serve.vlc.repository.pointState.PointStateRepository;
+import mg.serve.vlc.security.JwtService;
 import mg.serve.vlc.util.RepositoryProvider;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/points")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class PointController {
-
-    public PointController() {
-           
-    }
+    @Autowired
+    private final JwtService jwtService;
 
     /**
      * Liste complète des points.
@@ -53,7 +64,7 @@ public class PointController {
                 points = pointRepository.findAll();
             }
 
-            List<PointDTO> payload = new ArrayList<>();
+            List<Map<String, Object>> payload = new ArrayList<>();
             for (Point p : points) {
                 org.locationtech.jts.geom.Point coords = p.getCoordinates();
                 Double lon = null;
@@ -66,21 +77,24 @@ public class PointController {
 
                 String stateLabel = p.getPointState() != null ? p.getPointState().getLabel() : null;
                 String typeLabel = p.getPointType() != null ? p.getPointType().getLabel() : null;
+                List<Integer> factoryIds = p.getFactories().stream().map(f -> f.getId()).collect(Collectors.toList());
+                String factoryLabels = p.getFactories().stream().map(f -> f.getLabel()).collect(Collectors.joining(", "));
 
-                PointDTO dto = new PointDTO(
-                        p.getId(),
-                        p.getDate(),
-                        p.getSurface(),
-                        p.getBudget(),
-                        lat,
-                        lon,
-                        p.getPointState() != null ? p.getPointState().getId() : null,
-                        stateLabel,
-                        p.getPointType() != null ? p.getPointType().getId() : null,
-                        typeLabel
-                );
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", p.getId());
+                map.put("date", p.getDate());
+                map.put("surface", p.getSurface());
+                map.put("budget", p.getBudget());
+                map.put("lat", lat);
+                map.put("lon", lon);
+                map.put("stateId", p.getPointState() != null ? p.getPointState().getId() : null);
+                map.put("stateLabel", stateLabel);
+                map.put("typeId", p.getPointType() != null ? p.getPointType().getId() : null);
+                map.put("typeLabel", typeLabel);
+                map.put("factoryIds", factoryIds);
+                map.put("factoryLabels", factoryLabels); // Lord forgive me
 
-                payload.add(dto);
+                payload.add(map);
             }
 
             return ResponseEntity.ok(new ApiResponse("success", payload, null));
@@ -126,7 +140,11 @@ public class PointController {
                     typeLabel
             );
 
-            return ResponseEntity.ok(new ApiResponse("success", dto, null));
+            Map<String, Object> data = new HashMap<>();
+            data.put("point", dto);
+            data.put("factoryIds", p.getFactories().stream().map(f -> f.getId()).collect(Collectors.toList()));
+
+            return ResponseEntity.ok(new ApiResponse("success", data, null));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }
@@ -177,5 +195,120 @@ public class PointController {
         return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
     }
 
+    }
+
+
+    @GetMapping("/factories")
+    public ResponseEntity<ApiResponse> listFactories() {
+        try {
+            FactoryRepository factoryRepo = RepositoryProvider.getRepository(FactoryRepository.class);
+            List<Factory> factories = factoryRepo.findAll();
+            List<Map<String, Object>> payload = factories.stream()
+                .map(f -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", f.getId());
+                    map.put("label", f.getLabel());
+                    return map;
+                })
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(new ApiResponse("success", payload, null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
+
+    @GetMapping("/pointStates")
+    public ResponseEntity<ApiResponse> listPointStates() {
+        try {
+            PointStateRepository pointStateRepo = RepositoryProvider.getRepository(PointStateRepository.class);
+            List<PointState> pointStates = pointStateRepo.findAll();
+            List<Map<String, Object>> payload = pointStates.stream()
+                .map(ps -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", ps.getId());
+                    map.put("label", ps.getLabel());
+                    return map;
+                })
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(new ApiResponse("success", payload, null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
+
+    @GetMapping("/pointTypes")
+    public ResponseEntity<ApiResponse> listPointTypes() {
+        try {
+            PointTypeRepository pointTypeRepo = RepositoryProvider.getRepository(PointTypeRepository.class);
+            List<PointType> pointTypes = pointTypeRepo.findAll();
+            List<Map<String, Object>> payload = pointTypes.stream()
+                .map(pt -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", pt.getId());
+                    map.put("label", pt.getLabel());
+                    return map;
+                })
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(new ApiResponse("success", payload, null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
+    
+    /**
+     * Admin only
+     */
+    @PutMapping("/{id}")
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public ResponseEntity<ApiResponse> updatePoint(@PathVariable("id") Integer id, @RequestBody PointUpdateDTO dto, @RequestHeader("Authorization") String authHeader) {
+        try {
+            User user = jwtService.getUserFromAuthHeader(authHeader);
+            if (!user.isAdmin()) {
+                throw new BusinessLogicException("Only admins can update points");
+            }
+
+            Point point = RepositoryProvider.pointRepository.findById(id).orElse(null);
+            if (point == null) {
+                return ResponseEntity.badRequest().body(new ApiResponse("error", null, "Point not found"));
+            }
+
+            if (dto.getSurface() != null) {
+                point.setSurface(dto.getSurface());
+            }
+            if (dto.getBudget() != null) {
+                point.setBudget(dto.getBudget());
+            }
+            if (dto.getPointStateId() != null) {
+                PointStateRepository pointStateRepo = RepositoryProvider.getRepository(PointStateRepository.class);
+                PointState pointState = pointStateRepo.findById(dto.getPointStateId()).orElse(null);
+                if (pointState != null) {
+                    point.setPointState(pointState);
+                }
+            }
+            if (dto.getPointTypeId() != null) {
+                PointTypeRepository pointTypeRepo = RepositoryProvider.getRepository(PointTypeRepository.class);
+                PointType pointType = pointTypeRepo.findById(dto.getPointTypeId()).orElse(null);
+                if (pointType != null) {
+                    point.setPointType(pointType);
+                }
+            }
+
+            if (dto.getFactoryIds() != null) {
+                List<Factory> factories = dto.getFactoryIds().stream()
+                        .map(fid -> RepositoryProvider.getRepository(FactoryRepository.class).findById(fid).orElse(null))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+                point.setFactories(factories);
+            }
+
+            point.saveHistoric();
+            Point savedPoint = point.save();
+
+            return ResponseEntity.ok(new ApiResponse("success", savedPoint.getId(), null));
+        } catch (BusinessLogicException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
     }
 }
