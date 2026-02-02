@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import LoginUser from './pages/auth/LoginUser'
+import RecapGlob from './pages/dashboard/recapGlob'
 import MapPage from './components/MapPage'
 import './App.css'
 
@@ -24,12 +25,7 @@ function App() {
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-50">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Tableau de bord</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {['Incidents Total', 'Usines Actives', 'Budget Engagé', 'Équipes Terrain'].map((title, i) => (
-          <div key={i} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-gray-500 text-sm font-medium uppercase">{title}</h3>
-            <p className="text-3xl font-bold text-slate-800 mt-2">{Math.floor(Math.random() * 100)}</p>
-          </div>
-        ))}
+        <RecapGlob/>
       </div>
     </div>
   )
