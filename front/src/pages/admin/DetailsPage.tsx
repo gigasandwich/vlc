@@ -244,7 +244,7 @@ export default function DetailsPage() {
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Info Details</h2>
-          <p className="text-sm text-gray-500">Gestion locale (liste + update + delete, sans création)</p>
+          <p className="text-sm text-gray-500">Gestion locale</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <TabButton value="points" label="Points" />
@@ -343,7 +343,7 @@ export default function DetailsPage() {
           <aside className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 md:p-6">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-slate-800">Édition</h3>
-              <p className="text-sm text-gray-500">Update uniquement (pas de création)</p>
+              <p className="text-sm text-gray-500">Update uniquement</p>
             </div>
 
             {!editingPoint || !pointForm ? (
