@@ -113,6 +113,8 @@ CREATE TABLE point(
    surface DOUBLE PRECISION,
    budget DOUBLE PRECISION,
    coordinates GEOMETRY(POINT, 4326) NOT NULL,
+   updated_at TIMESTAMP,
+   deleted_at TIMESTAMP,
    user_id INTEGER NOT NULL,
    point_state_id INTEGER NOT NULL,
    point_type_id INTEGER NOT NULL,
@@ -139,7 +141,7 @@ CREATE TABLE point_factory(
    factory_id INTEGER,
    point_id INTEGER,
    id SERIAL,
-   date_modif TIMESTAMP NOT NULL DEFAULT NOW(),
+   updated_at TIMESTAMP NOT NULL DEFAULT NOW(), -- TODO: make it be the updated point date, not always now
    PRIMARY KEY(factory_id, point_id, id),
    FOREIGN KEY(factory_id) REFERENCES factory(id),
    FOREIGN KEY(point_id) REFERENCES point(id)

@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -93,6 +93,7 @@ public class PointController {
                 map.put("typeLabel", typeLabel);
                 map.put("factoryIds", factoryIds);
                 map.put("factoryLabels", factoryLabels); // Lord forgive me
+                map.put("updatedAt", p.getUpdatedAt());
 
                 payload.add(map);
             }
@@ -307,10 +308,20 @@ public class PointController {
 
             if (dto.getFactoryIds() != null) {
                 List<Factory> factories = dto.getFactoryIds().stream()
-                        .map(fid -> RepositoryProvider.getRepository(FactoryRepository.class).findById(fid).orElse(null))
+                        .map(fid -> {
+                            Factory f = RepositoryProvider.getRepository(FactoryRepository.class).findById(fid).orElse(null);
+                            // f.setUpdatedAt(dto.getUpdatedAt() != null ? dto.getUpdatedAt() : LocalDateTime.now());
+                            return f;
+                        })
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList());
                 point.setFactories(factories);
+            }
+
+            if (dto.getUpdatedAt() != null) {
+                point.setUpdatedAt(dto.getUpdatedAt());
+            } else {
+                point.setUpdatedAt(LocalDateTime.now());
             }
 
             point.saveHistoric();
