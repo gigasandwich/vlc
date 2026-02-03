@@ -335,6 +335,20 @@ public class PointController {
     @GetMapping("/work-delay")
     public ResponseEntity<ApiResponse> getWorkDelay() {
         try {
+            // helper to format ms into human readable string
+            java.util.function.Function<Long, String> fmt = (ms) -> {
+                if (ms == null) return null;
+                java.time.Duration d = java.time.Duration.ofMillis(ms);
+                long days = d.toDays();
+                long hours = d.toHours() % 24;
+                long minutes = d.toMinutes() % 60;
+                long seconds = d.getSeconds() % 60;
+                if (days > 0) return String.format("%dd %dh %dm", days, hours, minutes);
+                if (hours > 0) return String.format("%dh %dm", hours, minutes);
+                if (minutes > 0) return String.format("%dm %ds", minutes, seconds);
+                return String.format("%ds", seconds);
+            };
+
             // get finished point ids via repository
             var wtRepo = RepositoryProvider.getRepository(mg.serve.vlc.repository.WorkTreatmentRepository.class);
             java.util.List<Integer> finishedIds = wtRepo.getFinishedWork();
@@ -343,6 +357,13 @@ public class PointController {
 
             // load all historic entries once
             java.util.List<mg.serve.vlc.model.map.PointHistoric> allHistorics = RepositoryProvider.pointHistoricRepository.findAll();
+
+            long sumTotal = 0L;
+            int countTotal = 0;
+            long sumNew = 0L;
+            int countNew = 0;
+            long sumInProg = 0L;
+            int countInProg = 0;
 
             for (Integer pid : finishedIds) {
                 try {
@@ -398,10 +419,8 @@ public class PointController {
                         }
                     }
 
-                    // As a fallback, if date1 not found in historic but current point state is finished, use now (or point save)
-                    if (date1 == null && p.getPointState() != null && p.getPointState().getProgress() != null
-                            && Double.valueOf(p.getPointState().getProgress()).equals(Double.valueOf(1.0))) {
-                        // try to find the latest historic entry with progress 1.0; if none, use latest historic date
+                    // attempt to find latest 1.0 historic if date1 missing
+                    if (date1 == null) {
                         java.util.Optional<mg.serve.vlc.model.map.PointHistoric> lastWith1 = histForPoint.stream()
                             .filter(h -> h.getPointState() != null && h.getPointState().getProgress() != null
                                 && Double.valueOf(h.getPointState().getProgress()).equals(Double.valueOf(1.0)))
@@ -418,7 +437,26 @@ public class PointController {
                         inProgressDelay = java.time.Duration.between(date05, date1).toMillis();
                     }
 
-                    WorkTreatmentDTO wt = new WorkTreatmentDTO(pointDTO, newDelay, inProgressDelay);
+                    Long total = null;
+                    if (newDelay != null) {
+                        sumNew += newDelay;
+                        countNew += 1;
+                    }
+                    if (inProgressDelay != null) {
+                        sumInProg += inProgressDelay;
+                        countInProg += 1;
+                    }
+                    if (newDelay != null && inProgressDelay != null) {
+                        total = newDelay + inProgressDelay;
+                        sumTotal += total;
+                        countTotal += 1;
+                    }
+
+                    String newLabel = fmt.apply(newDelay);
+                    String inProgressLabel = fmt.apply(inProgressDelay);
+                    String totalLabel = fmt.apply(total);
+
+                    WorkTreatmentDTO wt = new WorkTreatmentDTO(pointDTO, newDelay, inProgressDelay, newLabel, inProgressLabel, total, totalLabel);
                     payload.add(wt);
 
                 } catch (Exception ex) {
@@ -426,7 +464,25 @@ public class PointController {
                 }
             }
 
-            return ResponseEntity.ok(new ApiResponse("success", payload, null));
+            Long avgNew = countNew > 0 ? Math.round((double) sumNew / countNew) : null;
+            Long avgInProg = countInProg > 0 ? Math.round((double) sumInProg / countInProg) : null;
+            Long avgTotal = countTotal > 0 ? Math.round((double) sumTotal / countTotal) : null;
+
+            String avgNewLabel = fmt.apply(avgNew);
+            String avgInProgLabel = fmt.apply(avgInProg);
+            String avgLabel = fmt.apply(avgTotal);
+
+            // Return a map containing the list of WorkTreatmentDTO and the global averages
+            java.util.Map<String, Object> out = new java.util.HashMap<>();
+            out.put("workTreatments", payload);
+            out.put("average0to05Ms", avgNew);
+            out.put("average0to05Label", avgNewLabel);
+            out.put("average05to1Ms", avgInProg);
+            out.put("average05to1Label", avgInProgLabel);
+            out.put("average0to1Ms", avgTotal);
+            out.put("average0to1Label", avgLabel);
+
+            return ResponseEntity.ok(new ApiResponse("success", out, null));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }
