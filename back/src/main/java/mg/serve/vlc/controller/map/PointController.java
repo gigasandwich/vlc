@@ -4,6 +4,8 @@ import mg.serve.vlc.controller.response.ApiResponse;
 import mg.serve.vlc.dto.PointDTO;
 import mg.serve.vlc.dto.PointUpdateDTO;
 import mg.serve.vlc.dto.PointsSummaryDTO;
+import mg.serve.vlc.dto.WorkTreatmentDTO;
+import mg.serve.vlc.dto.PointInProgressDTO;
 import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.map.*;
 import mg.serve.vlc.model.user.*;
@@ -319,6 +321,112 @@ public class PointController {
             return ResponseEntity.ok(new ApiResponse("success", savedPoint.getId(), null));
         } catch (BusinessLogicException e) {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
+
+    @GetMapping("/in-progress")
+    public ResponseEntity<ApiResponse> getPointInProgress() {
+        List<PointInProgressDTO> dto = RepositoryProvider.pointInProgressRepository.getPointInProgress();
+        return ResponseEntity.ok(new ApiResponse("success", dto, null));
+    }
+
+    @GetMapping("/work-delay")
+    public ResponseEntity<ApiResponse> getWorkDelay() {
+        try {
+            // get finished point ids via repository
+            var wtRepo = RepositoryProvider.getRepository(mg.serve.vlc.repository.WorkTreatmentRepository.class);
+            java.util.List<Integer> finishedIds = wtRepo.getFinishedWork();
+
+            java.util.List<WorkTreatmentDTO> payload = new java.util.ArrayList<>();
+
+            // load all historic entries once
+            java.util.List<mg.serve.vlc.model.map.PointHistoric> allHistorics = RepositoryProvider.pointHistoricRepository.findAll();
+
+            for (Integer pid : finishedIds) {
+                try {
+                    mg.serve.vlc.model.map.Point p = RepositoryProvider.pointRepository.findById(pid).orElse(null);
+                    if (p == null) continue;
+
+                    // build PointDTO for this point (similar to getPoint)
+                    org.locationtech.jts.geom.Point coords = p.getCoordinates();
+                    Double lon = coords != null ? coords.getX() : null;
+                    Double lat = coords != null ? coords.getY() : null;
+
+                    Integer stateId = p.getPointState() != null ? p.getPointState().getId() : null;
+                    String stateLabel = p.getPointState() != null ? p.getPointState().getLabel() : null;
+
+                    Integer typeId = p.getPointType() != null ? p.getPointType().getId() : null;
+                    String typeLabel = p.getPointType() != null ? p.getPointType().getLabel() : null;
+
+                    PointDTO pointDTO = new PointDTO(
+                        p.getId(),
+                        p.getDate(),
+                        p.getSurface(),
+                        p.getBudget(),
+                        lat,
+                        lon,
+                        stateId,
+                        stateLabel,
+                        typeId,
+                        typeLabel
+                    );
+
+                    // filter historic entries for this point and sort by date
+                    java.util.List<mg.serve.vlc.model.map.PointHistoric> histForPoint = allHistorics.stream()
+                        .filter(h -> h.getPointId() != null && h.getPointId().equals(pid))
+                        .sorted((a,b) -> a.getDate().compareTo(b.getDate()))
+                        .collect(java.util.stream.Collectors.toList());
+
+                    java.time.LocalDateTime date0 = null;
+                    java.time.LocalDateTime date05 = null;
+                    java.time.LocalDateTime date1 = null;
+
+                    for (mg.serve.vlc.model.map.PointHistoric h : histForPoint) {
+                        if (h.getPointState() != null && h.getPointState().getProgress() != null) {
+                            double prog = h.getPointState().getProgress();
+                            if (date0 == null && Double.valueOf(prog).equals(Double.valueOf(0.0))) {
+                                date0 = h.getDate();
+                            }
+                            if (date05 == null && Double.valueOf(prog).equals(Double.valueOf(0.5))) {
+                                date05 = h.getDate();
+                            }
+                            if (date1 == null && Double.valueOf(prog).equals(Double.valueOf(1.0))) {
+                                date1 = h.getDate();
+                            }
+                        }
+                    }
+
+                    // As a fallback, if date1 not found in historic but current point state is finished, use now (or point save)
+                    if (date1 == null && p.getPointState() != null && p.getPointState().getProgress() != null
+                            && Double.valueOf(p.getPointState().getProgress()).equals(Double.valueOf(1.0))) {
+                        // try to find the latest historic entry with progress 1.0; if none, use latest historic date
+                        java.util.Optional<mg.serve.vlc.model.map.PointHistoric> lastWith1 = histForPoint.stream()
+                            .filter(h -> h.getPointState() != null && h.getPointState().getProgress() != null
+                                && Double.valueOf(h.getPointState().getProgress()).equals(Double.valueOf(1.0)))
+                            .reduce((first, second) -> second);
+                        if (lastWith1.isPresent()) date1 = lastWith1.get().getDate();
+                    }
+
+                    Long newDelay = null;
+                    Long inProgressDelay = null;
+                    if (date0 != null && date05 != null) {
+                        newDelay = java.time.Duration.between(date0, date05).toMillis();
+                    }
+                    if (date05 != null && date1 != null) {
+                        inProgressDelay = java.time.Duration.between(date05, date1).toMillis();
+                    }
+
+                    WorkTreatmentDTO wt = new WorkTreatmentDTO(pointDTO, newDelay, inProgressDelay);
+                    payload.add(wt);
+
+                } catch (Exception ex) {
+                    // skip problematic point but continue
+                }
+            }
+
+            return ResponseEntity.ok(new ApiResponse("success", payload, null));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }
