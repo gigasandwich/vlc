@@ -1,9 +1,14 @@
 package mg.serve.vlc.repository.pointState;
 
 import mg.serve.vlc.model.map.PointState;
-import java.util.Optional;
+import java.util.*;
 
 public class FirebasePointStateRepository implements PointStateRepository {
+    @Override
+    public List<PointState> findAll() {
+        throw new UnsupportedOperationException("Firebase not implemented for PointState");
+    }
+
     @Override
     public Optional<PointState> findById(Integer id) {
         throw new UnsupportedOperationException("Firebase not implemented for PointState");

@@ -118,7 +118,7 @@ export default function AdminPage() {
   return (
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-50">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Administration — Points</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Points</h2>
         <button onClick={load} className="px-3 py-1 bg-blue-600 text-white rounded">Refresh</button>
       </div>
 
@@ -147,9 +147,9 @@ export default function AdminPage() {
                   <td className="px-4 py-2">{p.date}</td>
                   <td className="px-4 py-2">{p.surface}</td>
                   <td className="px-4 py-2">{p.budget}</td>
-                  <td className="px-4 py-2">{p.stateLabel}</td>
                   <td className="px-4 py-2">{p.typeLabel}</td>
                   <td className="px-4 py-2">{p.factoryLabels}</td>
+                  <td className="px-4 py-2">{p.stateLabel}</td>
                   <td className="px-4 py-2">
                     <button onClick={() => handleEdit(p)} className="px-2 py-1 bg-green-600 text-white rounded">Edit</button>
                   </td>
