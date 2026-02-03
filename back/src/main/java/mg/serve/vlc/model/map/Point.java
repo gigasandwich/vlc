@@ -31,6 +31,12 @@ public class Point {
     @Column(name = "date_", nullable = false)
     private LocalDateTime date;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @Column(nullable = false)
     private Double surface;
 
@@ -79,7 +85,7 @@ public class Point {
     @Transactional(rollbackOn = Exception.class)
     public void saveHistoric() {
         PointHistoric historic = new PointHistoric();
-        historic.setDate(LocalDateTime.now());
+        historic.setDate(this.getUpdatedAt() != null ? this.getUpdatedAt() : LocalDateTime.now()); // IDk if this is okay, plz feedback
         historic.setSurface(this.surface);
         historic.setBudget(this.budget);
         historic.setCoordinates(this.coordinates);
@@ -103,5 +109,12 @@ public class Point {
 
     public List<Factory> getFactories() {
         return this.factories;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        if (this.updatedAt == null) {
+            return this.date;
+        }
+        return this.updatedAt;
     }
 }
