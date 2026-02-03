@@ -33,6 +33,7 @@ public class RepositoryProvider {
     public static PointStateRepository pointStateRepository;
     public static PointTypeRepository pointTypeRepository;
     public static FactoryRepository factoryRepository;
+    public static PointFactoryRepository pointFactoryRepository;
 
     @Autowired
     public RepositoryProvider(
@@ -44,6 +45,7 @@ public class RepositoryProvider {
             PointRepository pointRepository,
             PointHistoricRepository pointHistoricRepository,
             PointsSummaryRepository pointsSummaryRepository,
+            PointFactoryRepository pointFactoryRepository,
             PointStateRepository pointStateRepository,
             PointTypeRepository pointTypeRepository,
             FactoryRepository factoryRepository
@@ -61,6 +63,7 @@ public class RepositoryProvider {
         RepositoryProvider.pointStateRepository = pointStateRepository;
         RepositoryProvider.pointTypeRepository = pointTypeRepository;
         RepositoryProvider.factoryRepository = factoryRepository;
+        RepositoryProvider.pointFactoryRepository = pointFactoryRepository;
     }
 
     private static final Map<Class<?>, Object> firebaseRepositories = new HashMap<>();

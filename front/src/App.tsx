@@ -6,6 +6,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPoints from './pages/admin/AdminPoints';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import DetailsPage from './pages/admin/DetailsPage.tsx';
+import ResetBlockingPage from './pages/admin/ResetBlockingPage';
 import BottomNav from './components/BottomNav';
 import UserInfo from './components/UserInfo';
 import './App.css';
@@ -49,6 +50,7 @@ function App() {
             <Route path="/details" element={isAdmin ? <DetailsPage /> : <Navigate to="/profile" replace />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/points" element={<AdminPoints />} />
+            <Route path="/admin/reset-blocking" element={<ResetBlockingPage />} />
             <Route path="/profile" element={
               <div className="h-full w-full bg-gray-50 flex items-center justify-center p-4 overflow-y-auto">
                 <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg border border-gray-200">

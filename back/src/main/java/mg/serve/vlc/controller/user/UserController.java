@@ -8,6 +8,8 @@ import mg.serve.vlc.util.RepositoryProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import mg.serve.vlc.security.JwtService;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -16,6 +18,31 @@ public class UserController {
 
     public UserController(JwtService jwtService) {
         this.jwtService = jwtService;
+    }
+
+    @GetMapping("/blocked")
+    public ResponseEntity<ApiResponse> getBlockedUsers(@RequestHeader("Authorization") String authHeader) {
+        try {
+            User user = jwtService.getUserFromAuthHeader(authHeader);
+            if (!user.isAdmin()) {
+                return ResponseEntity.status(403).body(new ApiResponse("error", null, "Only admins can view blocked users"));
+            }
+
+            UserRepository userRepository = RepositoryProvider.getRepository(UserRepository.class);
+            List<User> blockedUsers = userRepository.findByUserStateId(3);
+
+            List<Map<String, Object>> data = blockedUsers.stream().map(u -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", u.getId());
+                m.put("email", u.getEmail());
+                m.put("username", u.getUsername());
+                return m;
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(new ApiResponse("success", data, null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
     }
 
     @PutMapping("/update")

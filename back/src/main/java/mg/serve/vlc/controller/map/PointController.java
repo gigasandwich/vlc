@@ -188,8 +188,20 @@ public class PointController {
                     typeLabel
                 );
             })
-            .toList();
-
+            .toList(); // Java 16+; use .collect(Collectors.toList()) if < Java 16
+        // Populate factories list for each DTO using PointFactoryRepository
+        try {
+            payload.forEach(dto -> {
+                try {
+                    List<String> labels = PointFactory.getFactoryLabelsForPoint(dto.id);
+                    dto.factories = labels != null ? labels : new java.util.ArrayList<>();
+                } catch (Exception ex) {
+                    dto.factories = new java.util.ArrayList<>();
+                }
+            });
+        } catch (Exception ex) {
+            // ignore
+        }
         return ResponseEntity.ok(new ApiResponse("success", payload, null));
     } catch (Exception e) {
         return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));

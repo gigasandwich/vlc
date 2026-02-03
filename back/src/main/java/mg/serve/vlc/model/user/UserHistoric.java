@@ -27,7 +27,7 @@ public class UserHistoric {
     @Column(name = "date_")
     private LocalDateTime date;
     private Integer userId;
-    private String userFbId;
+    // private String userFbId;
     private Integer userStateId;
 
     public Map<String, Object> toMap() {
@@ -38,7 +38,7 @@ public class UserHistoric {
         map.put("username", username);
         map.put("date", date != null ? Date.from(date.atZone(ZoneId.systemDefault()).toInstant()) : null);
         map.put("userId", userId);
-        map.put("userFbId", userFbId);
+        // map.put("userFbId", userFbId);
         map.put("userStateId", userStateId);
         return map;
     }
