@@ -13,6 +13,11 @@ import com.google.firebase.auth.ExportedUserRecord;
 public class FirebaseUserRepository implements UserRepository {
 
     @Override
+    public List<User> findAll() {
+        throw new UnsupportedOperationException("Unimplemented method 'findAll'");
+    }
+
+    @Override
     public User save(User user) {
         try {
             System.out.println("Saving user to Firebase: " + user.getEmail());
@@ -63,24 +68,29 @@ public class FirebaseUserRepository implements UserRepository {
     }
 
     @Override
-    public List<User> findAll() {
+    public List<User> findByUserStateId(Integer userStateId) {
         try {
-            System.out.println("Fetching all users from Firebase");
+            System.out.println("Fetching users from Firebase by userStateId: " + userStateId);
 
-            Iterable<ExportedUserRecord> userRecords = FirebaseAuth.getInstance().listUsers(null).getValues();
+            Firestore firestore = FirestoreClient.getFirestore();
+            Iterable<com.google.cloud.firestore.DocumentReference> docs = firestore.collection("users").listDocuments();
             List<User> users = new ArrayList<>();
 
-            for (ExportedUserRecord userRecord : userRecords) {
-                User user = new User();
-                user.setEmail(userRecord.getEmail());
-                user.setUsername(userRecord.getDisplayName());
-                users.add(user);
+            for (com.google.cloud.firestore.DocumentReference doc : docs) {
+                Map<String, Object> data = doc.get().get().getData();
+                if (data != null && data.get("userStateId") != null && ((Long) data.get("userStateId")).intValue() == userStateId) {
+                    User user = new User();
+                    user.setEmail((String) data.get("email"));
+                    user.setUsername((String) data.get("username"));
+                    user.setUserStateId(((Long) data.get("userStateId")).intValue());
+                    users.add(user);
+                }
             }
 
             return users;
         } catch (Exception e) {
-            System.err.println("Error fetching users from Firebase: " + e.getMessage());
-            throw new RuntimeException("Failed to fetch users from Firebase", e);
+            System.err.println("Error fetching users by userStateId from Firebase: " + e.getMessage());
+            throw new RuntimeException("Failed to fetch users by userStateId from Firebase", e);
         }
     }
 }

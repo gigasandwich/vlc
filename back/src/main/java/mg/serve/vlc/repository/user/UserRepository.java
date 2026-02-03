@@ -13,4 +13,6 @@ public interface UserRepository {
     Optional<User> findById(Integer id);
 
     List<User> findAll();
+
+    List<User> findByUserStateId(Integer userStateId);
 }
