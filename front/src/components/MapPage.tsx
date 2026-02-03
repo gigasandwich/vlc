@@ -16,6 +16,7 @@ import { backendURL } from '../constant';
 type PointType = 'circle' | 'square' | 'triangle' | 'all';
 
 interface BackendPointData {
+  point_state_label: string;
   id: number;
   date?: string;
   surface?: number;
