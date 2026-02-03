@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { backendURL } from '../../constant';
 
-export default function AdminPage() {
+export default function PointsAdminPage() {
   const [points, setPoints] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
