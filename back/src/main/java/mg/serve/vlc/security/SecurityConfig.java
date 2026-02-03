@@ -46,7 +46,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/points", "/points/summary", "/points/list",
                     "/points/factories", "/points/pointStates", "/points/pointTypes",
-                    "/points/inProgress"
+                    "/points/inProgress","/points/work-delay"
                 ).permitAll()
 
                 .anyRequest().authenticated()

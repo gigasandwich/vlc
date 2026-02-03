@@ -16,8 +16,7 @@ public class SwaggerConfig {
                     "/auth/sign-up",
                     "/auth/reset-block/{userId}",
                     "/users/update",
-                    "/users/delete",
-                    "/points/in-progress"
+                    "/users/delete"
                 )
                 .build();
     }
@@ -26,7 +25,7 @@ public class SwaggerConfig {
     public GroupedOpenApi pointsApi() {
         return GroupedOpenApi.builder()
                 .group("points")
-                .pathsToMatch("/points/summary","/points/list", "/points/{id}","/points/in-progress")
+                .pathsToMatch("/points/summary","/points/list", "/points/{id}","/points/in-progress","/points/work-delay")
                 .build();
     }
     
