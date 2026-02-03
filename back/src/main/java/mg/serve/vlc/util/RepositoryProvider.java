@@ -34,7 +34,6 @@ public class RepositoryProvider {
     public static PointStateRepository pointStateRepository;
     public static PointTypeRepository pointTypeRepository;
     public static FactoryRepository factoryRepository;
-    public static PointFactoryRepository pointFactoryRepository;
     public static PointInProgressRepository pointInProgressRepository;
     public static WorkTreatmentRepository workTreatmentRepository;
 
@@ -48,7 +47,6 @@ public class RepositoryProvider {
             PointRepository pointRepository,
             PointHistoricRepository pointHistoricRepository,
             PointsSummaryRepository pointsSummaryRepository,
-            PointFactoryRepository pointFactoryRepository,
             PointStateRepository pointStateRepository,
             PointTypeRepository pointTypeRepository,
             FactoryRepository factoryRepository,
@@ -69,7 +67,6 @@ public class RepositoryProvider {
         RepositoryProvider.pointStateRepository = pointStateRepository;
         RepositoryProvider.pointTypeRepository = pointTypeRepository;
         RepositoryProvider.factoryRepository = factoryRepository;
-        RepositoryProvider.pointFactoryRepository = pointFactoryRepository;
         RepositoryProvider.pointInProgressRepository=pointInProgressRepository;
         RepositoryProvider.workTreatmentRepository = workTreatmentRepository;
     }

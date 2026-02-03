@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { backendURL } from '../../constant';
+import { formatDate } from '../../utils';
 
 export default function AdminPoints() {
   const [points, setPoints] = useState<any[] | null>(null);
@@ -17,7 +18,8 @@ export default function AdminPoints() {
     budget: '',
     pointStateId: '',
     pointTypeId: '',
-    factoryIds: [] as number[]
+    factoryIds: [] as number[],
+    updatedAt: '',
   });
 
   const load = async () => {
@@ -68,7 +70,8 @@ export default function AdminPoints() {
       budget: point.budget || '',
       pointStateId: point.stateId || '',
       pointTypeId: point.typeId || '',
-      factoryIds: point.factoryIds || []
+      factoryIds: point.factoryIds || [],
+      updatedAt: new Date().toISOString().slice(0, 16),
     });
     setIsEditing(true);
   };
@@ -81,6 +84,7 @@ export default function AdminPoints() {
       return;
     }
     try {
+      const updatedAt = formData.updatedAt.length === 16 ? formData.updatedAt + ':00' : formData.updatedAt;
       const res = await fetch(`${backendURL}/points/${selectedPoint.id}`, {
         method: 'PUT',
         headers: {
@@ -92,14 +96,16 @@ export default function AdminPoints() {
           budget: parseFloat(formData.budget),
           pointStateId: parseInt(formData.pointStateId),
           pointTypeId: parseInt(formData.pointTypeId),
-          factoryIds: formData.factoryIds
+          factoryIds: formData.factoryIds,
+          updatedAt: updatedAt,
         })
       });
       if (res.ok) {
         setIsEditing(false);
         load();
       } else {
-        alert('Update failed');
+        const data = await res.json();
+        alert(`Update failed: ${res.status} ${res.statusText}\n${data.error}`);
       }
     } catch (e: any) {
       alert('Error: ' + e.message);
@@ -138,13 +144,14 @@ export default function AdminPoints() {
                 <th className="px-4 py-2">Entreprises</th>                
                 <th className="px-4 py-2">Etat</th>
                 <th className="px-4 py-2">Actions</th>
+                <th className="px-4 py-2">Updated At</th>
               </tr>
             </thead>
             <tbody>
               {points.map((p: any) => (
                 <tr key={p.id} className="border-t even:bg-gray-50">
                   <td className="px-4 py-2">{p.id}</td>
-                  <td className="px-4 py-2">{p.date}</td>
+                  <td className="px-4 py-2">{formatDate(p.date)}</td>
                   <td className="px-4 py-2">{p.surface}</td>
                   <td className="px-4 py-2">{p.budget}</td>
                   <td className="px-4 py-2">{p.typeLabel}</td>
@@ -152,6 +159,9 @@ export default function AdminPoints() {
                   <td className="px-4 py-2">{p.stateLabel}</td>
                   <td className="px-4 py-2">
                     <button onClick={() => handleEdit(p)} className="px-2 py-1 bg-green-600 text-white rounded">Edit</button>
+                  </td>
+                  <td className="px-4 py-2">
+                    {formatDate(p.updatedAt)}
                   </td>
                 </tr>
               ))}
@@ -225,6 +235,15 @@ export default function AdminPoints() {
                     {f.label}
                   </label>
                 ))}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Update date</label>
+                <input
+                  type="datetime-local"
+                  value={formData.updatedAt}
+                  onChange={(e) => setFormData(prev => ({ ...prev, updatedAt: e.target.value }))}
+                  className="w-full p-2 border rounded"
+                />
               </div>
               <div className="flex justify-end">
                 <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 mr-2 bg-gray-300 rounded">Cancel</button>

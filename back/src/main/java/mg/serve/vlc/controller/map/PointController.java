@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -95,6 +95,7 @@ public class PointController {
                 map.put("typeLabel", typeLabel);
                 map.put("factoryIds", factoryIds);
                 map.put("factoryLabels", factoryLabels); // Lord forgive me
+                map.put("updatedAt", p.getUpdatedAt());
 
                 payload.add(map);
             }
@@ -161,55 +162,55 @@ public class PointController {
         return ResponseEntity.ok(new ApiResponse("success", dto, null));
     }
 
-    @GetMapping("/list")
-    public ResponseEntity<ApiResponse> listPoints() {
-        try {
-        List<PointDTO> payload = RepositoryProvider.pointRepository.findAll()
-            .stream()
-            .map(p -> {
-                org.locationtech.jts.geom.Point coords = p.getCoordinates();
-                Double lon = coords != null ? coords.getX() : null;
-                Double lat = coords != null ? coords.getY() : null;
+    // @GetMapping("/list")
+    // public ResponseEntity<ApiResponse> listPoints() {
+    //     try {
+    //     List<PointDTO> payload = RepositoryProvider.pointRepository.findAll()
+    //         .stream()
+    //         .map(p -> {
+    //             org.locationtech.jts.geom.Point coords = p.getCoordinates();
+    //             Double lon = coords != null ? coords.getX() : null;
+    //             Double lat = coords != null ? coords.getY() : null;
 
-                Integer stateId = p.getPointState() != null ? p.getPointState().getId() : null;
-                String stateLabel = p.getPointState() != null ? p.getPointState().getLabel() : null;
+    //             Integer stateId = p.getPointState() != null ? p.getPointState().getId() : null;
+    //             String stateLabel = p.getPointState() != null ? p.getPointState().getLabel() : null;
 
-                Integer typeId = p.getPointType() != null ? p.getPointType().getId() : null;
-                String typeLabel = p.getPointType() != null ? p.getPointType().getLabel() : null;
+    //             Integer typeId = p.getPointType() != null ? p.getPointType().getId() : null;
+    //             String typeLabel = p.getPointType() != null ? p.getPointType().getLabel() : null;
 
-                return new PointDTO(
-                    p.getId(),
-                    p.getDate(),
-                    p.getSurface(),
-                    p.getBudget(),
-                    lat,
-                    lon,
-                    stateId,
-                    stateLabel,
-                    typeId,
-                    typeLabel
-                );
-            })
-            .toList(); // Java 16+; use .collect(Collectors.toList()) if < Java 16
-        // Populate factories list for each DTO using PointFactoryRepository
-        try {
-            payload.forEach(dto -> {
-                try {
-                    List<String> labels = PointFactory.getFactoryLabelsForPoint(dto.id);
-                    dto.factories = labels != null ? labels : new java.util.ArrayList<>();
-                } catch (Exception ex) {
-                    dto.factories = new java.util.ArrayList<>();
-                }
-            });
-        } catch (Exception ex) {
-            // ignore
-        }
-        return ResponseEntity.ok(new ApiResponse("success", payload, null));
-    } catch (Exception e) {
-        return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
-    }
+    //             return new PointDTO(
+    //                 p.getId(),
+    //                 p.getDate(),
+    //                 p.getSurface(),
+    //                 p.getBudget(),
+    //                 lat,
+    //                 lon,
+    //                 stateId,
+    //                 stateLabel,
+    //                 typeId,
+    //                 typeLabel
+    //             );
+    //         })
+    //         .toList(); // Java 16+; use .collect(Collectors.toList()) if < Java 16
+    //     // Populate factories list for each DTO using PointFactoryRepository
+    //     try {
+    //         payload.forEach(dto -> {
+    //             try {
+    //                 List<String> labels = PointFactory.getFactoryLabelsForPoint(dto.id);
+    //                 dto.factories = labels != null ? labels : new java.util.ArrayList<>();
+    //             } catch (Exception ex) {
+    //                 dto.factories = new java.util.ArrayList<>();
+    //             }
+    //         });
+    //     } catch (Exception ex) {
+    //         // ignore
+    //     }
+    //     return ResponseEntity.ok(new ApiResponse("success", payload, null));
+    // } catch (Exception e) {
+    //     return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+    // }
 
-    }
+    // }
 
 
     @GetMapping("/factories")
@@ -309,10 +310,20 @@ public class PointController {
 
             if (dto.getFactoryIds() != null) {
                 List<Factory> factories = dto.getFactoryIds().stream()
-                        .map(fid -> RepositoryProvider.getRepository(FactoryRepository.class).findById(fid).orElse(null))
+                        .map(fid -> {
+                            Factory f = RepositoryProvider.getRepository(FactoryRepository.class).findById(fid).orElse(null);
+                            // f.setUpdatedAt(dto.getUpdatedAt() != null ? dto.getUpdatedAt() : LocalDateTime.now());
+                            return f;
+                        })
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList());
                 point.setFactories(factories);
+            }
+
+            if (dto.getUpdatedAt() != null) {
+                point.setUpdatedAt(dto.getUpdatedAt());
+            } else {
+                point.setUpdatedAt(LocalDateTime.now());
             }
 
             point.saveHistoric();
