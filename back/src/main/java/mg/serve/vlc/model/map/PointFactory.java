@@ -20,8 +20,8 @@ public class PointFactory {
     @Column(name = "point_id", nullable = false)
     private Integer pointId;
 
-    @Column(name = "date_modif")
-    private LocalDateTime dateModif;
+    @Column(name = "updated_at", nullable = true)
+    private LocalDateTime updatedAt;
 
     public PointFactory() {}
 
@@ -49,12 +49,12 @@ public class PointFactory {
         this.pointId = pointId;
     }
 
-    public LocalDateTime getDateModif() {
-        return dateModif;
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setDateModif(LocalDateTime dateModif) {
-        this.dateModif = dateModif;
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     // Utility: fetch factory labels for a given point id via repository
