@@ -104,4 +104,19 @@ public class SignInController {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
+        try {
+            User user = jwtService.getUserFromAuthHeader(authHeader);
+            Map<String, Object> data = new HashMap<>();
+            data.put("id", user.getId());
+            data.put("email", user.getEmail());
+            data.put("name", user.getUsername() != null ? user.getUsername() : user.getEmail());
+            data.put("role", user.isAdmin() ? "admin" : "user");
+            return ResponseEntity.ok(new ApiResponse("success", data, null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
 }
