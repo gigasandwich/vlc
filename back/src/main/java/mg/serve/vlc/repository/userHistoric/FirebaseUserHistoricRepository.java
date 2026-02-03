@@ -16,8 +16,9 @@ public class FirebaseUserHistoricRepository implements UserHistoricRepository {
 
     @Override
     public UserHistoric save(UserHistoric userHistoric) {
-        String userFbId = String.valueOf(userHistoric.getUserFbId());
-        collectionReference.document(userFbId).collection("history").add(userHistoric.toMap());
+        // TODO: fix later
+        // String userFbId = String.valueOf(userHistoric.getUserFbId());
+        // collectionReference.document(userFbId).collection("history").add(userHistoric.toMap());
         return userHistoric;
     }
 }

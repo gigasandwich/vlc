@@ -29,9 +29,11 @@ export default function LoginUser({ onResponse }: LoginUserProps) {
         localStorage.setItem('jwt', j.data.token)
         onResponse(j, 'success')
       } else {
+        alert(j.error)
         onResponse(j, 'error')
       }
     } catch (err) {
+      alert(err)
       onResponse({ error: String(err) }, 'error')
     } finally {
       setIsLoading(false)
