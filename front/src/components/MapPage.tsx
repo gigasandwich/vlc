@@ -1,30 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import L from 'leaflet';
-import { 
-  MapContainer, 
-  TileLayer, 
-  Marker, 
-  Popup, 
-  useMapEvents, 
-  Tooltip 
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Tooltip
 } from 'react-leaflet';
 
 import 'leaflet/dist/leaflet.css';
+import { backendURL } from '../constant';
 
 // --- 1. TYPES & CONFIGURATION ---
 
-type PointType = 'circle' | 'square' | 'triangle';
+type PointType = 'circle' | 'square' | 'triangle' | 'all';
 
 interface BackendPointData {
   id: number;
-  date: string;
-  surface: number;
-  budget: number;
-  coordinates: [number, number];
-  point_type_label: string;
-  point_state_label: string;
-  factories: string[];
-  assigned_user: string;
+  date?: string;
+  surface?: number;
+  budget?: number;
+  lat?: number | null;
+  lon?: number | null;
+  stateId?: number | null;
+  stateLabel?: string | null;
+  typeId?: number | null;
+  typeLabel?: string | null;
+  // legacy names sometimes used by other endpoints
+  type_label?: string | null;
+  factories?: string[];
+  assigned_user?: string;
 }
 
 interface MapPoint {
@@ -51,55 +56,78 @@ const createIcon = (color: string, shape: 'circle' | 'square' | 'triangle') => {
   });
 };
 
-// --- 3. SIMULATION BACKEND ---
+// --- 3. FETCH BACKEND ---
 
-const simulateBackendFetch = (id: number, type: PointType, lat: number, lng: number): BackendPointData => {
-  return {
-    id: id,
-    date: new Date().toISOString(),
-    surface: Math.floor(Math.random() * 500) + 50,
-    budget: Math.floor(Math.random() * 10000) + 1000,
-    coordinates: [lat, lng],
-    point_type_label: type === 'circle' ? 'Peu grave' : type === 'square' ? 'Grave' : 'Très grave',
-    point_state_label: 'En attente',
-    factories: ['Usine Alpha', 'Zone B'],
-    assigned_user: 'admin_tana'
-  };
+// Map backend type label to local point shape
+const mapTypeFromLabel = (label?: string | null): PointType => {
+  if (!label) return 'circle';
+  const l = label.toLowerCase();
+  if (l.includes('peu')) return 'circle';
+  if (l.includes('tres') || l.includes('très')) return 'triangle';
+  return 'square';
 };
 
 // --- 4. COMPOSANT MAP ---
 
-const MapClickHandler: React.FC<{ onMapClick: (lat: number, lng: number) => void }> = ({ onMapClick }) => {
-  useMapEvents({ click(e) { onMapClick(e.latlng.lat, e.latlng.lng); } });
-  return null;
-};
+// No MapClickHandler: we no longer add points by clicking on the map.
 
 const MapPage: React.FC = () => {
-  const [points, setPoints] = useState<MapPoint[]>([]);
-  const [selectedShape, setSelectedShape] = useState<PointType>('circle');
+  const [allPoints, setAllPoints] = useState<MapPoint[]>([]);
+  const [selectedShape, setSelectedShape] = useState<PointType>('all');
   const [isLegendOpen, setIsLegendOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const tanaPosition: [number, number] = [-18.9101, 47.5251];
   const tileUrl = "http://localhost:8081/styles/basic-preview/{z}/{x}/{y}.png";
 
-  const handleMapClick = (lat: number, lng: number) => {
-    const backendData = simulateBackendFetch(Date.now(), selectedShape, lat, lng);
-    const newPoint: MapPoint = {
-      id: backendData.id,
-      lat,
-      lng,
-      type: selectedShape,
-      backendData: backendData
-    };
-    setPoints((prev) => [...prev, newPoint]);
-    console.log("📡 BACKEND POST: Point ajouté", backendData);
+  // Fetch points from backend and map to MapPoint
+  const fetchPoints = async () => {
+    setError(null);
+    try {
+      const res = await fetch(`${backendURL}/points/list`);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+      const json = await res.json();
+      const payload = json && (json.payload ?? json.data ?? json);
+      if (!Array.isArray(payload)) {
+        throw new Error('Unexpected points response format');
+      }
+
+      const mapped: MapPoint[] = payload
+        .map((dto: any) => {
+          const lat = dto.lat ?? dto.latitude ?? null;
+          const lon = dto.lon ?? dto.longitude ?? null;
+          return {
+            id: dto.id,
+            lat: lat ?? 0,
+            lng: lon ?? 0,
+            type: mapTypeFromLabel(dto.typeLabel ?? dto.type_label ?? dto.point_type_label),
+            backendData: dto as BackendPointData,
+          } as MapPoint;
+        })
+        .filter((p: MapPoint) => p.lat !== null && p.lng !== null);
+
+      setAllPoints(mapped);
+    } catch (e: any) {
+      console.error('Failed to fetch points', e);
+      setError(e.message ?? String(e));
+      setAllPoints([]);
+    }
   };
+
+  useEffect(() => {
+    setLoading(true);
+    fetchPoints().finally(() => setLoading(false));
+  }, []);
 
   const handleDeletePoint = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setPoints((prev) => prev.filter((p) => p.id !== id));
-    console.log(`🗑️ BACKEND DELETE: Point ID ${id} supprimé`);
+    setAllPoints((prev) => prev.filter((p) => p.id !== id));
+    console.log(`🗑️ (local) Point ID ${id} supprimé`);
   };
 
   const renderPoint = (point: MapPoint) => {
@@ -113,7 +141,7 @@ const MapPage: React.FC = () => {
         <Popup>
           <div className="text-center min-w-[140px]">
             <div className="font-bold text-slate-700 mb-1">Point #{point.id}</div>
-            <div className="text-xs text-slate-500 mb-3">{point.backendData.point_type_label}</div>
+            <div className="text-xs text-slate-500 mb-3">{point.backendData.typeLabel ?? point.backendData.type_label}</div>
             <button 
               onClick={(e) => handleDeletePoint(point.id, e)}
               className="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1 px-3 rounded shadow transition-colors w-full"
@@ -126,9 +154,11 @@ const MapPage: React.FC = () => {
           <div className="bg-white p-2 rounded shadow text-xs text-slate-700 min-w-[200px]">
             <div className="font-bold border-b mb-1 pb-1 text-slate-900">Détails Backend</div>
             <ul className="space-y-1">
-              <li><span className="font-semibold">Surface:</span> {point.backendData.surface} m²</li>
-              <li><span className="font-semibold">Budget:</span> {point.backendData.budget} Ar</li>
-              <li><span className="font-semibold">Usines:</span> {point.backendData.factories.join(', ')}</li>
+              <li><span className="font-semibold">Date:</span> {point.backendData.date ?? '-'}</li>
+              <li><span className="font-semibold">status:</span> {point.backendData.point_state_label  ?? '-'}</li>
+              <li><span className="font-semibold">Surface:</span> {point.backendData.surface ?? '-'} m²</li>
+              <li><span className="font-semibold">Budget:</span> {point.backendData.budget ?? '-'} Ar</li>
+              <li><span className="font-semibold">Usines:</span> {(point.backendData.factories ?? []).join(', ')}</li>
             </ul>
           </div>
         </Tooltip>
@@ -157,6 +187,12 @@ const MapPage: React.FC = () => {
   const IconTriangle = () => <svg className="w-5 h-5" viewBox="0 0 24 24"><polygon points="12,3 21,20 3,20" fill="currentColor"/></svg>;
   const IconDots = () => <svg className="w-6 h-6 text-slate-700" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>;
 
+  // compute displayed points based on selectedShape ('all' shows everything)
+  const displayedPoints = selectedShape === 'all' ? allPoints : allPoints.filter(p => p.type === selectedShape);
+
+  // header color depending on the active filter
+  const headerColorClass = selectedShape === 'circle' ? 'text-blue-500' : selectedShape === 'square' ? 'text-orange-500' : selectedShape === 'triangle' ? 'text-red-500' : 'text-slate-700';
+
   return (
     <div className="h-full w-full flex flex-col bg-gray-100 font-sans relative">
       
@@ -166,19 +202,19 @@ const MapPage: React.FC = () => {
           <h2 className="text-lg font-bold text-slate-700">VLC Serve</h2>
           
           {/* Sélecteur de forme : Colors + Distribution Mobile */}
-          <div className={`flex ${selectedShape === 'circle' ? 'text-blue-500' : selectedShape === 'square' ? 'text-orange-500' : 'text-red-500'} bg-slate-50 p-2 rounded-lg w-full md:w-auto border border-slate-100`}>
+          <div className={`flex ${headerColorClass} bg-slate-50 p-2 rounded-lg w-full md:w-auto border border-slate-100`}>
             
-            <button onClick={() => setSelectedShape('circle')} className={getBtnClasses('circle')} title="Peu grave">
+            <button onClick={() => setSelectedShape(prev => prev === 'circle' ? 'all' : 'circle')} className={getBtnClasses('circle')} title="Peu grave">
               <IconCircle />
               <span className="hidden md:inline text-xs font-semibold">Peu grave</span>
             </button>
 
-            <button onClick={() => setSelectedShape('square')} className={getBtnClasses('square')} title="Grave">
+            <button onClick={() => setSelectedShape(prev => prev === 'square' ? 'all' : 'square')} className={getBtnClasses('square')} title="Grave">
               <IconSquare />
               <span className="hidden md:inline text-xs font-semibold">Grave</span>
             </button>
 
-            <button onClick={() => setSelectedShape('triangle')} className={getBtnClasses('triangle')} title="Très grave">
+            <button onClick={() => setSelectedShape(prev => prev === 'triangle' ? 'all' : 'triangle')} className={getBtnClasses('triangle')} title="Très grave">
               <IconTriangle />
               <span className="hidden md:inline text-xs font-semibold">Très grave</span>
             </button>
@@ -194,9 +230,14 @@ const MapPage: React.FC = () => {
           className="h-full w-full z-0"
           scrollWheelZoom={true}
         >
+          {loading && (
+            <div className="absolute top-4 left-4 z-[9999] p-2 bg-white rounded shadow text-xs">Chargement des points…</div>
+          )}
+          {error && (
+            <div className="absolute top-4 left-4 z-[9999] p-2 bg-red-50 text-red-700 rounded shadow text-xs">Erreur: {error}</div>
+          )}
           <TileLayer url={tileUrl} attribution='&copy; Local TileServer' />
-          <MapClickHandler onMapClick={handleMapClick} />
-          {points.map(renderPoint)}
+          {displayedPoints.map(renderPoint)}
 
           {/* --- LÉGENDE RÉTRACTABLE --- */}
           {/* z-[9999] pour être ABSOLUMENT au dessus de la carte */}

@@ -1,6 +1,7 @@
 package mg.serve.vlc.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class PointDTO {
         public Integer id;
@@ -13,6 +14,7 @@ public class PointDTO {
         public String point_state_label;
         public Integer point_type_id;
         public String point_type_label;
+        public List<String> factories;
 
         public PointDTO(Integer id,
                         LocalDateTime date,
@@ -34,5 +36,6 @@ public class PointDTO {
             this.point_state_label = point_state_label;
             this.point_type_id = point_type_id;
             this.point_type_label = point_type_label;
+            this.factories = new java.util.ArrayList<>();
         }
     }
