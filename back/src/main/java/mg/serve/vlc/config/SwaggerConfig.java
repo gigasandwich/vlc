@@ -27,7 +27,8 @@ public class SwaggerConfig {
                 .group("points")
                 .pathsToMatch(
                     "/points", "/points/summary",
-                    "/points/list", "/points/{id}"
+                    "/points/list", "/points/{id}",
+                    "/points/in-progress" , "/points/work-delay"
                 )
                 .build();
     }
