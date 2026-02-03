@@ -4,7 +4,7 @@
 
 -- États des points
 INSERT INTO point_state (label, order_, progress) VALUES
-('Nouveau', 1, 0.25),
+('Nouveau', 1, 0),
 ('En cours', 2, 0.5),
 ('Terminé', 3, 1);
 
