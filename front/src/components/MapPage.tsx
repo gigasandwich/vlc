@@ -29,7 +29,7 @@ interface BackendPointData {
   typeLabel?: string | null;
   // legacy names sometimes used by other endpoints
   type_label?: string | null;
-  factories?: string[];
+  factoryLabels?: string;
   assigned_user?: string;
 }
 
@@ -86,7 +86,7 @@ const MapPage: React.FC = () => {
   const fetchPoints = async () => {
     setError(null);
     try {
-      const res = await fetch(`${backendURL}/points/list`);
+      const res = await fetch(`${backendURL}/points`);
       if (!res.ok) {
         const text = await res.text();
         throw new Error(`HTTP ${res.status}: ${text}`);
@@ -156,10 +156,10 @@ const MapPage: React.FC = () => {
             <div className="font-bold border-b mb-1 pb-1 text-slate-900">Détails Backend</div>
             <ul className="space-y-1">
               <li><span className="font-semibold">Date:</span> {formatDate(point.backendData.date) ?? '-'}</li>
-              <li><span className="font-semibold">status:</span> {point.backendData.point_state_label  ?? '-'}</li>
+              <li><span className="font-semibold">status:</span> {point.backendData.stateLabel  ?? '-'}</li>
               <li><span className="font-semibold">Surface:</span> {point.backendData.surface ?? '-'} m²</li>
               <li><span className="font-semibold">Budget:</span> {point.backendData.budget ?? '-'} Ar</li>
-              <li><span className="font-semibold">Usines:</span> {(point.backendData.factories ?? []).join(', ')}</li>
+              <li><span className="font-semibold">Usines:</span> {point.backendData.factoryLabels ?? '-'}</li>
             </ul>
           </div>
         </Tooltip>

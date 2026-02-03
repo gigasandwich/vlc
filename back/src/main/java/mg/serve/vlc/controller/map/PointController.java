@@ -160,55 +160,55 @@ public class PointController {
         return ResponseEntity.ok(new ApiResponse("success", dto, null));
     }
 
-    @GetMapping("/list")
-    public ResponseEntity<ApiResponse> listPoints() {
-        try {
-        List<PointDTO> payload = RepositoryProvider.pointRepository.findAll()
-            .stream()
-            .map(p -> {
-                org.locationtech.jts.geom.Point coords = p.getCoordinates();
-                Double lon = coords != null ? coords.getX() : null;
-                Double lat = coords != null ? coords.getY() : null;
+    // @GetMapping("/list")
+    // public ResponseEntity<ApiResponse> listPoints() {
+    //     try {
+    //     List<PointDTO> payload = RepositoryProvider.pointRepository.findAll()
+    //         .stream()
+    //         .map(p -> {
+    //             org.locationtech.jts.geom.Point coords = p.getCoordinates();
+    //             Double lon = coords != null ? coords.getX() : null;
+    //             Double lat = coords != null ? coords.getY() : null;
 
-                Integer stateId = p.getPointState() != null ? p.getPointState().getId() : null;
-                String stateLabel = p.getPointState() != null ? p.getPointState().getLabel() : null;
+    //             Integer stateId = p.getPointState() != null ? p.getPointState().getId() : null;
+    //             String stateLabel = p.getPointState() != null ? p.getPointState().getLabel() : null;
 
-                Integer typeId = p.getPointType() != null ? p.getPointType().getId() : null;
-                String typeLabel = p.getPointType() != null ? p.getPointType().getLabel() : null;
+    //             Integer typeId = p.getPointType() != null ? p.getPointType().getId() : null;
+    //             String typeLabel = p.getPointType() != null ? p.getPointType().getLabel() : null;
 
-                return new PointDTO(
-                    p.getId(),
-                    p.getDate(),
-                    p.getSurface(),
-                    p.getBudget(),
-                    lat,
-                    lon,
-                    stateId,
-                    stateLabel,
-                    typeId,
-                    typeLabel
-                );
-            })
-            .toList(); // Java 16+; use .collect(Collectors.toList()) if < Java 16
-        // Populate factories list for each DTO using PointFactoryRepository
-        try {
-            payload.forEach(dto -> {
-                try {
-                    List<String> labels = PointFactory.getFactoryLabelsForPoint(dto.id);
-                    dto.factories = labels != null ? labels : new java.util.ArrayList<>();
-                } catch (Exception ex) {
-                    dto.factories = new java.util.ArrayList<>();
-                }
-            });
-        } catch (Exception ex) {
-            // ignore
-        }
-        return ResponseEntity.ok(new ApiResponse("success", payload, null));
-    } catch (Exception e) {
-        return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
-    }
+    //             return new PointDTO(
+    //                 p.getId(),
+    //                 p.getDate(),
+    //                 p.getSurface(),
+    //                 p.getBudget(),
+    //                 lat,
+    //                 lon,
+    //                 stateId,
+    //                 stateLabel,
+    //                 typeId,
+    //                 typeLabel
+    //             );
+    //         })
+    //         .toList(); // Java 16+; use .collect(Collectors.toList()) if < Java 16
+    //     // Populate factories list for each DTO using PointFactoryRepository
+    //     try {
+    //         payload.forEach(dto -> {
+    //             try {
+    //                 List<String> labels = PointFactory.getFactoryLabelsForPoint(dto.id);
+    //                 dto.factories = labels != null ? labels : new java.util.ArrayList<>();
+    //             } catch (Exception ex) {
+    //                 dto.factories = new java.util.ArrayList<>();
+    //             }
+    //         });
+    //     } catch (Exception ex) {
+    //         // ignore
+    //     }
+    //     return ResponseEntity.ok(new ApiResponse("success", payload, null));
+    // } catch (Exception e) {
+    //     return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+    // }
 
-    }
+    // }
 
 
     @GetMapping("/factories")
