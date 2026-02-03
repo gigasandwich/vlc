@@ -9,7 +9,11 @@ const BottomNav = ({ user }: BottomNavProps) => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (user && user.role === 'admin') {
+    if (
+      user &&
+      (user.role === 'admin' ||
+        (Array.isArray(user.roles) && user.roles.some((r: any) => r?.label === 'ADMIN')))
+    ) {
       setIsAdmin(true);
     } else {
       setIsAdmin(false);
@@ -20,7 +24,7 @@ const BottomNav = ({ user }: BottomNavProps) => {
   const IconMap = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.553-.894L15 7m0 13V7" /></svg>
   const IconDash = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
   const IconUser = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-  const IconAdmin = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l2 5 5 .5-3.5 3 1 5L12 14l-4.5 2.5 1-5L5 7.5 10 7 12 2z" /></svg>
+  const IconDetails = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /></svg>
 
   const NavItem = ({ to, label, icon: Icon }: { to: string, label: string, icon: any }) => (
     <NavLink
@@ -46,7 +50,7 @@ const BottomNav = ({ user }: BottomNavProps) => {
     <nav className="py-2 fixed bottom-4 left-1/2 transform -translate-x-1/2 w-1/2 bg-white border border-gray-200 rounded-l-full rounded-r-full shadow-[0_-4px_15px_rgba(0,0,0,0.02)] z-[2000] flex justify-around items-center h-16">
       <NavItem to="/map" label="Carte" icon={IconMap} />
       <NavItem to="/dashboard" label="Tableau" icon={IconDash} />
-      {isAdmin && <NavItem to="/admin" label="Admin" icon={IconAdmin} />}
+      {isAdmin && <NavItem to="/details" label="Details" icon={IconDetails} />}
       <NavItem to="/profile" label="Profil" icon={IconUser} />
     </nav>
   );

@@ -1,16 +1,25 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import LoginUser from './pages/auth/LoginUser';
-import RecapGlob from './pages/dashboard/recapGlob';
 import MapPage from './components/MapPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPoints from './pages/admin/AdminPoints';
+import DashboardPage from './pages/dashboard/DashboardPage';
+import DetailsPage from './pages/admin/DetailsPage.tsx';
 import BottomNav from './components/BottomNav';
 import UserInfo from './components/UserInfo';
 import './App.css';
+import type { MapPoint } from './types/mapPoints'
 
 function App() {
   const [user, setUser] = useState<any>(null);
+  const [points, setPoints] = useState<MapPoint[]>([]);
+
+  const isAdmin = !!(
+    user &&
+    (user.role === 'admin' ||
+      (Array.isArray(user.roles) && user.roles.some((r: any) => r?.label === 'ADMIN')))
+  );
 
   useEffect(() => {
     const jwt = localStorage.getItem('jwt');
@@ -34,14 +43,10 @@ function App() {
         {user && <UserInfo user={user} />}
         <div className="flex-1 relative overflow-hidden">
           <Routes>
-            <Route path="/" element={<MapPage />} />
-            <Route path="/map" element={<MapPage />} />
-            <Route path="/dashboard" element={
-              <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-50">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Tableau de bord</h2>
-                <RecapGlob onResponse={() => {}} />
-              </div>
-            } />
+            <Route path="/" element={<MapPage points={points} setPoints={setPoints} />} />
+            <Route path="/map" element={<MapPage points={points} setPoints={setPoints} />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/details" element={isAdmin ? <DetailsPage /> : <Navigate to="/profile" replace />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/points" element={<AdminPoints />} />
             <Route path="/profile" element={

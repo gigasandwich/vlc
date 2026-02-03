@@ -1,4 +1,4 @@
-import RecapGlob from '../dashboard/recapGlob';
+import RecapGlob from './recapGlob'
 
 export default function DashboardPage() {
   return (
@@ -6,5 +6,5 @@ export default function DashboardPage() {
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Tableau de bord</h2>
       <RecapGlob onResponse={() => {}} />
     </div>
-  );
+  )
 }

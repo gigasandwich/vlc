@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import L from 'leaflet';
 import { 
   MapContainer, 
@@ -11,29 +11,9 @@ import {
 
 import 'leaflet/dist/leaflet.css';
 
+import type { BackendPointData, MapPoint, PointType } from '../types/mapPoints'
+
 // --- 1. TYPES & CONFIGURATION ---
-
-type PointType = 'circle' | 'square' | 'triangle';
-
-interface BackendPointData {
-  id: number;
-  date: string;
-  surface: number;
-  budget: number;
-  coordinates: [number, number];
-  point_type_label: string;
-  point_state_label: string;
-  factories: string[];
-  assigned_user: string;
-}
-
-interface MapPoint {
-  id: number;
-  lat: number;
-  lng: number;
-  type: PointType;
-  backendData: BackendPointData;
-}
 
 // --- 2. ICÔNES SVG ---
 
@@ -74,8 +54,12 @@ const MapClickHandler: React.FC<{ onMapClick: (lat: number, lng: number) => void
   return null;
 };
 
-const MapPage: React.FC = () => {
-  const [points, setPoints] = useState<MapPoint[]>([]);
+type MapPageProps = {
+  points: MapPoint[]
+  setPoints: React.Dispatch<React.SetStateAction<MapPoint[]>>
+}
+
+const MapPage: React.FC<MapPageProps> = ({ points, setPoints }) => {
   const [selectedShape, setSelectedShape] = useState<PointType>('circle');
   const [isLegendOpen, setIsLegendOpen] = useState(true);
 
