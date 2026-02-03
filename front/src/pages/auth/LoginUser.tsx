@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { backendURL } from '../../constant'
 
 interface LoginUserProps {
@@ -39,34 +39,62 @@ export default function LoginUser({ onResponse }: LoginUserProps) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <div className="form-group">
-        <label htmlFor="login-email" className="text-sm font-medium text-gray-700">Email</label>
-        <input
-          id="login-email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          placeholder="nom@example.com"
-          className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
-        />
+    <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+      <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-sm">
+        <form onSubmit={submit} className="space-y-6">
+          <div>
+            <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900">Email address</label>
+            <div className="mt-2">
+              <input
+                id="email"
+                type="email"
+                name="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-gray-800 outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900">Password</label>
+              <div className="text-sm">
+                <a href="#" className="font-semibold text-indigo-400 hover:text-indigo-300">Forgot password?</a>
+              </div>
+            </div>
+            <div className="mt-2">
+              <input
+                id="password"
+                type="password"
+                name="password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-gray-800 outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
+              />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </div>
+        </form>
+
+        {/* <p className="mt-10 text-center text-sm/6 text-gray-400">
+          Not a member?
+          <a href="#" className="font-semibold text-indigo-400 hover:text-indigo-300"> Start a 14 day free trial</a>
+        </p> */}
       </div>
-      <div className="form-group">
-        <label htmlFor="login-password"  className="text-sm font-medium text-gray-700">Mot de passe</label>
-        <input
-          id="login-password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          placeholder="••••••••"
-          className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
-        />
-      </div>
-      <button type="submit" className="w-full py-2.5 text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-300 ease-in-out disabled:bg-green-300" disabled={isLoading}>
-        {isLoading ? 'Connexion...' : 'Se connecter'}
-      </button>
-    </form>
+    </div>
   )
 }
