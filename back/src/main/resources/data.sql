@@ -65,3 +65,5 @@ INSERT INTO point (date_, surface, budget, coordinates, user_id, point_state_id,
 INSERT INTO factory (label) VALUES
 ('Factory A'),
 ('Factory B');
+
+UPDATE point_state SET progress=0 WHERE label='nouveau';
