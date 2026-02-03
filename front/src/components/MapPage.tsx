@@ -151,16 +151,47 @@ const MapPage: React.FC = () => {
             </button>
           </div>
         </Popup>
-        <Tooltip direction="top" offset={[0, -20]} opacity={1}>
-          <div className="bg-white p-2 rounded shadow text-xs text-slate-700 min-w-[200px]">
-            <div className="font-bold border-b mb-1 pb-1 text-slate-900">Détails Backend</div>
-            <ul className="space-y-1">
-              <li><span className="font-semibold">Date:</span> {formatDate(point.backendData.date) ?? '-'}</li>
-              <li><span className="font-semibold">status:</span> {point.backendData.stateLabel  ?? '-'}</li>
-              <li><span className="font-semibold">Surface:</span> {point.backendData.surface ?? '-'} m²</li>
-              <li><span className="font-semibold">Budget:</span> {point.backendData.budget ?? '-'} Ar</li>
-              <li><span className="font-semibold">Usines:</span> {point.backendData.factoryLabels ?? '-'}</li>
-            </ul>
+        <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent={false}>
+          <div className="bg-gradient-to-br from-white to-slate-50 p-4 rounded-xl shadow-xl border border-slate-300 text-sm text-slate-700 max-w-[320px] relative">
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white"></div>
+            <div className="font-bold text-lg mb-4 text-slate-900 border-b-2 border-slate-200 pb-2 text-center">Point #{point.id}</div>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  <span className="font-medium">Date:</span>
+                </div>
+                <span className="ml-5 text-right">{point.backendData.date ? formatDate(point.backendData.date) : '-'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                  <span className="font-medium">État:</span>
+                </div>
+                <span className="ml-5 text-right">{point.backendData.stateLabel ?? '-'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 6H3m18 0v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6m18 0V4a2 2 0 00-2-2H5a2 2 0 00-2 2v2m0 0h18m-9 4v2m0 4v2m4-6v2m0 4v2" /></svg>
+                  <span className="font-medium">Surface:</span>
+                </div>
+                <span className="ml-5 text-right">{point.backendData.surface ?? '-'} m²</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>
+                  <span className="font-medium">Budget:</span>
+                </div>
+                <span className="ml-5 text-right">{point.backendData.budget ?? '-'} Ar</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                  <span className="font-medium">Usines:</span>
+                </div>
+                <span className="ml-5 text-right truncate max-w-[120px]">{point.backendData.factoryLabels ?? '-'}</span>
+              </div>
+            </div>
           </div>
         </Tooltip>
       </Marker>
@@ -186,44 +217,14 @@ const MapPage: React.FC = () => {
   const IconCircle = () => <svg className="w-5 h-5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>;
   const IconSquare = () => <svg className="w-5 h-5" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="currentColor"/></svg>;
   const IconTriangle = () => <svg className="w-5 h-5" viewBox="0 0 24 24"><polygon points="12,3 21,20 3,20" fill="currentColor"/></svg>;
-  const IconDots = () => <svg className="w-6 h-6 text-slate-700" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>;
+  const IconFilter = () => <svg className="w-6 h-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>;
 
   // compute displayed points based on selectedShape ('all' shows everything)
   const displayedPoints = selectedShape === 'all' ? allPoints : allPoints.filter(p => p.type === selectedShape);
 
-  // header color depending on the active filter
-  const headerColorClass = selectedShape === 'circle' ? 'text-blue-500' : selectedShape === 'square' ? 'text-orange-500' : selectedShape === 'triangle' ? 'text-red-500' : 'text-slate-700';
-
   return (
     <div className="h-full w-full flex flex-col bg-gray-100 font-sans relative">
       
-      <header className="bg-white shadow-sm z-20 shrink-0">
-        <div className="p-2 md:p-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          
-          <h2 className="text-lg font-bold text-slate-700">VLC Serve</h2>
-          
-          {/* Sélecteur de forme : Colors + Distribution Mobile */}
-          <div className={`flex ${headerColorClass} bg-slate-50 p-2 rounded-lg w-full md:w-auto border border-slate-100`}>
-            
-            <button onClick={() => setSelectedShape(prev => prev === 'circle' ? 'all' : 'circle')} className={getBtnClasses('circle')} title="Peu grave">
-              <IconCircle />
-              <span className="hidden md:inline text-xs font-semibold">Peu grave</span>
-            </button>
-
-            <button onClick={() => setSelectedShape(prev => prev === 'square' ? 'all' : 'square')} className={getBtnClasses('square')} title="Grave">
-              <IconSquare />
-              <span className="hidden md:inline text-xs font-semibold">Grave</span>
-            </button>
-
-            <button onClick={() => setSelectedShape(prev => prev === 'triangle' ? 'all' : 'triangle')} className={getBtnClasses('triangle')} title="Très grave">
-              <IconTriangle />
-              <span className="hidden md:inline text-xs font-semibold">Très grave</span>
-            </button>
-
-          </div>
-        </div>
-      </header>
-
       <main className="flex-1 relative bg-slate-200">
         <MapContainer 
           center={tanaPosition} 
@@ -240,8 +241,7 @@ const MapPage: React.FC = () => {
           <TileLayer url={tileUrl} attribution='&copy; Local TileServer' />
           {displayedPoints.map(renderPoint)}
 
-          {/* --- LÉGENDE RÉTRACTABLE --- */}
-          {/* z-[9999] pour être ABSOLUMENT au dessus de la carte */}
+          {/* --- LÉGENDE RÉTRACTABLE AVEC FILTRES --- */}
           <div className="absolute top-4 right-4 z-[9999] pointer-events-none flex flex-col items-end">
             
             {isLegendOpen && (
@@ -253,31 +253,41 @@ const MapPage: React.FC = () => {
                 className="bg-white/95 backdrop-blur p-4 rounded-lg shadow-xl border border-gray-200 pointer-events-auto cursor-pointer transition-all duration-300 transform origin-top-right"
               >
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700">Légende (Cliquez pour fermer)</h4>
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700">Légende & Filtres</h4>
                   <span className="text-gray-400 text-xs">✕</span>
                 </div>
-                <ul className="space-y-3 text-xs text-slate-700">
+                <ul className="space-y-3 text-xs text-slate-700 mb-4">
                   <li className="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#3b82f6"/></svg><span>Peu grave</span></li>
                   <li className="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="#f97316"/></svg><span>Grave</span></li>
                   <li className="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,3 21,20 3,20" fill="#ef4444"/></svg><span>Très grave</span></li>
                 </ul>
+                {/* Filter buttons */}
+                <div className="flex gap-2 w-[250px] h-[50px] bg-slate-50 p-2 rounded-lg border border-slate-200">
+                  <button onClick={() => setSelectedShape(prev => prev === 'circle' ? 'all' : 'circle')} className={getBtnClasses('circle')} title="Peu grave">
+                    <IconCircle />
+                  </button>
+                  <button onClick={() => setSelectedShape(prev => prev === 'square' ? 'all' : 'square')} className={getBtnClasses('square')} title="Grave">
+                    <IconSquare />
+                  </button>
+                  <button onClick={() => setSelectedShape(prev => prev === 'triangle' ? 'all' : 'triangle')} className={getBtnClasses('triangle')} title="Très grave">
+                    <IconTriangle />
+                  </button>
+                </div>
               </div>
             )}
 
             {!isLegendOpen && (
               <button 
-                // UTILISATION DE onPointerDown au lieu de onClick
-                // Cela capture l'événement DOIGT/CLIC avant que Leaflet ne le prenne
                 onPointerDown={(e) => {
                   e.stopPropagation(); 
-                  e.preventDefault(); // Double sécurité
+                  e.preventDefault();
                   setIsLegendOpen(true);
                 }}
                 className="bg-white shadow-2xl border-2 border-slate-300 pointer-events-auto hover:bg-gray-50 active:bg-gray-100 transition-all
                            w-14 h-14 rounded-full flex items-center justify-center z-[9999]"
-                title="Ouvrir la légende"
+                title="Ouvrir la légende et les filtres"
               >
-                <IconDots />
+                <IconFilter />
               </button>
             )}
 
