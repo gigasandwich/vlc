@@ -10,6 +10,7 @@ import {
 
 import 'leaflet/dist/leaflet.css';
 import { backendURL } from '../constant';
+import { formatDate } from '../utils';
 
 // --- 1. TYPES & CONFIGURATION ---
 
@@ -154,7 +155,7 @@ const MapPage: React.FC = () => {
           <div className="bg-white p-2 rounded shadow text-xs text-slate-700 min-w-[200px]">
             <div className="font-bold border-b mb-1 pb-1 text-slate-900">Détails Backend</div>
             <ul className="space-y-1">
-              <li><span className="font-semibold">Date:</span> {point.backendData.date ?? '-'}</li>
+              <li><span className="font-semibold">Date:</span> {formatDate(point.backendData.date) ?? '-'}</li>
               <li><span className="font-semibold">status:</span> {point.backendData.point_state_label  ?? '-'}</li>
               <li><span className="font-semibold">Surface:</span> {point.backendData.surface ?? '-'} m²</li>
               <li><span className="font-semibold">Budget:</span> {point.backendData.budget ?? '-'} Ar</li>
