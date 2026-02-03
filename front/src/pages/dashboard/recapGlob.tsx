@@ -11,6 +11,10 @@ export default function RecapGlob({ onResponse }: recapGlobProps) {
   const [avgProgress,setAvgProgress] = useState(0.00)
   const [totalBudget,setTotalBudget] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
+  const [workDelays, setWorkDelays] = useState<any[]>([])
+  const [avgNewLabel, setAvgNewLabel] = useState<string | null>(null)
+  const [avgInProgLabel, setAvgInProgLabel] = useState<string | null>(null)
+  const [avg0to1Label, setAvg0to1Label] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -42,7 +46,29 @@ export default function RecapGlob({ onResponse }: recapGlobProps) {
     fetchSummary()
   },[])
 
-  const StatCard = ({ title, value, icon, unit = '', color = 'green' }: { title: string, value: string | number, icon: JSX.Element, unit?: string, color?: string }) => (
+  useEffect(() => {
+    const fetchWorkDelays = async () => {
+      try {
+        const r = await fetch(`${backendURL}/points/work-delay`, { method: 'GET', headers: { 'Content-Type': 'application/json' } })
+        const j = await r.json()
+        if (j.status === 'success') {
+          // backend returns { workTreatments: WorkTreatmentDTO[], average0to05Ms/Label, average05to1Ms/Label, average0to1Ms/Label }
+          const payload = j.data ?? {}
+          setWorkDelays(payload.workTreatments ?? [])
+          setAvgNewLabel(payload.average0to05Label ?? null)
+          setAvgInProgLabel(payload.average05to1Label ?? null)
+          setAvg0to1Label(payload.average0to1Label ?? null)
+        } else {
+          // ignore
+        }
+      } catch (err) {
+        // ignore
+      }
+    }
+    fetchWorkDelays()
+  }, [])
+
+  const StatCard = ({ title, value, icon, unit = '', color = 'green' }: { title: string, value: string | number, icon: any, unit?: string, color?: string }) => (
     <div className="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100 flex items-center">
       <div className={`w-12 h-12 flex items-center justify-center rounded-full bg-${color}-100 text-${color}-600 mr-4 shrink-0`}>
         {icon}
@@ -78,11 +104,54 @@ export default function RecapGlob({ onResponse }: recapGlobProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-      <StatCard title="Points signalés" value={nbPoints} icon={<IconMapPin />} color="blue" />
-      <StatCard title="Surface totale" value={totalSurface.toFixed(2)} unit="m²" icon={<IconRuler />} color="purple" />
-      <StatCard title="Avancement moyen" value={avgProgress.toFixed(2)} unit="%" icon={<IconTrendingUp />} color="green" />
-      <StatCard title="Budget total" value={totalBudget.toLocaleString()} unit="Ar" icon={<IconCash />} color="yellow" />
+    <div className="space-y-6 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+        <StatCard title="Points signalés" value={nbPoints} icon={<IconMapPin />} color="blue" />
+        <StatCard title="Surface totale" value={totalSurface.toFixed(2)} unit="m²" icon={<IconRuler />} color="purple" />
+        <StatCard title="Avancement moyen" value={avgProgress.toFixed(2)} unit="%" icon={<IconTrendingUp />} color="green" />
+        <StatCard title="Budget total" value={totalBudget.toLocaleString()} unit="Ar" icon={<IconCash />} color="yellow" />
+      </div>
+
+      {/* Work delays table */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-800 mb-3">Délai de traitement des travaux</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+                <thead>
+                  <tr className="text-gray-500">
+                    <th className="py-2 pr-4">Point</th>
+                    <th className="py-2 pr-4">Nouveau ➡ En cours</th>
+                    <th className="py-2 pr-4">En cours ➡ Terminé</th>
+                    <th className="py-2 pr-4">Nouveau ➡ Terminé</th>
+                  </tr>
+                </thead>
+            <tbody>
+              {workDelays.map((w) => {
+                const p = w.pointDTO
+                const d1Label = w.newDelaytoInProgressLabel
+                const d2Label = w.inProgressDelaytofinishedLabel
+                    const totalLabel = w.totalDelayLabel
+                return (
+                  <tr key={p.id} className="border-t border-gray-100">
+                    <td className="py-3 pr-4">#{p.id} — {p.point_type_label ?? ''} — {p.point_state_label ?? ''}</td>
+                    <td className="py-3 pr-4">{d1Label ?? '—'}</td>
+                    <td className="py-3 pr-4">{d2Label ?? '—'}</td>
+                        <td className="py-3 pr-4">{totalLabel ?? '—'}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+                <tfoot>
+                  <tr className="border-t font-semibold text-gray-700">
+                    <td className="py-3 pr-4">Moyennes</td>
+                    <td className="py-3 pr-4">{avgNewLabel ?? '—'}</td>
+                    <td className="py-3 pr-4">{avgInProgLabel ?? '—'}</td>
+                    <td className="py-3 pr-4">{avg0to1Label ?? '—'}</td>
+                  </tr>
+                </tfoot>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }

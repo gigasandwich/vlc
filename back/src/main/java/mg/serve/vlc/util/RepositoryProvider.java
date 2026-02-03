@@ -11,6 +11,7 @@ import mg.serve.vlc.repository.example.*;
 import mg.serve.vlc.repository.example.ExampleRepository;
 import mg.serve.vlc.repository.pointState.*;
 import mg.serve.vlc.repository.example.*;
+import mg.serve.vlc.repository.WorkTreatmentRepository;
 
 import java.util.HashMap;
 
@@ -33,6 +34,8 @@ public class RepositoryProvider {
     public static PointStateRepository pointStateRepository;
     public static PointTypeRepository pointTypeRepository;
     public static FactoryRepository factoryRepository;
+    public static PointInProgressRepository pointInProgressRepository;
+    public static WorkTreatmentRepository workTreatmentRepository;
 
     @Autowired
     public RepositoryProvider(
@@ -46,7 +49,10 @@ public class RepositoryProvider {
             PointsSummaryRepository pointsSummaryRepository,
             PointStateRepository pointStateRepository,
             PointTypeRepository pointTypeRepository,
-            FactoryRepository factoryRepository
+            FactoryRepository factoryRepository,
+            PointInProgressRepository pointInProgressRepository
+            ,
+            WorkTreatmentRepository workTreatmentRepository
         ) {
         RepositoryProvider.jpaExampleRepository = jpaExampleRepository;
         RepositoryProvider.jpaUserHistoricRepository = jpaUserHistoricRepository;
@@ -61,6 +67,8 @@ public class RepositoryProvider {
         RepositoryProvider.pointStateRepository = pointStateRepository;
         RepositoryProvider.pointTypeRepository = pointTypeRepository;
         RepositoryProvider.factoryRepository = factoryRepository;
+        RepositoryProvider.pointInProgressRepository=pointInProgressRepository;
+        RepositoryProvider.workTreatmentRepository = workTreatmentRepository;
     }
 
     private static final Map<Class<?>, Object> firebaseRepositories = new HashMap<>();
@@ -81,6 +89,7 @@ public class RepositoryProvider {
 
         jpaRepositories.put(PointTypeRepository.class, RepositoryProvider.pointTypeRepository);
         jpaRepositories.put(FactoryRepository.class, RepositoryProvider.factoryRepository);
+        jpaRepositories.put(WorkTreatmentRepository.class, RepositoryProvider.workTreatmentRepository);
     }
 
     public static <T> T getRepository(Class<T> repositoryClass) {
