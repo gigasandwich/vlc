@@ -120,9 +120,9 @@ export default function RecapGlob({ onResponse }: recapGlobProps) {
                 <thead>
                   <tr className="text-gray-500">
                     <th className="py-2 pr-4">Point</th>
-                    <th className="py-2 pr-4">0 → 0.5</th>
-                    <th className="py-2 pr-4">0.5 → 1</th>
-                    <th className="py-2 pr-4">0 → 1</th>
+                    <th className="py-2 pr-4">Nouveau ➡ En cours</th>
+                    <th className="py-2 pr-4">En cours ➡ Terminé</th>
+                    <th className="py-2 pr-4">Nouveau ➡ Terminé</th>
                   </tr>
                 </thead>
             <tbody>
