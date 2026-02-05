@@ -20,7 +20,7 @@ public class Example {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Transient
+    @Column(length = 50, unique = true)
     private String fbId;
 
     private String column1;

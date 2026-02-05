@@ -24,4 +24,7 @@ public class Config {
 
     @Column(name = "date_")
     private LocalDateTime date;
+
+    @Column(length = 50, unique = true)
+    private String fbId;
 }

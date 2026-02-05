@@ -28,7 +28,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Transient
+    @Column(length = 50, unique = true)
     private String fbId;
 
     @Column(nullable = false, unique = true, length = 50)
