@@ -85,9 +85,9 @@ export default function ResetBlockingPage() {
 
   return (
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-50">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Reset User Blocking</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Reinitialisation bloc</h2>
       {blockedUsers.length === 0 ? (
-        <div className="text-gray-600 text-center">No blocked users found.</div>
+        <div className="text-gray-600 text-center">Aucun utilisateur bloque</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {blockedUsers.map(user => (
@@ -102,7 +102,7 @@ export default function ResetBlockingPage() {
                 onClick={() => resetBlock(user.id)}
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
               >
-                Reset Block
+                Reinitialiser
               </button>
             </div>
           ))}

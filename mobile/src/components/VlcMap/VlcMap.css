@@ -44,6 +44,8 @@
   border: 1px solid #eef2f7;
   padding: 8px;
   border-radius: 12px;
+  width: 250px;
+  height: 50px;
 }
 
 .vlc-shape-btn {
@@ -141,6 +143,8 @@
   padding: 12px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
   min-width: 200px;
+  transition: all 300ms ease;
+  transform-origin: top right;
 }
 
 .vlc-legend-header {

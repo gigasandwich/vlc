@@ -125,42 +125,52 @@ export default function AdminPoints() {
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-50">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Points</h2>
-        <button onClick={load} className="px-3 py-1 bg-blue-600 text-white rounded">Refresh</button>
+        <button onClick={load} disabled={loading} className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>Refresh</span>
+        </button>
       </div>
 
       {loading && <div>Loading...</div>}
       {error && <div className="text-red-600">{error}</div>}
 
       {!loading && points && (
-        <div className="bg-white shadow rounded border overflow-x-auto">
+        <div className="bg-white shadow-lg rounded-lg border border-gray-200 overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-gray-100 text-sm text-gray-600">
+            <thead className="bg-gray-100 text-sm text-gray-600 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-2">ID</th>
-                <th className="px-4 py-2">Date</th>
-                <th className="px-4 py-2">Surface</th>
-                <th className="px-4 py-2">Budget</th>
-                <th className="px-4 py-2">Type</th>        
-                <th className="px-4 py-2">Entreprises</th>                
-                <th className="px-4 py-2">Etat</th>
-                <th className="px-4 py-2">Actions</th>
-                <th className="px-4 py-2">Updated At</th>
+                <th className="px-6 py-3 font-semibold">ID</th>
+                <th className="px-6 py-3 font-semibold">Date de creation</th>
+                <th className="px-6 py-3 font-semibold">Surface</th>
+                <th className="px-6 py-3 font-semibold">Budget</th>
+                <th className="px-6 py-3 font-semibold">Type</th>        
+                <th className="px-6 py-3 font-semibold">Entreprises</th>                
+                <th className="px-6 py-3 font-semibold">Etat</th>
+                <th className="px-6 py-3 font-semibold">Actions</th>
+                <th className="px-6 py-3 font-semibold">Date de derniere modification</th>
               </tr>
             </thead>
             <tbody>
               {points.map((p: any) => (
-                <tr key={p.id} className="border-t even:bg-gray-50">
-                  <td className="px-4 py-2">{p.id}</td>
-                  <td className="px-4 py-2">{formatDate(p.date)}</td>
-                  <td className="px-4 py-2">{p.surface}</td>
-                  <td className="px-4 py-2">{p.budget}</td>
-                  <td className="px-4 py-2">{p.typeLabel}</td>
-                  <td className="px-4 py-2">{p.factoryLabels}</td>
-                  <td className="px-4 py-2">{p.stateLabel}</td>
-                  <td className="px-4 py-2">
-                    <button onClick={() => handleEdit(p)} className="px-2 py-1 bg-green-600 text-white rounded">Edit</button>
+                <tr key={p.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                  <td className="px-6 py-4">{p.id}</td>
+                  <td className="px-6 py-4">{formatDate(p.date)}</td>
+                  <td className="px-6 py-4">{p.surface}</td>
+                  <td className="px-6 py-4">{p.budget}</td>
+                  <td className="px-6 py-4">{p.typeLabel}</td>
+                  <td className="px-6 py-4">{p.factoryLabels}</td>
+                  <td className="px-6 py-4">{p.stateLabel}</td>
+                  <td className="px-6 py-4">
+                    <button onClick={() => handleEdit(p)} className="px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-md shadow-md hover:shadow-lg transition-all duration-200 flex items-center space-x-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      <span>Edit</span>
+                    </button>
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-6 py-4">
                     {formatDate(p.updatedAt)}
                   </td>
                 </tr>
@@ -175,79 +185,97 @@ export default function AdminPoints() {
       )}
 
       {isEditing && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded shadow-lg max-w-md w-full">
-            <h3 className="text-lg font-bold mb-4">Edit Point {selectedPoint.id}</h3>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium">Surface</label>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-xl max-w-lg w-full mx-4">
+            <h3 className="text-xl font-bold mb-6 text-gray-800">Edit Point {selectedPoint.id}</h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <label className="text-sm font-medium text-gray-700">Surface</label>
                 <input
                   type="number"
                   value={formData.surface}
                   onChange={(e) => setFormData(prev => ({ ...prev, surface: e.target.value }))}
-                  className="w-full p-2 border rounded"
+                  className="col-span-2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  required
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium">Budget</label>
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <label className="text-sm font-medium text-gray-700">Budget</label>
                 <input
                   type="number"
                   value={formData.budget}
                   onChange={(e) => setFormData(prev => ({ ...prev, budget: e.target.value }))}
-                  className="w-full p-2 border rounded"
+                  className="col-span-2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  required
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium">Point State</label>
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <label className="text-sm font-medium text-gray-700">Etat du probleme</label>
                 <select
                   value={formData.pointStateId}
                   onChange={(e) => setFormData(prev => ({ ...prev, pointStateId: e.target.value }))}
-                  className="w-full p-2 border rounded"
+                  className="col-span-2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  required
                 >
-                  <option value="">Select State</option>
+                  <option value="">Selectionnez un etat</option>
                   {pointStates.map((s: any) => (
                     <option key={s.id} value={s.id}>{s.label}</option>
                   ))}
                 </select>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium">Point Type</label>
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <label className="text-sm font-medium text-gray-700">Type du probleme</label>
                 <select
                   value={formData.pointTypeId}
                   onChange={(e) => setFormData(prev => ({ ...prev, pointTypeId: e.target.value }))}
-                  className="w-full p-2 border rounded"
+                  className="col-span-2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  required
                 >
-                  <option value="">Select Type</option>
+                  <option value="">Selectionnez un type</option>
                   {pointTypes.map((t: any) => (
                     <option key={t.id} value={t.id}>{t.label}</option>
                   ))}
                 </select>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium">Factories</label>
-                {factories.map((f: any) => (
-                  <label key={f.id} className="block">
-                    <input
-                      type="checkbox"
-                      checked={formData.factoryIds.includes(f.id)}
-                      onChange={(e) => handleCheckboxChange(f.id, e.target.checked)}
-                    />
-                    {f.label}
-                  </label>
-                ))}
+              <div className="grid grid-cols-3 gap-4 items-start">
+                <label className="text-sm font-medium text-gray-700 pt-3">Usines</label>
+                <div className="col-span-2 space-y-2 max-h-32 overflow-y-auto">
+                  {factories.map((f: any) => (
+                    <label key={f.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.factoryIds.includes(f.id)}
+                        onChange={(e) => handleCheckboxChange(f.id, e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">{f.label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium">Update date</label>
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <label className="text-sm font-medium text-gray-700">Date de modification</label>
                 <input
                   type="datetime-local"
                   value={formData.updatedAt}
                   onChange={(e) => setFormData(prev => ({ ...prev, updatedAt: e.target.value }))}
-                  className="w-full p-2 border rounded"
+                  className="col-span-2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  required
                 />
               </div>
-              <div className="flex justify-end">
-                <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 mr-2 bg-gray-300 rounded">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">Update</button>
+              <div className="flex justify-end space-x-3 pt-4">
+                <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md transition-all duration-200 flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>Cancel</span>
+                </button>
+                <button type="submit" className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-md shadow-md hover:shadow-lg transition-all duration-200 flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Update</span>
+                </button>
               </div>
             </form>
           </div>
