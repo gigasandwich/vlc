@@ -43,6 +43,9 @@ public class Point {
     @Column(nullable = false)
     private Double budget;
 
+    @Column(length = 50, unique = true)
+    private String fbId;
+
     @Column(
         name = "coordinates",
         nullable = false,

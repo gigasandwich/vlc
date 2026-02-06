@@ -19,4 +19,7 @@ public class Factory {
 
     @Column(nullable = false, unique = true)
     private String label;
+
+    @Column(length = 50, unique = true)
+    private String fbId;
 }

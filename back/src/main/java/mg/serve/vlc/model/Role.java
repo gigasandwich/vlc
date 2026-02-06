@@ -17,7 +17,7 @@ public class Role {
     @Column(name = "label", nullable = false, unique = true)
     private String label;
 
-    @Transient
+    @Column(length = 50, unique = true)
     private String fbId;
 
     public Map<String, Object> toMap() {

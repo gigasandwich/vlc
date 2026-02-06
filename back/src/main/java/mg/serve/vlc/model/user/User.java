@@ -28,7 +28,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Transient
+    @Column(length = 50, unique = true)
     private String fbId;
 
     @Column(nullable = false, unique = true, length = 50)
@@ -143,8 +143,7 @@ public class User {
 
     @Transactional(rollbackOn = Exception.class)
     public void saveHistoric() throws BusinessLogicException {
-        // UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.id, this.fbId, this.userStateId); // fbId from User Creation
-        UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.id, this.userStateId); // fbId from User Creation
+        UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.id, this.userStateId, null);
         RepositoryProvider.getRepository(UserHistoricRepository.class).save(userHistoric);
         // System.out.println("Historic saved for user id " + this.fbId);
     }
@@ -173,7 +172,7 @@ public class User {
         }
 
         // Business logic
-        UserLog userLog = new UserLog(null, LocalDateTime.now(), 0.0, null, this, wrongLoginAction.get());
+        UserLog userLog = new UserLog(null, LocalDateTime.now(), 0.0, null, this, wrongLoginAction.get(), null);
         
         // Persistence
         RepositoryProvider.userLogRepository.save(userLog);

@@ -38,4 +38,7 @@ public class UserLog {
     @ManyToOne(optional = false)
     @JoinColumn(name = "action_id")
     private Action action;
+
+    @Column(length = 50, unique = true)
+    private String fbId;
 }

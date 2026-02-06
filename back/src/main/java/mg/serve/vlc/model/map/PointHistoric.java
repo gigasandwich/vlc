@@ -42,4 +42,7 @@ public class PointHistoric
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "point_state_id", nullable = false)
     private PointState pointState;
+
+    @Column(length = 50, unique = true)
+    private String fbId;
 }

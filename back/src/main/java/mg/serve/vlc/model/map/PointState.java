@@ -22,4 +22,7 @@ public class PointState
     private Double order;
 
     private Double progress;
+
+    @Column(length = 50, unique = true)
+    private String fbId;
 }

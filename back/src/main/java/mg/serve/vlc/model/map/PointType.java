@@ -17,4 +17,7 @@ public class PointType
 
     @Column(nullable = false, unique = true, length = 50)
     private String label;
+
+    @Column(length = 50, unique = true)
+    private String fbId;
 }
