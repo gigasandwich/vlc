@@ -12,6 +12,8 @@ import mg.serve.vlc.repository.user.FirebaseUserRepository;
 import mg.serve.vlc.repository.userHistoric.FirebaseUserHistoricRepository;
 import mg.serve.vlc.util.RepositoryProvider;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.ListUsersPage;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -19,16 +21,14 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/sync")
 public class SyncController {
-
     private static final Logger logger = LoggerFactory.getLogger(SyncController.class);
+    FirebaseUserRepository firebaseUserRepository = new FirebaseUserRepository();
+    FirebaseUserHistoricRepository firebaseUserHistoricRepository = new FirebaseUserHistoricRepository();
 
     @PostMapping("/users")
     public ResponseEntity<ApiResponse> syncUsers() {
         try {
             List<User> localUsers = RepositoryProvider.jpaUserRepository.findAll();
-            if (localUsers.isEmpty()) {
-                return ResponseEntity.ok(new ApiResponse("success", Collections.emptyList(), "No users to sync"));
-            }
 
             List<String> errors = new ArrayList<>();
             List<User> syncedUsers = new ArrayList<>();
@@ -41,7 +41,30 @@ public class SyncController {
             // Wait for all to complete
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-            String message = String.format("Synced %d users successfully. %d errors occurred.", syncedUsers.size(), errors.size());
+            // Delete Firebase Auth/Firestore users not in local DB
+            Set<String> localEmails = localUsers.stream().map(User::getEmail).collect(Collectors.toSet());
+            Map<String, String> firebaseUsers = new HashMap<>();
+            ListUsersPage page = FirebaseAuth.getInstance().listUsers(null);
+            while (page != null) {
+                page.getValues().forEach(userRecord -> firebaseUsers.put(userRecord.getEmail(), userRecord.getUid()));
+                page = page.getNextPage();
+            }
+            int deletedCount = 0;
+            for (String email : firebaseUsers.keySet()) {
+                if (!localEmails.contains(email)) {
+                    String uid = firebaseUsers.get(email);
+                    try {
+                        firebaseUserRepository.deleteByUserFbId(uid);
+                        deletedCount++;
+                        logger.info("Deleted user from Firebase: {}", email);
+                    } catch (Exception e) {
+                        errors.add("Failed to delete user from Firebase: " + email + " - " + e.getMessage());
+                        logger.warn("Failed to delete user from Firebase: {}", email, e);
+                    }
+                }
+            }
+
+            String message = String.format("Synced %d users successfully. Deleted %d users from Firebase. %d errors occurred.", syncedUsers.size(), deletedCount, errors.size());
             if (!errors.isEmpty()) {
                 message += " Errors: " + String.join("; ", errors);
             }
@@ -55,9 +78,6 @@ public class SyncController {
 
     private void syncUser(User user, List<User> syncedUsers, List<String> errors) {
         try {
-            FirebaseUserRepository firebaseUserRepository = new FirebaseUserRepository();
-            FirebaseUserHistoricRepository firebaseUserHistoricRepository = new FirebaseUserHistoricRepository();
-
             // User: Firebase Auth / Firestore
             User syncedUser = firebaseUserRepository.save(user);
             syncedUsers.add(syncedUser);
