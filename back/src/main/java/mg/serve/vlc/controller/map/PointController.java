@@ -496,4 +496,19 @@ public class PointController {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }
     }
+
+    @GetMapping("/detailled")
+    public ResponseEntity<ApiResponse> getClean() {
+        try {
+            List<Point> points = RepositoryProvider.getRepository(PointRepository.class).findAll();
+            List<Map<String, Object>> payload = points.stream()
+                .map(p -> {
+                    return p.toMap();
+                })
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(new ApiResponse("success", payload, null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
 }

@@ -1,6 +1,10 @@
 package mg.serve.vlc.repository.point;
 
 import mg.serve.vlc.model.map.Point;
+import mg.serve.vlc.model.map.PointState;
+import mg.serve.vlc.model.map.PointType;
+import mg.serve.vlc.model.map.Factory;
+import mg.serve.vlc.model.user.User;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.GeoPoint;
@@ -37,7 +41,6 @@ public class FirebasePointRepository implements PointRepository {
 
     @Override
     public List<Point> findByPointStateId(Integer pointStateId) {
-        // For simplicity, fetch all and filter
         return findAll().stream()
                 .filter(p -> p.getPointState() != null && p.getPointState().getId().equals(pointStateId))
                 .toList();
@@ -100,6 +103,51 @@ public class FirebasePointRepository implements PointRepository {
             double longitude = ((Number) coords.get("longitude")).doubleValue();
             double latitude = ((Number) coords.get("latitude")).doubleValue();
             point.setCoordinates(longitude, latitude);
+        }
+
+        // Handle userId
+        if (data.get("userId") != null) {
+            Integer userId = ((Long) data.get("userId")).intValue();
+            User user = new User();
+            user.setId(userId);
+            point.setUser(user);
+        }
+
+        // Handle pointState
+        if (data.get("point_state") != null) {
+            Map<String, Object> psMap = (Map<String, Object>) data.get("point_state");
+            PointState pointState = new PointState();
+            if (psMap.get("id") != null) {
+                pointState.setId(((Long) psMap.get("id")).intValue());
+            }
+            pointState.setLabel((String) psMap.get("label"));
+            point.setPointState(pointState);
+        }
+
+        // Handle pointType
+        if (data.get("point_type") != null) {
+            Map<String, Object> ptMap = (Map<String, Object>) data.get("point_type");
+            PointType pointType = new PointType();
+            if (ptMap.get("id") != null) {
+                pointType.setId(((Long) ptMap.get("id")).intValue());
+            }
+            pointType.setLabel((String) ptMap.get("label"));
+            point.setPointType(pointType);
+        }
+
+        // Handle factories
+        if (data.get("factories") != null) {
+            List<Map<String, Object>> factoriesList = (List<Map<String, Object>>) data.get("factories");
+            List<Factory> factories = new ArrayList<>();
+            for (Map<String, Object> fMap : factoriesList) {
+                Factory factory = new Factory();
+                if (fMap.get("id") != null) {
+                    factory.setId(((Long) fMap.get("id")).intValue());
+                }
+                factory.setLabel((String) fMap.get("label"));
+                factories.add(factory);
+            }
+            point.setFactories(factories);
         }
 
         return point;
