@@ -9,7 +9,7 @@ import mg.serve.vlc.dto.PointInProgressDTO;
 import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.map.*;
 import mg.serve.vlc.model.user.*;
-import mg.serve.vlc.repository.PointRepository;
+import mg.serve.vlc.repository.point.*;
 import mg.serve.vlc.repository.PointTypeRepository;
 import mg.serve.vlc.repository.FactoryRepository;
 import mg.serve.vlc.repository.pointState.PointStateRepository;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/points")
 @RequiredArgsConstructor
-@SecurityRequirement(name = "bearerAuth")
+// @SecurityRequirement(name = "bearerAuth")
 public class PointController {
     @Autowired
     private final JwtService jwtService;
@@ -46,7 +46,7 @@ public class PointController {
             @RequestParam(name = "point_type_id", required = false) Integer pointTypeId
     ) {
         try {
-            PointRepository pointRepository = RepositoryProvider.pointRepository;
+            PointRepository pointRepository = RepositoryProvider.getRepository(PointRepository.class);
             List<Point> points;
 
             // Filtrage simple si demandé
@@ -111,7 +111,7 @@ public class PointController {
     @Transactional(Transactional.TxType.REQUIRES_NEW)
     public ResponseEntity<ApiResponse> getPoint(@PathVariable("id") Integer id) {
         try {
-            PointRepository pointRepository = RepositoryProvider.pointRepository;
+            PointRepository pointRepository = RepositoryProvider.getRepository(PointRepository.class);
             Point p = pointRepository.findById(id).orElse(null);
             if (p == null) {
                 return ResponseEntity.badRequest().body(new ApiResponse("error", null, "Point not found"));
@@ -280,7 +280,7 @@ public class PointController {
                 throw new BusinessLogicException("Only admins can update points");
             }
 
-            Point point = RepositoryProvider.pointRepository.findById(id).orElse(null);
+            Point point = RepositoryProvider.getRepository(PointRepository.class).findById(id).orElse(null);
             if (point == null) {
                 return ResponseEntity.badRequest().body(new ApiResponse("error", null, "Point not found"));
             }
@@ -376,7 +376,7 @@ public class PointController {
 
             for (Integer pid : finishedIds) {
                 try {
-                    mg.serve.vlc.model.map.Point p = RepositoryProvider.pointRepository.findById(pid).orElse(null);
+                    mg.serve.vlc.model.map.Point p = RepositoryProvider.getRepository(PointRepository.class).findById(pid).orElse(null);
                     if (p == null) continue;
 
                     // build PointDTO for this point (similar to getPoint)
