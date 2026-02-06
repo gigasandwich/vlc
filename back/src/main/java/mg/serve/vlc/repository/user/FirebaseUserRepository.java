@@ -18,7 +18,7 @@ public class FirebaseUserRepository implements UserRepository {
     private final CollectionReference collectionReference;
 
     public FirebaseUserRepository() {
-        db = FirestoreClient.getFirestore();
+        this.db = FirestoreClient.getFirestore();
         this.collectionReference = db.collection("users");
     }
 

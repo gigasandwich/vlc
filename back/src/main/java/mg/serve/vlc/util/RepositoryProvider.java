@@ -104,7 +104,7 @@ public class RepositoryProvider {
         return repositoryClass.cast(jpaRepositories.get(repositoryClass));
     }
     
-    private static boolean checkFirebaseConnection() {
+    public static boolean checkFirebaseConnection() {
         try {
             FirebaseApp firebaseApp = FirebaseApp.getInstance();
             FirebaseAuth firebaseAuth = FirebaseAuth.getInstance(firebaseApp);

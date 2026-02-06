@@ -9,6 +9,7 @@ import mg.serve.vlc.model.user.User;
 @RestController
 @RequestMapping("/auth/sign-up")
 public class SignUpController {
+    // Add admin check
     @PostMapping
     ResponseEntity<ApiResponse> signUp(@RequestParam String email, @RequestParam String password, @RequestParam(required = false) String username, @RequestParam(defaultValue = "USER") String role) {
         try {

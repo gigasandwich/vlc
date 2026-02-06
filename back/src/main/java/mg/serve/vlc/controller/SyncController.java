@@ -12,8 +12,6 @@ import mg.serve.vlc.repository.user.FirebaseUserRepository;
 import mg.serve.vlc.repository.userHistoric.FirebaseUserHistoricRepository;
 import mg.serve.vlc.util.RepositoryProvider;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.ListUsersPage;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -28,6 +26,10 @@ public class SyncController {
     @PostMapping("/users")
     public ResponseEntity<ApiResponse> syncUsers() {
         try {
+            if (!RepositoryProvider.checkFirebaseConnection()) {
+                throw new Exception("Firebase can't be accessde");
+            }
+
             List<User> localUsers = RepositoryProvider.jpaUserRepository.findAll();
 
             List<String> errors = new ArrayList<>();
@@ -43,23 +45,19 @@ public class SyncController {
 
             // Delete Firebase Auth/Firestore users not in local DB
             Set<String> localEmails = localUsers.stream().map(User::getEmail).collect(Collectors.toSet());
-            Map<String, String> firebaseUsers = new HashMap<>();
-            ListUsersPage page = FirebaseAuth.getInstance().listUsers(null);
-            while (page != null) {
-                page.getValues().forEach(userRecord -> firebaseUsers.put(userRecord.getEmail(), userRecord.getUid()));
-                page = page.getNextPage();
-            }
+            List<User> firebaseUsers = firebaseUserRepository.findAll();
             int deletedCount = 0;
-            for (String email : firebaseUsers.keySet()) {
+            for (User fbUser : firebaseUsers) {
+                String email = fbUser.getEmail();
                 if (!localEmails.contains(email)) {
-                    String uid = firebaseUsers.get(email);
+                    String uid = fbUser.getFbId();
                     try {
                         firebaseUserRepository.deleteByUserFbId(uid);
                         deletedCount++;
                         logger.info("Deleted user from Firebase: {}", email);
                     } catch (Exception e) {
                         errors.add("Failed to delete user from Firebase: " + email + " - " + e.getMessage());
-                        logger.warn("Failed to delete user from Firebase: {}", email, e);
+                        // logger.warn("Failed to delete user from Firebase: {}", email, e);
                     }
                 }
             }
@@ -92,7 +90,7 @@ public class SyncController {
         } catch (Exception ex) {
             String errorMsg = String.format("Failed to sync user %s: %s", user.getId(), ex.getMessage());
             errors.add(errorMsg);
-            logger.warn(errorMsg, ex);
+            // logger.warn(errorMsg, ex); // Detailled error, uncomment if you wanna see the attrocities in logs
         }
     }
 }
