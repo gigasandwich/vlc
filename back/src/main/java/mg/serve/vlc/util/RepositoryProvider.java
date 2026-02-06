@@ -101,7 +101,6 @@ public class RepositoryProvider {
         //     return repositoryClass.cast(jpaRepositories.get(repositoryClass));
         // }
 
-        // For now, always use local repository for testing
         return repositoryClass.cast(jpaRepositories.get(repositoryClass));
     }
     

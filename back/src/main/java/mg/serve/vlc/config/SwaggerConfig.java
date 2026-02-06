@@ -38,9 +38,19 @@ public class SwaggerConfig {
                 .pathsToMatch(
                     "/points", "/points/summary",
                     "/points/list", "/points/{id}",
-                    "/points/in-progress" , "/points/work-delay"
+                    "/points/in-progress" , "/points/work-delay",
+                    "/points/detailled"
                 )
                 .build();
     }
     
+    @Bean
+    public GroupedOpenApi syncApi() {
+        return GroupedOpenApi.builder()
+                .group("sync")
+                .pathsToMatch(
+                    "/sync/users"
+                )
+                .build();
+    }
 }

@@ -105,6 +105,7 @@ public class User {
         }
     }
 
+    // TODO: fix Transactions, not working???
     // Sign in is not handled by this Model class (only in SignInController)
     @Transactional(rollbackOn = Exception.class)
     public void signUp(String role) throws BusinessLogicException {
@@ -148,7 +149,7 @@ public class User {
 
     @Transactional(rollbackOn = Exception.class)
     public void saveHistoric() throws BusinessLogicException {
-        UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.id, this.userStateId, null);
+        UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.userStateId, this.fbId, this);
         RepositoryProvider.getRepository(UserHistoricRepository.class).save(userHistoric);
         // System.out.println("Historic saved for user id " + this.fbId);
     }

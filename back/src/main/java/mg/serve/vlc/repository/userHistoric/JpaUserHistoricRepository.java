@@ -5,8 +5,11 @@ import jakarta.persistence.PersistenceContext;
 import mg.serve.vlc.model.user.UserHistoric;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.*;
 
 @Repository
 public interface JpaUserHistoricRepository extends JpaRepository<UserHistoric, Integer>, UserHistoricRepository {
+    List<UserHistoric> findAll();
 
+    List<UserHistoric> findByUserId(Integer userId);
 }

@@ -133,15 +133,17 @@ public class Point {
         }
         if (this.pointState != null) {
             pointMap.put("pointStateId", this.pointState.getId());
+    pointMap.put("pointState", Map.of("id", this.pointState.getId(), "label", this.pointState.getLabel()));
         }
         if (this.pointType != null) {
             pointMap.put("pointTypeId", this.pointType.getId());
+            pointMap.put("pointType", Map.of("id", this.pointType.getId(), "label", this.pointType.getLabel()));
         }
-        List<Integer> factoryIds = new ArrayList<>();
+        List<Map<String, Object>> factoryList = new ArrayList<>();
         for (Factory factory : this.factories) {
-            factoryIds.add(factory.getId());
+            factoryList.add(Map.of("id", factory.getId(), "label", factory.getLabel()));
         }
-        pointMap.put("factoryIds", factoryIds);
+        pointMap.put("factories", factoryList);
         return pointMap;
     }
 }
