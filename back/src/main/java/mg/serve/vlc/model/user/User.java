@@ -107,7 +107,7 @@ public class User {
 
     // Sign in is not handled by this Model class (only in SignInController)
     @Transactional(rollbackOn = Exception.class)
-    public void signUp() throws BusinessLogicException {
+    public void signUp(String role) throws BusinessLogicException {
         // Control
         UserRepository repo = RepositoryProvider.getRepository(UserRepository.class);
         User existingUser = repo.findByEmail(this.email).orElse(null);
@@ -116,7 +116,12 @@ public class User {
         }
 
         // Business logic (Role + State)
-        this.roles.add(new Role(1, "1", "USER")); // Too lazy to create RoleRepository
+        if (role.equals("ADMIN"))
+            this.roles.add(new Role(2, "2", "ADMIN")); // Too lazy to create RoleRepository
+        else if (role.equals("USER"))
+            this.roles.add(new Role(1, "1", "USER"));
+        else
+            throw new BusinessLogicException("Invalid role: " + role); 
 
         this.userStateId = 1;
 

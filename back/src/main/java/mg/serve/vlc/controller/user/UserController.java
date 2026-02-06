@@ -87,4 +87,25 @@ public class UserController {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }
     }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse> getAllUsers() { // @RequestHeader("Authorization") String authHeader
+        try {
+            // User user = jwtService.getUserFromAuthHeader(authHeader);
+            // if (!user.isAdmin()) {
+            //     throw new BusinessLogicException("Only admins can view all users");
+            // }
+
+            UserRepository userRepository = RepositoryProvider.getRepository(UserRepository.class);
+            List<User> users = userRepository.findAll();
+
+            List<Map<String, Object>> data = users.stream().map(u -> {
+                return u.toMap();
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(new ApiResponse("success", data, null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
 }

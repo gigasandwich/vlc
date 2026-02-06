@@ -17,9 +17,7 @@ import mg.serve.vlc.security.JwtService;
 import mg.serve.vlc.util.RepositoryProvider;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
