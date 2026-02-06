@@ -25,11 +25,14 @@ public class UserHistoric {
     private String username;
     @Column(name = "date_")
     private LocalDateTime date;
-    private Integer userId;
     private Integer userStateId;
 
     @Column(length = 50, unique = true)
     private String fbId;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
 
     public Map<String, Object> toMap() {
         Map<String, Object> map = new HashMap<>();
@@ -38,7 +41,7 @@ public class UserHistoric {
         map.put("password", password);
         map.put("username", username);
         map.put("date", date != null ? Date.from(date.atZone(ZoneId.systemDefault()).toInstant()) : null);
-        map.put("userId", userId);
+        map.put("userId", this.user.getId());
         // map.put("userFbId", userFbId);
         map.put("userStateId", userStateId);
         return map;

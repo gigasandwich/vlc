@@ -44,4 +44,13 @@ public class SwaggerConfig {
                 .build();
     }
     
+    @Bean
+    public GroupedOpenApi syncApi() {
+        return GroupedOpenApi.builder()
+                .group("sync")
+                .pathsToMatch(
+                    "/sync/users"
+                )
+                .build();
+    }
 }

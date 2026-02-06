@@ -148,7 +148,7 @@ public class User {
 
     @Transactional(rollbackOn = Exception.class)
     public void saveHistoric() throws BusinessLogicException {
-        UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.id, this.userStateId, null);
+        UserHistoric userHistoric = new UserHistoric(null, this.email, this.password, this.username, LocalDateTime.now(), this.id, this.userStateId, null, this);
         RepositoryProvider.getRepository(UserHistoricRepository.class).save(userHistoric);
         // System.out.println("Historic saved for user id " + this.fbId);
     }

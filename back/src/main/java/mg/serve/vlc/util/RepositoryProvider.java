@@ -95,14 +95,13 @@ public class RepositoryProvider {
     }
 
     public static <T> T getRepository(Class<T> repositoryClass) {
-        if (checkFirebaseConnection()) {
-            return repositoryClass.cast(firebaseRepositories.get(repositoryClass));
-        } else {
-            return repositoryClass.cast(jpaRepositories.get(repositoryClass));
-        }
+        // if (checkFirebaseConnection()) {
+        //     return repositoryClass.cast(firebaseRepositories.get(repositoryClass));
+        // } else {
+        //     return repositoryClass.cast(jpaRepositories.get(repositoryClass));
+        // }
 
-        // For now, always use local repository for testing
-        // return repositoryClass.cast(jpaRepositories.get(repositoryClass));
+        return repositoryClass.cast(jpaRepositories.get(repositoryClass));
     }
     
     private static boolean checkFirebaseConnection() {

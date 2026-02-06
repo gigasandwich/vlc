@@ -56,6 +56,10 @@ public class SecurityConfig {
                     "/users" // Debug
                 ).permitAll()
 
+                .requestMatchers(
+                    "/sync/users" // Debug
+                ).permitAll()
+
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
