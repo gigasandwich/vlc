@@ -1,6 +1,7 @@
 package mg.serve.vlc.repository.user;
 
 import mg.serve.vlc.model.user.User;
+import mg.serve.vlc.model.Role;
 
 import java.util.*;
 import com.google.firebase.auth.FirebaseAuth;
@@ -14,7 +15,52 @@ public class FirebaseUserRepository implements UserRepository {
 
     @Override
     public List<User> findAll() {
-        throw new UnsupportedOperationException("Unimplemented method 'findAll'");
+        try {
+            Firestore firestore = FirestoreClient.getFirestore();
+            // I'm using full package to remember the class
+            Iterable<com.google.cloud.firestore.DocumentReference> docs = firestore.collection("users").listDocuments();
+            List<User> users = new ArrayList<>();
+
+            for (com.google.cloud.firestore.DocumentReference doc : docs) {
+                Map<String, Object> data = doc.get().get().getData();
+                if (data != null) {
+                    User user = new User();
+                    user.setFbId(doc.getId());
+                    if (data.get("id") != null) {
+                        user.setId(((Long) data.get("id")).intValue());
+                    }
+                    user.setEmail((String) data.get("email"));
+                    user.setUsername((String) data.get("username"));
+                    if (data.get("userStateId") != null) {
+                        user.setUserStateId(((Long) data.get("userStateId")).intValue());
+                    }
+
+                    // Handle roles
+                    List<Map<String, Object>> rolesData = (List<Map<String, Object>>) data.get("roles");
+                    if (rolesData != null) {
+                        Set<Role> roles = new HashSet<>();
+                        for (Map<String, Object> roleData : rolesData) {
+                            Role role = new Role();
+                            if (roleData.get("id") != null) {
+                                role.setId(((Long) roleData.get("id")).intValue());
+                            }
+                            role.setLabel((String) roleData.get("label"));
+                            roles.add(role);
+                        }
+                        user.setRoles(roles);
+                    }
+
+                    users.add(user);
+                }
+            }
+
+            return users;
+        } catch (Exception e) {
+            System.err.println("Error fetching all users from Firebase: " + e.getMessage());
+            // throw new RuntimeException("Failed to fetch all users from Firebase " + e.getMessage(), e);
+        }
+
+        return Collections.emptyList();
     }
 
     @Override
@@ -29,12 +75,12 @@ public class FirebaseUserRepository implements UserRepository {
 
             UserRecord userRecord = FirebaseAuth.getInstance().createUser(request);
             String fbId = userRecord.getUid();
+            user.setFbId(fbId); // So that the historic can still use it
 
             System.out.println("Successfully created Firebase user: " + userRecord.getUid());
 
             Firestore firestore = FirestoreClient.getFirestore();
             firestore.collection("users").document(fbId).set(user.toMap()).get();
-            user.setFbId(fbId); // So that the historic can still use it
 
             return user;
         } catch (Exception e) {
@@ -52,7 +98,7 @@ public class FirebaseUserRepository implements UserRepository {
 
             User user = new User();
             user.setEmail(userRecord.getEmail());
-            user.setUsername(userRecord.getDisplayName());
+            user.setUsername(userRecord.getDisplayName()); // TODO: Should get full user, not just the one from UserRecord
 
             return Optional.of(user);
         } catch (Exception e) {

@@ -2,16 +2,14 @@ package mg.serve.vlc.model.map;
 
 import lombok.*;
 import mg.serve.vlc.model.user.User;
+import mg.serve.vlc.repository.point.PointRepository;
 import mg.serve.vlc.util.RepositoryProvider;
-import mg.serve.vlc.model.map.Factory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 
@@ -76,7 +74,7 @@ public class Point {
 
     @Transactional(rollbackOn = Exception.class)
     public Point save() {
-        return RepositoryProvider.pointRepository.save(this);
+        return RepositoryProvider.getRepository(PointRepository.class).save(this);
     }
 
     public void setCoordinates(double longitude, double latitude) {
@@ -119,5 +117,31 @@ public class Point {
             return this.date;
         }
         return this.updatedAt;
+    }
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> pointMap = new HashMap<>();
+        pointMap.put("id", this.id);
+        pointMap.put("date", this.date);
+        pointMap.put("updatedAt", this.updatedAt);
+        pointMap.put("deletedAt", this.deletedAt);
+        pointMap.put("surface", this.surface);
+        pointMap.put("budget", this.budget);
+        pointMap.put("coordinates", Map.of("longitude", this.coordinates.getX(), "latitude", this.coordinates.getY()));
+        if (this.user != null) {
+            pointMap.put("userId", this.user.getId());
+        }
+        if (this.pointState != null) {
+            pointMap.put("pointStateId", this.pointState.getId());
+        }
+        if (this.pointType != null) {
+            pointMap.put("pointTypeId", this.pointType.getId());
+        }
+        List<Integer> factoryIds = new ArrayList<>();
+        for (Factory factory : this.factories) {
+            factoryIds.add(factory.getId());
+        }
+        pointMap.put("factoryIds", factoryIds);
+        return pointMap;
     }
 }

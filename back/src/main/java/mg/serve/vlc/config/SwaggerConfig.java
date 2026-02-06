@@ -14,7 +14,17 @@ public class SwaggerConfig {
                 .pathsToMatch(
                     "/auth/sign-in",
                     "/auth/sign-up",
-                    "/auth/reset-block/{userId}",
+                    "/auth/reset-block/{userId}"
+                )
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi usersApi() {
+        return GroupedOpenApi.builder()
+                .group("users")
+                .pathsToMatch(
+                    "/users", // Just for debbuging
                     "/users/update",
                     "/users/delete"
                 )

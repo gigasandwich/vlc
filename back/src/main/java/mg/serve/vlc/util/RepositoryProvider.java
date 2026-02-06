@@ -9,9 +9,8 @@ import mg.serve.vlc.repository.userHistoric.*;
 import mg.serve.vlc.repository.userHistoric.UserHistoricRepository;
 import mg.serve.vlc.repository.example.*;
 import mg.serve.vlc.repository.example.ExampleRepository;
+import mg.serve.vlc.repository.point.*;
 import mg.serve.vlc.repository.pointState.*;
-import mg.serve.vlc.repository.example.*;
-import mg.serve.vlc.repository.WorkTreatmentRepository;
 
 import java.util.HashMap;
 
@@ -28,7 +27,7 @@ public class RepositoryProvider {
     public static ConfigRepository configRepository;
     public static ActionRepository actionRepository;
     public static JpaUserRepository jpaUserRepository;
-    public static PointRepository pointRepository;
+    public static JpaPointRepository jpaPointRepository;
     public static PointHistoricRepository pointHistoricRepository;
     public static PointsSummaryRepository pointsSummaryRepository;
     public static PointStateRepository pointStateRepository;
@@ -44,7 +43,7 @@ public class RepositoryProvider {
             UserLogRepository userLogRepository, ConfigRepository configRepository,
             ActionRepository actionRepository,
             JpaUserRepository jpaUserRepository,
-            PointRepository pointRepository,
+            JpaPointRepository jpaPointRepository,
             PointHistoricRepository pointHistoricRepository,
             PointsSummaryRepository pointsSummaryRepository,
             PointStateRepository pointStateRepository,
@@ -61,7 +60,7 @@ public class RepositoryProvider {
         RepositoryProvider.configRepository = configRepository;
         RepositoryProvider.actionRepository = actionRepository;
         RepositoryProvider.jpaUserRepository = jpaUserRepository;
-        RepositoryProvider.pointRepository = pointRepository;
+        RepositoryProvider.jpaPointRepository = jpaPointRepository;
         RepositoryProvider.pointHistoricRepository = pointHistoricRepository;
         RepositoryProvider.pointsSummaryRepository = pointsSummaryRepository;
         RepositoryProvider.pointStateRepository = pointStateRepository;
@@ -87,20 +86,23 @@ public class RepositoryProvider {
         firebaseRepositories.put(PointStateRepository.class, new FirebasePointStateRepository());
         jpaRepositories.put(PointStateRepository.class, pointStateRepository);
 
+        firebaseRepositories.put(PointRepository.class, new FirebasePointRepository());
+        jpaRepositories.put(PointRepository.class, jpaPointRepository);
+
         jpaRepositories.put(PointTypeRepository.class, RepositoryProvider.pointTypeRepository);
         jpaRepositories.put(FactoryRepository.class, RepositoryProvider.factoryRepository);
         jpaRepositories.put(WorkTreatmentRepository.class, RepositoryProvider.workTreatmentRepository);
     }
 
     public static <T> T getRepository(Class<T> repositoryClass) {
-        // if (checkFirebaseConnection()) {
-        //     return repositoryClass.cast(firebaseRepositories.get(repositoryClass));
-        // } else {
-        //     return repositoryClass.cast(jpaRepositories.get(repositoryClass));
-        // }
+        if (checkFirebaseConnection()) {
+            return repositoryClass.cast(firebaseRepositories.get(repositoryClass));
+        } else {
+            return repositoryClass.cast(jpaRepositories.get(repositoryClass));
+        }
 
         // For now, always use local repository for testing
-        return repositoryClass.cast(jpaRepositories.get(repositoryClass));
+        // return repositoryClass.cast(jpaRepositories.get(repositoryClass));
     }
     
     private static boolean checkFirebaseConnection() {

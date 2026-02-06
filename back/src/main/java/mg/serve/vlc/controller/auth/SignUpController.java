@@ -10,10 +10,10 @@ import mg.serve.vlc.model.user.User;
 @RequestMapping("/auth/sign-up")
 public class SignUpController {
     @PostMapping
-    ResponseEntity<ApiResponse> signUp(@RequestParam String email, @RequestParam String password, @RequestParam(required = false) String username) {
+    ResponseEntity<ApiResponse> signUp(@RequestParam String email, @RequestParam String password, @RequestParam(required = false) String username, @RequestParam(defaultValue = "USER") String role) {
         try {
             User user = new User(email, password, username);
-            user.signUp();
+            user.signUp(role);
 
             Object data = "New account of " + email + " signed up successfully";
             ApiResponse response = new ApiResponse("success", data, null);
