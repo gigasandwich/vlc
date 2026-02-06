@@ -31,7 +31,7 @@ public class UserHistoric {
     private String fbId;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     public Map<String, Object> toMap() {
