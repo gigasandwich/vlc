@@ -9,7 +9,7 @@ import mg.serve.vlc.model.map.Point;
 @Repository
 public interface WorkTreatmentRepository extends JpaRepository<Point, Integer> {
 
-    @Query("SELECT p.id FROM Point p JOIN p.pointState ps WHERE ps.progress = 1.0")
+    @Query("SELECT p.id FROM Point p JOIN p.pointState ps")
     List<Integer> getFinishedWork();
 
 }

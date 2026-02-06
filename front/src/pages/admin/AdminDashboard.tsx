@@ -4,8 +4,7 @@ import { Link } from 'react-router-dom';
 export default function AdminDashboard() {
   const adminActions = [
     {
-      title: 'Manage Points',
-      description: 'Update and manage the list of points, including surface, budget, and associated factories.',
+      title: 'Gestion des Points',
       link: '/admin/points',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -14,8 +13,7 @@ export default function AdminDashboard() {
       )
     },
     {
-      title: 'Create New User',
-      description: 'Add a new user to the system using the signup form.',
+      title: 'Creer Nouvel Utilisateur',
       link: '/signup',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,8 +22,7 @@ export default function AdminDashboard() {
       )
     },
     {
-      title: 'Update Configs',
-      description: 'Modify system configurations such as session duration and attempts before blocking.',
+      title: 'Mettre a Jour Configurations',
       link: '/admin/configs',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,8 +32,7 @@ export default function AdminDashboard() {
       )
     },
     {
-      title: 'Reset Blocking',
-      description: 'Select a user and reset their blocking status.',
+      title: 'Reinitialiser Blocage',
       link: '/admin/reset-blocking',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,7 +44,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-50">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Administration Dashboard</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Tableau de Bord Administration</h2>
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {adminActions.map((action, index) => (
           <Link
@@ -56,13 +52,12 @@ export default function AdminDashboard() {
             to={action.link}
             className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 no-underline"
           >
-            <div className="flex items-center mb-4">
-              <div className="text-blue-600 mr-3">
+            <div className="flex items-center">
+              <div className="text-blue-600 mr-3 flex-shrink-0">
                 {action.icon}
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">{action.title}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 flex-1 text-center">{action.title}</h3>
             </div>
-            <p className="text-gray-600">{action.description}</p>
           </Link>
         ))}
       </div>

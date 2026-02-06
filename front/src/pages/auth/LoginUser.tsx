@@ -45,7 +45,7 @@ export default function LoginUser({ onResponse }: LoginUserProps) {
       <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-sm">
         <form onSubmit={submit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900">Email address</label>
+            <label htmlFor="email" className="block text-sm/6 font-medium text-gray-500">Adresse email</label>
             <div className="mt-2">
               <input
                 id="email"
@@ -62,10 +62,10 @@ export default function LoginUser({ onResponse }: LoginUserProps) {
 
           <div>
             <div className="flex items-center justify-between">
-              <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900">Password</label>
-              <div className="text-sm">
+              <label htmlFor="password" className="block text-sm/6 font-medium text-gray-500">Mot de passe</label>
+              {/* <div className="text-sm">
                 <a href="#" className="font-semibold text-indigo-400 hover:text-indigo-300">Forgot password?</a>
-              </div>
+              </div> */}
             </div>
             <div className="mt-2">
               <input
@@ -87,7 +87,7 @@ export default function LoginUser({ onResponse }: LoginUserProps) {
               className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
               disabled={isLoading}
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? 'En cours de connexion...' : 'Se connecter'}
             </button>
           </div>
         </form>

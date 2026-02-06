@@ -1,53 +1,5 @@
 <template>
   <div class="vlc-map-root">
-    <header class="vlc-map-header">
-      <h2 class="vlc-map-title">VLC Serve</h2>
-
-      <div class="vlc-shape-select">
-        <button
-          type="button"
-          :class="[
-            'vlc-shape-btn',
-            'vlc-shape-btn--circle',
-            selectedShape === 'circle' && 'vlc-shape-btn--active',
-          ]"
-          @click="selectedShape = 'circle'"
-          title="Peu grave"
-        >
-          <span aria-hidden="true">●</span>
-          <span>Peu grave</span>
-        </button>
-
-        <button
-          type="button"
-          :class="[
-            'vlc-shape-btn',
-            'vlc-shape-btn--square',
-            selectedShape === 'square' && 'vlc-shape-btn--active',
-          ]"
-          @click="selectedShape = 'square'"
-          title="Grave"
-        >
-          <span aria-hidden="true">■</span>
-          <span>Grave</span>
-        </button>
-
-        <button
-          type="button"
-          :class="[
-            'vlc-shape-btn',
-            'vlc-shape-btn--triangle',
-            selectedShape === 'triangle' && 'vlc-shape-btn--active',
-          ]"
-          @click="selectedShape = 'triangle'"
-          title="Très grave"
-        >
-          <span aria-hidden="true">▲</span>
-          <span>Très grave</span>
-        </button>
-      </div>
-    </header>
-
     <main class="vlc-map-main">
       <div ref="mapEl" class="vlc-leaflet" />
 
@@ -59,7 +11,7 @@
       <div class="vlc-legend-wrap">
         <div v-if="isLegendOpen" class="vlc-legend" @click.stop="isLegendOpen = false">
           <div class="vlc-legend-header">
-            <div class="vlc-legend-title">Légende (cliquez pour fermer)</div>
+            <div class="vlc-legend-title">Légende & Filtres</div>
             <div class="vlc-legend-close">✕</div>
           </div>
 
@@ -83,6 +35,48 @@
               <span>Très grave</span>
             </li>
           </ul>
+
+          <!-- Filter buttons -->
+          <div class="vlc-shape-select">
+            <button
+              type="button"
+              :class="[
+                'vlc-shape-btn',
+                'vlc-shape-btn--circle',
+                selectedShape === 'circle' && 'vlc-shape-btn--active',
+              ]"
+              @click="selectedShape = selectedShape === 'circle' ? 'all' : 'circle'"
+              title="Peu grave"
+            >
+              <span aria-hidden="true">●</span>
+            </button>
+
+            <button
+              type="button"
+              :class="[
+                'vlc-shape-btn',
+                'vlc-shape-btn--square',
+                selectedShape === 'square' && 'vlc-shape-btn--active',
+              ]"
+              @click="selectedShape = selectedShape === 'square' ? 'all' : 'square'"
+              title="Grave"
+            >
+              <span aria-hidden="true">■</span>
+            </button>
+
+            <button
+              type="button"
+              :class="[
+                'vlc-shape-btn',
+                'vlc-shape-btn--triangle',
+                selectedShape === 'triangle' && 'vlc-shape-btn--active',
+              ]"
+              @click="selectedShape = selectedShape === 'triangle' ? 'all' : 'triangle'"
+              title="Très grave"
+            >
+              <span aria-hidden="true">▲</span>
+            </button>
+          </div>
         </div>
 
         <button
@@ -105,7 +99,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-type PointType = 'circle' | 'square' | 'triangle'
+type PointType = 'circle' | 'square' | 'triangle' | 'all'
 
 type FirestorePoint = {
   id: string
@@ -124,7 +118,7 @@ const props = defineProps<{
 const isLoading = computed(() => !!props.isLoading)
 const errorMessage = computed(() => props.errorMessage || null)
 
-const selectedShape = ref<PointType>('circle')
+const selectedShape = ref<PointType>('all')
 const isLegendOpen = ref(true)
 
 const mapEl = ref<HTMLDivElement | null>(null)
@@ -227,7 +221,14 @@ function renderPoints() {
 
   pointsLayer.clearLayers()
   const pts = props.points || []
-  for (const p of pts) {
+  const filteredPts = selectedShape.value === 'all' ? pts : pts.filter((p: FirestorePoint) => {
+    const typeId = Number(p.point_type_id)
+    if (selectedShape.value === 'circle') return typeId === 1
+    if (selectedShape.value === 'square') return typeId === 2
+    if (selectedShape.value === 'triangle') return typeId === 3
+    return false
+  })
+  for (const p of filteredPts) {
     const ll = normalizeLatLng(p)
     if (!ll) continue
 
@@ -252,6 +253,10 @@ watch(
   },
   { deep: true }
 )
+
+watch(selectedShape, () => {
+  renderPoints()
+})
 
 onBeforeUnmount(() => {
   if (map) {
