@@ -13,6 +13,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 @Configuration
@@ -49,11 +51,15 @@ public class SecurityConfig {
                     "/points/inProgress","/points/work-delay"
                 ).permitAll()
 
+                .requestMatchers(
+                    "/users" // Debug
+                ).permitAll()
+
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(
-                    (request, response, authException) -> writeUnauthorized(response)
+                    (request, response, authException) -> writeUnauthorized(response, authException)
                 )
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -62,14 +68,29 @@ public class SecurityConfig {
     }
 
     
-    private void writeUnauthorized(HttpServletResponse response) {
+    private void writeUnauthorized(HttpServletResponse response, Exception ex) {
         try {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-            ApiResponse body = new ApiResponse("error", null, "Unauthenticated: missing or invalid token");
+
+            String message = "Unauthenticated: missing or invalid token";
+            if (ex != null) {
+                String exMsg = ex.getMessage();
+                message = (ex.getClass() != null ? ex.getClass().getSimpleName() : "Exception")
+                        + (exMsg != null && !exMsg.isBlank() ? ": " + exMsg : "");
+            }
+
+            ApiResponse body = new ApiResponse("error", null, message);
             new ObjectMapper().writeValue(response.getWriter(), body);
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            ApiResponse body = new ApiResponse("error", null, e.getMessage());
+            try {
+                new ObjectMapper().writeValue(response.getWriter(), body);
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+        }
     }
 
     @Bean
