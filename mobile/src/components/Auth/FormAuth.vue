@@ -146,6 +146,10 @@ input[type="email"], input[type="password"] {
   border-radius:10px;
   font-size:15px;
   background:#fff;
+  color: #0f172a; /* ensure input text is dark/black */
+}
+input::placeholder {
+  color: #94a3b8;
 }
 .form-actions { padding-top:6px }
 .submit-btn {
