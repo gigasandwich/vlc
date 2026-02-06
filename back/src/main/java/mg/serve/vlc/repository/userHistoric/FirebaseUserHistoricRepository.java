@@ -1,17 +1,23 @@
 package mg.serve.vlc.repository.userHistoric;
 
 import com.google.cloud.firestore.CollectionReference;
+import com.google.cloud.firestore.Firestore;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.cloud.FirestoreClient;
 import mg.serve.vlc.model.user.UserHistoric;
+
+
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class FirebaseUserHistoricRepository implements UserHistoricRepository {
-
+    private Firestore db;
     private final CollectionReference collectionReference;
 
     public FirebaseUserHistoricRepository() {
-        this.collectionReference = FirestoreClient.getFirestore().collection("users");
+        db = FirestoreClient.getFirestore();
+        this.collectionReference = db.collection("users");
     }
 
     @Override

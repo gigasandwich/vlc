@@ -5,13 +5,22 @@ import mg.serve.vlc.model.Role;
 
 import java.util.*;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.auth.UserRecord.CreateRequest;
 import com.google.firebase.cloud.FirestoreClient;
+import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.Firestore;
-import com.google.firebase.auth.ExportedUserRecord;
+import java.util.concurrent.ExecutionException;
 
 public class FirebaseUserRepository implements UserRepository {
+    private final Firestore db;
+    private final CollectionReference collectionReference;
+
+    public FirebaseUserRepository() {
+        db = FirestoreClient.getFirestore();
+        this.collectionReference = db.collection("users");
+    }
 
     @Override
     public List<User> findAll() {
@@ -138,5 +147,14 @@ public class FirebaseUserRepository implements UserRepository {
             System.err.println("Error fetching users by userStateId from Firebase: " + e.getMessage());
             throw new RuntimeException("Failed to fetch users by userStateId from Firebase", e);
         }
+    }
+
+    public void deleteByUserFbId(String userFbId) 
+        throws FirebaseAuthException, // Auth
+                InterruptedException, ExecutionException { // Firestore
+        // Auth
+        FirebaseAuth.getInstance().deleteUser(userFbId);
+        // Firestore
+        collectionReference.document(userFbId).delete().get();
     }
 }

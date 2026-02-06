@@ -14,8 +14,6 @@ import mg.serve.vlc.util.RepositoryProvider;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.ListUsersPage;
-import com.google.firebase.cloud.FirestoreClient;
-import com.google.cloud.firestore.Firestore;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -23,16 +21,14 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/sync")
 public class SyncController {
-
     private static final Logger logger = LoggerFactory.getLogger(SyncController.class);
+    FirebaseUserRepository firebaseUserRepository = new FirebaseUserRepository();
+    FirebaseUserHistoricRepository firebaseUserHistoricRepository = new FirebaseUserHistoricRepository();
 
     @PostMapping("/users")
     public ResponseEntity<ApiResponse> syncUsers() {
         try {
             List<User> localUsers = RepositoryProvider.jpaUserRepository.findAll();
-            if (localUsers.isEmpty()) {
-                return ResponseEntity.ok(new ApiResponse("success", Collections.emptyList(), "No users to sync"));
-            }
 
             List<String> errors = new ArrayList<>();
             List<User> syncedUsers = new ArrayList<>();
@@ -53,16 +49,12 @@ public class SyncController {
                 page.getValues().forEach(userRecord -> firebaseUsers.put(userRecord.getEmail(), userRecord.getUid()));
                 page = page.getNextPage();
             }
-            Firestore db = FirestoreClient.getFirestore();
             int deletedCount = 0;
             for (String email : firebaseUsers.keySet()) {
                 if (!localEmails.contains(email)) {
                     String uid = firebaseUsers.get(email);
                     try {
-                        // Delete from Auth
-                        FirebaseAuth.getInstance().deleteUser(uid);
-                        // Delete from Firestore
-                        db.collection("users").document(uid).delete().get();
+                        firebaseUserRepository.deleteByUserFbId(uid);
                         deletedCount++;
                         logger.info("Deleted user from Firebase: {}", email);
                     } catch (Exception e) {
@@ -86,9 +78,6 @@ public class SyncController {
 
     private void syncUser(User user, List<User> syncedUsers, List<String> errors) {
         try {
-            FirebaseUserRepository firebaseUserRepository = new FirebaseUserRepository();
-            FirebaseUserHistoricRepository firebaseUserHistoricRepository = new FirebaseUserHistoricRepository();
-
             // User: Firebase Auth / Firestore
             User syncedUser = firebaseUserRepository.save(user);
             syncedUsers.add(syncedUser);
