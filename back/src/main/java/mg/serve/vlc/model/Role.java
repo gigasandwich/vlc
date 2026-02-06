@@ -24,6 +24,7 @@ public class Role {
         Map<String, Object> roleMap = new HashMap<>();
         roleMap.put("id", this.id);
         roleMap.put("label", this.label);
+        roleMap.put("fbId", this.fbId);
         return roleMap;
     }
 }

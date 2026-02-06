@@ -117,9 +117,9 @@ public class User {
 
         // Business logic (Role + State)
         if (role.equals("ADMIN"))
-            this.roles.add(new Role(2, "2", "ADMIN")); // Too lazy to create RoleRepository
+            this.roles.add(new Role(2, "ADMIN", null)); // Too lazy to create RoleRepository
         else if (role.equals("USER"))
-            this.roles.add(new Role(1, "1", "USER"));
+            this.roles.add(new Role(1, "USER", null));
         else
             throw new BusinessLogicException("Invalid role: " + role); 
 
@@ -222,6 +222,7 @@ public class User {
         userMap.put("email", this.email);
         userMap.put("username", this.username);
         userMap.put("userStateId", this.userStateId);
+        userMap.put("fbId", this.fbId);
 
         List<Map<String, Object>> rolesList = new ArrayList<>();
         for (Role role : this.roles) {
