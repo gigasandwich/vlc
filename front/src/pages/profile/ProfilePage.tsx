@@ -19,7 +19,6 @@ export default function ProfilePage() {
       <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-slate-700">Connexion</h2>
-          <p className="text-gray-500 mt-2">Connectez-vous pour continuer</p>
         </div>
         {message && (
           <div className={`p-3 mb-4 rounded text-center ${
