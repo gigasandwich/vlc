@@ -36,21 +36,8 @@ function onSuccess(payload: any) {
     console.warn('Failed to set user in store', e)
   }
 
-  // inform user and navigate to map (tab1)
-  try {
-    // simple feedback — replace with Ionic toast if desired
-    // some mobile browsers block alert on certain contexts; it's a simple confirmation
-    // but we keep it minimal per request
-    // eslint-disable-next-line no-alert
-    alert('Connexion réussie')
-  } catch (e) {
-    console.log('Login success')
-  } finally {
-    // authStore exposes the reactive `state` object. Read persisted values there.
-    //console.log('stored email:', authStore.state?.email)
-    
-    window.location.href = '/tabs/tab1'
-  }
+  // navigate to map (tab1)
+  router.replace('/tabs/tab1')
 }
 </script>
 

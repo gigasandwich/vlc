@@ -44,7 +44,8 @@
 
 <script setup lang="ts">
 import { ref, watch, toRef, onMounted } from 'vue'
-import { login} from '../../../backJs/firebaseAuth.js'
+import { login } from '@backjs/firebaseAuth'
+import { assertUserRole, fetchUserProfileByFirebaseUid } from '@backjs/firestoreUsers'
 
 const props = defineProps<{ mode?: 'login' | 'register' }>()
 const emit = defineEmits<{
@@ -79,12 +80,35 @@ async function onSubmit() {
 
   loading.value = true
   try {
+    // 1) Firebase login (email/password). Anonymous is not used.
     const res = await login(email.value, password.value)
     if (res.error) throw res.error
+
+    // 2) Role check using Firestore `users` collection
+    const firebaseUser = res.user
+    const profile = await fetchUserProfileByFirebaseUid(firebaseUser?.uid)
+    assertUserRole(profile)
+
+    // Persist user profile for filtering/profile page
+    try {
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          id: profile?.id ?? null,
+          email: profile?.email ?? firebaseUser?.email ?? email.value,
+          name: profile?.username ?? profile?.name ?? null,
+          role: 'USER',
+          fbId: profile?.fbId ?? firebaseUser?.uid ?? null,
+        })
+      )
+    } catch {
+      // ignore
+    }
+
     emit('success', res)
   }
   catch (err: any) {
-    error.value = err?.message || String(err)
+    error.value = err?.message || 'Connexion refusée'
   } finally {
     loading.value = false
   }
