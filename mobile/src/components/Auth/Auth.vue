@@ -48,9 +48,9 @@ function onSuccess(payload: any) {
   } finally {
     // authStore exposes the reactive `state` object. Read persisted values there.
     //console.log('stored email:', authStore.state?.email)
+    
+    window.location.href = '/tabs/tab1'
   }
-
-  router.push('/tabs/tab1')
 }
 </script>
 

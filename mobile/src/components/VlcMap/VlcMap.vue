@@ -180,11 +180,9 @@
 </template>
 
 <script setup lang="ts">
-
-import authStore from '@/stores/authStore'
-
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { createFirestorePoint } from '@/backJs/router.js'
+import authStore from '@/stores/authStore'
 // test if it works
 console.log(authStore?.state?.email ?? null)
 type PointType = 'circle' | 'square' | 'triangle' | 'all'
