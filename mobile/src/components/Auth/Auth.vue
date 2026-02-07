@@ -2,10 +2,9 @@
   <div class="auth-root">
     <div class="auth-card">
       <header class="auth-header">
-        <h1 class="auth-title">Connexion / Inscription</h1>
+        <h1 class="auth-title">Connexion</h1>
         <nav class="auth-tabs">
           <button :class="{active: mode === 'login'}" @click="mode = 'login'">Se connecter</button>
-          <button :class="{active: mode === 'register'}" @click="mode = 'register'">S'inscrire</button>
         </nav>
       </header>
 
@@ -20,7 +19,7 @@
 import { ref } from 'vue'
 import FormAuth from './FormAuth.vue'
 
-const mode = ref<'login' | 'register'>('login')
+const mode = ref<'login'>('login')
 
 function onSuccess(payload: any) {
   // payload contains { user } on success. Up to the caller to navigate or persist.

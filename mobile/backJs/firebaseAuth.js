@@ -31,7 +31,8 @@ const auth = getAuth()
  * @param {string} password
  * @returns {Promise<{user?: import('firebase/auth').User, error?: any}>}
  */
-export async function register(email, password) {
+/** register is not required to the mobile but may be useful later
+  export async function register(email, password) {
   try {
     const userCredential = await createUserWithEmailAndPassword(
       auth,
@@ -43,6 +44,7 @@ export async function register(email, password) {
     return { error }
   }
 }
+*/
 
 /**
  * Sign in an existing user with email and password.
@@ -64,4 +66,4 @@ export async function login(email, password) {
 }
 
 // Default export for convenience
-export default { register, login }
+export default { /*register,*/ login }

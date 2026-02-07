@@ -1,8 +1,7 @@
 <template>
   <form class="form-auth" @submit.prevent="onSubmit" novalidate>
     <header class="form-header">
-      <h2 class="form-title">{{ mode === 'login' ? 'Connexion' : "Inscription" }}</h2>
-      <p class="form-sub">{{ mode === 'login' ? 'Connectez-vous pour continuer' : 'Créez un compte' }}</p>
+      <h2 class="form-title">{{ mode === 'login' ? 'Se connecter' : 'Sign-in'}}</h2>
     </header>
 
     <div class="fields">
@@ -30,23 +29,11 @@
           minlength="6"
         />
       </label>
-
-      <label v-if="mode === 'register'" class="field">
-        <span class="label-text">Confirmer mot de passe</span>
-        <input
-          v-model="confirmPassword"
-          type="password"
-          autocomplete="new-password"
-          placeholder="Confirmez le mot de passe"
-          required
-          minlength="6"
-        />
-      </label>
     </div>
 
     <div class="form-actions">
       <button class="submit-btn" type="submit" :disabled="loading">
-        <span v-if="!loading">{{ mode === 'login' ? 'Se connecter' : "S'inscrire" }}</span>
+        <span v-if="!loading">{{ mode === 'login' ? 'Se connecter' : 'Sign-in' }}</span>
         <span v-else>Chargement…</span>
       </button>
     </div>
@@ -57,7 +44,7 @@
 
 <script setup lang="ts">
 import { ref, watch, toRef, onMounted } from 'vue'
-import { login, register } from '../../../backJs/firebaseAuth.js'
+import { login} from '../../../backJs/firebaseAuth.js'
 
 const props = defineProps<{ mode?: 'login' | 'register' }>()
 const emit = defineEmits<{
@@ -68,7 +55,6 @@ const mode = toRef(props, 'mode')
 
 const email = ref('')
 const password = ref('')
-const confirmPassword = ref('')
 const loading = ref(false)
 const error = ref<string | null>(null)
 
@@ -78,7 +64,6 @@ watch(mode, () => {
   // reset form when mode changes
   email.value = ''
   password.value = ''
-  confirmPassword.value = ''
   error.value = null
   // focus email when switching
   requestAnimationFrame(() => emailInput.value?.focus())
@@ -91,23 +76,14 @@ onMounted(() => {
 
 async function onSubmit() {
   error.value = null
-  if (mode.value === 'register' && password.value !== confirmPassword.value) {
-    error.value = "Les mots de passe ne correspondent pas"
-    return
-  }
 
   loading.value = true
   try {
-    if (mode.value === 'register') {
-      const res = await register(email.value, password.value)
-      if (res.error) throw res.error
-      emit('success', res)
-    } else {
-      const res = await login(email.value, password.value)
-      if (res.error) throw res.error
-      emit('success', res)
-    }
-  } catch (err: any) {
+    const res = await login(email.value, password.value)
+    if (res.error) throw res.error
+    emit('success', res)
+  }
+  catch (err: any) {
     error.value = err?.message || String(err)
   } finally {
     loading.value = false
