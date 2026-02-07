@@ -12,6 +12,7 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signOut,
 } from 'firebase/auth'
 import { getFirebaseConfig, assertFirebaseConfig } from './firebaseConfig.js'
 
@@ -65,5 +66,18 @@ export async function login(email, password) {
   }
 }
 
+/**
+ * Sign out current Firebase user.
+ * @returns {Promise<{success?: true, error?: any}>}
+ */
+export async function logout() {
+  try {
+    await signOut(auth)
+    return { success: true }
+  } catch (error) {
+    return { error }
+  }
+}
+
 // Default export for convenience
-export default { /*register,*/ login }
+export default { /*register,*/ login, logout }
