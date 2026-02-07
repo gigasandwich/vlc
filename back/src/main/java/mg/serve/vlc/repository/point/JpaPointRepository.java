@@ -10,5 +10,6 @@ import java.util.*;
 public interface JpaPointRepository extends JpaRepository<Point, Integer>, PointRepository {
     List<Point> findAll();
     List<Point> findByPointStateId(Integer pointStateId);
+    List<Point> findByDeletedAtIsNull();
     Optional<Point> findById(Integer pid);
 }

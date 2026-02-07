@@ -46,22 +46,19 @@ public class PointController {
             @RequestParam(name = "point_type_id", required = false) Integer pointTypeId
     ) {
         try {
-            PointRepository pointRepository = RepositoryProvider.getRepository(PointRepository.class);
-            List<Point> points;
+            // Base list = non-deleted points (deletedAt IS NULL)
+            List<Point> points = RepositoryProvider.jpaPointRepository.findByDeletedAtIsNull();
 
-            // Filtrage simple si demandé
-            if (pointStateId != null && pointTypeId != null) {
-                // Si besoin, ajoute une méthode repository avec ces deux critères.
-                points = pointRepository.findAll(); // fallback si méthode custom absente
-                // NOTE: pour performance ajoute findByPointStateIdAndPointTypeId dans PointRepository
-            } else if (pointStateId != null) {
-                points = pointRepository.findByPointStateId(pointStateId);
-            } else if (pointTypeId != null) {
-                // fallback to findAll if pas de méthode dédiée
-                points = pointRepository.findAll();
-                // NOTE: pour performance ajoute findByPointTypeId dans PointRepository
-            } else {
-                points = pointRepository.findAll();
+            // Optional filters in-memory
+            if (pointStateId != null) {
+                points = points.stream()
+                        .filter(p -> p.getPointState() != null && p.getPointState().getId().equals(pointStateId))
+                        .toList();
+            }
+            if (pointTypeId != null) {
+                points = points.stream()
+                        .filter(p -> p.getPointType() != null && p.getPointType().getId().equals(pointTypeId))
+                        .toList();
             }
 
             List<Map<String, Object>> payload = new ArrayList<>();
@@ -328,6 +325,26 @@ public class PointController {
             Point savedPoint = point.save();
 
             return ResponseEntity.ok(new ApiResponse("success", savedPoint.getId(), null));
+        } catch (BusinessLogicException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse> deletePoint(@PathVariable("id") Integer id, @RequestHeader("Authorization") String authHeader) {
+        try {
+            User user = jwtService.getUserFromAuthHeader(authHeader);
+            if(!user.isAdmin()) {
+                throw new BusinessLogicException("Only admins can delete points");
+            }
+            Point point = RepositoryProvider.getRepository(PointRepository.class).findById(id).orElse(null);
+            if (point == null) {
+                return ResponseEntity.badRequest().body(new ApiResponse("error", null, "Point not found"));
+            }
+            point.delete();
+            return ResponseEntity.ok(new ApiResponse("success", null, null));
         } catch (BusinessLogicException e) {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         } catch (Exception e) {
