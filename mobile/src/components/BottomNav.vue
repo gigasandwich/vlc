@@ -78,11 +78,11 @@ onMounted(() => {
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  width: 50%;
+  width: min(92%, 440px);
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 999px;
-  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.18);
   z-index: 2000;
   display: flex;
   justify-content: space-around;
@@ -100,12 +100,12 @@ onMounted(() => {
   padding: 8px;
   border-radius: 12px;
   text-decoration: none;
-  color: #9ca3af;
+  color: #475569;
   transition: all 200ms ease;
 }
 
 .bottom-nav-item:hover {
-  color: #6b7280;
+  color: #0f172a;
 }
 
 .bottom-nav-item--active {
@@ -122,14 +122,27 @@ onMounted(() => {
 }
 
 .bottom-nav-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: inherit;
   transition: transform 200ms ease;
   margin-bottom: 4px;
 }
 
+.bottom-nav-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
 .bottom-nav-label {
   font-weight: 500;
-  font-size: 14px;
-  opacity: 0.9;
+  font-size: 13px;
+  opacity: 0.95;
 }
 
 .bottom-nav-item--active .bottom-nav-label {

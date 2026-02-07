@@ -105,7 +105,7 @@
   position: absolute;
   left: 16px;
   right: 16px;
-  bottom: 18px;
+  bottom: 96px;
   z-index: 950;
   pointer-events: none;
 }
@@ -133,6 +133,7 @@
   flex-direction: column;
   align-items: flex-end;
   pointer-events: none;
+  gap: 10px;
 }
 
 .vlc-legend {
@@ -165,6 +166,11 @@
 .vlc-legend-close {
   font-size: 12px;
   color: #94a3b8;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .vlc-legend-list {
@@ -202,6 +208,115 @@
   justify-content: center;
 }
 
+.vlc-filter-open-btn {
+  pointer-events: auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: 2px solid #cbd5e1;
+  background: #ffffff;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vlc-filter-open-btn:active {
+  transform: scale(0.98);
+}
+
 .vlc-legend-open-btn:active {
   transform: scale(0.98);
+}
+
+.vlc-placement-hint {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.vlc-placement-hint__title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--vlc-muted);
+  margin-bottom: 6px;
+}
+
+.vlc-placement-hint__text {
+  font-size: 12px;
+  color: var(--vlc-text);
+  line-height: 1.35;
+}
+
+.vlc-filter {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--vlc-border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  min-width: 220px;
+  transform-origin: top right;
+}
+
+.vlc-filter-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.vlc-filter-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--vlc-muted);
+  margin-bottom: 8px;
+}
+
+.vlc-filter-types {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.vlc-filter-type-btn {
+  border: 1px solid var(--vlc-border);
+  background: var(--vlc-card);
+  color: var(--vlc-text);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vlc-filter-type-btn--active {
+  border-color: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.vlc-filter-mine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--vlc-text);
+}
+
+.vlc-filter-mine input {
+  width: 18px;
+  height: 18px;
+}
+
+.vlc-filter-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #64748b;
 }
