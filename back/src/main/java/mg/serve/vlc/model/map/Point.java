@@ -119,6 +119,19 @@ public class Point {
         return this.updatedAt;
     }
 
+    public LocalDateTime getDeletedAt() {
+        return this.deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public Point delete() {
+        this.setDeletedAt(LocalDateTime.now());
+        return RepositoryProvider.getRepository(PointRepository.class).save(this);
+    }
+
     public Map<String, Object> toMap() {
         Map<String, Object> pointMap = new HashMap<>();
         pointMap.put("id", this.id);
