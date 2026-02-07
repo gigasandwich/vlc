@@ -19,10 +19,10 @@
     "@capacitor/status-bar": "8.0.0",
     "@ionic/vue": "^8.0.0",
     "@ionic/vue-router": "^8.0.0",
-    "firebase": "^12.8.0",
+    "firebase": "^12.9.0",
     "ionicons": "^7.0.0",
     "vue": "^3.3.0",
-    "vue-router": "^4.2.0"
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@capacitor/cli": "8.0.1",
