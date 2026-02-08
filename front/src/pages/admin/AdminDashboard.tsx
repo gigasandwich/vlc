@@ -1,9 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { backendURL } from '../../constant';
 
 export default function AdminDashboard() {
+  const [isSyncing, setIsSyncing] = useState(false);
+
   const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      const response = await fetch(`${backendURL}/sync/all`, { method: 'POST' });
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        alert('Sync completed successfully');
+      } else {
+        alert(data.error || 'Sync failed');
+      }
+    } catch (error) {
+      alert('Error syncing: ' + error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
   const adminActions = [
     {
       title: 'Gestion des Points',
@@ -51,15 +68,18 @@ export default function AdminDashboard() {
       <div className="mt-6">
         <button
           onClick={handleSync}
-          className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 no-underline cursor-pointer w-full"
+          disabled={isSyncing}
+          className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 no-underline cursor-pointer w-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="flex items-center">
             <div className="text-blue-600 mr-3 flex-shrink-0">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-8 h-8 ${isSyncing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 flex-1 text-center">Synchronisation</h3>
+            <h3 className="text-lg font-semibold text-gray-900 flex-1 text-center">
+              {isSyncing ? 'Synchronisation en cours...' : 'Synchronisation'}
+            </h3>
           </div>
         </button>
       </div>
