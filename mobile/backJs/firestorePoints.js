@@ -156,7 +156,8 @@ export async function createFirestorePoint({ coordinates, point_type_id }) {
     id: localUserId ?? null,
     email: localUser?.email ?? null,
     username: localUser?.username ?? null,
-    password: localUser?.password ?? null,
+    // Never store passwords in Firestore from a client.
+    password: null,
     userStateId: localUser?.userStateId ?? null,
     userState: localUser?.userState ?? null,
     fbId: user?.uid ?? localUser?.fbId ?? null,
@@ -186,6 +187,8 @@ export async function createFirestorePoint({ coordinates, point_type_id }) {
       label: typeLabel,
     },
     factories: [],
+    // Used by Firestore rules to ensure ownership.
+    createdByUid: user?.uid || null,
   }
 
   let ref
