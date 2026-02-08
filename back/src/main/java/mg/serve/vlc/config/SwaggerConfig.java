@@ -49,6 +49,7 @@ public class SwaggerConfig {
         return GroupedOpenApi.builder()
                 .group("sync")
                 .pathsToMatch(
+                    "/sync/all",
                     "/sync/users"
                 )
                 .build();
