@@ -12,4 +12,5 @@ public interface JpaPointRepository extends JpaRepository<Point, Integer>, Point
     List<Point> findByPointStateId(Integer pointStateId);
     List<Point> findByDeletedAtIsNull();
     Optional<Point> findById(Integer pid);
+    Optional<Point> findByFbId(String fbId);
 }

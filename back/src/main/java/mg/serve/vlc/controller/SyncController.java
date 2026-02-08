@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import mg.serve.vlc.controller.response.ApiResponse;
 import mg.serve.vlc.service.UserSyncService;
+import mg.serve.vlc.service.PointSyncService;
 
 @RestController
 @RequestMapping("/sync")
@@ -17,11 +18,16 @@ public class SyncController {
     @Autowired
     private UserSyncService userSyncService;
 
+    @Autowired
+    private PointSyncService pointSyncService;
+
     @PostMapping("/all")
     public ResponseEntity<ApiResponse> syncAll() {
         try {
             userSyncService.syncUsers();
             userSyncService.syncUserHistoric();
+            pointSyncService.syncPoints();
+            pointSyncService.syncPointHistoric();
             
             return ResponseEntity.ok(new ApiResponse("success", null, "All sync completed"));
         } catch (Exception e) {
@@ -43,6 +49,26 @@ public class SyncController {
     @PostMapping("/userHistoric")
     public ResponseEntity<ApiResponse> syncUserHistoric() {
         ApiResponse response = userSyncService.syncUserHistoric();
+        if ("success".equals(response.getStatus())) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/points")
+    public ResponseEntity<ApiResponse> syncPoints() {
+        ApiResponse response = pointSyncService.syncPoints();
+        if ("success".equals(response.getStatus())) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/pointHistoric")
+    public ResponseEntity<ApiResponse> syncPointHistoric() {
+        ApiResponse response = pointSyncService.syncPointHistoric();
         if ("success".equals(response.getStatus())) {
             return ResponseEntity.ok(response);
         } else {

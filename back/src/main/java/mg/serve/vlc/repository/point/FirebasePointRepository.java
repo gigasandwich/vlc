@@ -3,6 +3,7 @@ package mg.serve.vlc.repository.point;
 import mg.serve.vlc.model.map.Point;
 import mg.serve.vlc.model.map.PointState;
 import mg.serve.vlc.model.map.PointType;
+import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.map.Factory;
 import mg.serve.vlc.model.user.User;
 import com.google.firebase.cloud.FirestoreClient;
@@ -12,6 +13,7 @@ import com.google.cloud.Timestamp;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.*;
 
 public class FirebasePointRepository implements PointRepository {
@@ -51,11 +53,16 @@ public class FirebasePointRepository implements PointRepository {
         try {
             Firestore firestore = FirestoreClient.getFirestore();
             String fbId = point.getFbId();
-            if (fbId == null) {
+            boolean isNew = fbId == null;
+            if (isNew) {
                 fbId = firestore.collection("points").document().getId();
                 point.setFbId(fbId);
             }
-            firestore.collection("points").document(fbId).set(point.toMap()).get();
+            if (isNew) {
+                firestore.collection("points").document(fbId).set(point.toMap()).get();
+            } else {
+                firestore.collection("points").document(fbId).update(point.toMap()).get();
+            }
             return point;
         } catch (Exception e) {
             System.err.println("Error saving point to Firebase: " + e.getMessage());
@@ -67,22 +74,19 @@ public class FirebasePointRepository implements PointRepository {
         throw new UnsupportedOperationException("findById is not supported in FirebasePointRepository");
     }
 
-    private Point mapToPoint(Map<String, Object> data) {
+    private Point mapToPoint(Map<String, Object> data) throws BusinessLogicException {
         Point point = new Point();
         if (data.get("id") != null) {
             point.setId(((Long) data.get("id")).intValue());
         }
-        if (data.get("date") != null) {
-            Timestamp ts = (Timestamp) data.get("date");
-            point.setDate(ts.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+        if (data.get("date_") != null) {
+            point.setDate(parseTimestamp(data.get("date_")));
         }
         if (data.get("updatedAt") != null) {
-            Timestamp ts = (Timestamp) data.get("updatedAt");
-            point.setUpdatedAt(ts.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+            point.setUpdatedAt(parseTimestamp(data.get("updatedAt")));
         }
         if (data.get("deletedAt") != null) {
-            Timestamp ts = (Timestamp) data.get("deletedAt");
-            point.setDeletedAt(ts.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+            point.setDeletedAt(parseTimestamp(data.get("deletedAt")));
         }
         if (data.get("surface") != null) {
             point.setSurface(((Number) data.get("surface")).doubleValue());
@@ -105,11 +109,19 @@ public class FirebasePointRepository implements PointRepository {
             point.setCoordinates(longitude, latitude);
         }
 
-        // Handle userId
-        if (data.get("userId") != null) {
-            Integer userId = ((Long) data.get("userId")).intValue();
+        // Handle user
+        if (data.get("user") != null) {
+            Map<String, Object> userMap = (Map<String, Object>) data.get("user");
             User user = new User();
-            user.setId(userId);
+            if (userMap.get("id") != null) {
+                user.setId(((Long) userMap.get("id")).intValue());
+            }
+            user.setEmail((String) userMap.get("email"));
+            user.setUsername((String) userMap.get("username"));
+            user.setFbId((String) userMap.get("fbId"));
+            if (userMap.get("userStateId") != null) {
+                user.setUserStateId(((Long) userMap.get("userStateId")).intValue());
+            }
             point.setUser(user);
         }
 
@@ -151,5 +163,19 @@ public class FirebasePointRepository implements PointRepository {
         }
 
         return point;
+    }
+
+    // Too lazy to create a new class, God forgive me
+    private LocalDateTime parseTimestamp(Object timestampObj) {
+        if (timestampObj instanceof com.google.cloud.Timestamp) {
+            return ((com.google.cloud.Timestamp) timestampObj).toSqlTimestamp().toLocalDateTime();
+        } else if (timestampObj instanceof Map) {
+            Map<String, Object> tsMap = (Map<String, Object>) timestampObj;
+            long seconds = ((Number) tsMap.get("seconds")).longValue();
+            int nanoseconds = ((Number) tsMap.get("nanoseconds")).intValue();
+            return LocalDateTime.ofInstant(java.time.Instant.ofEpochSecond(seconds, nanoseconds), ZoneId.systemDefault());
+        } else {
+            throw new IllegalArgumentException("Unsupported timestamp type: " + timestampObj.getClass());
+        }
     }
 }

@@ -15,4 +15,6 @@ public interface JpaUserRepository extends JpaRepository<User, Integer>, UserRep
                 .filter(user -> user.getEmail().equals(email))
                 .findFirst();
     }
+
+    Optional<User> findByFbId(String fbId);
 }
