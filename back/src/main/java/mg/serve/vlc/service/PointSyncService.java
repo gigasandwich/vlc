@@ -65,29 +65,29 @@ public class PointSyncService {
                         local = ((PointRepository) RepositoryProvider.jpaPointRepository).save(updatedLocal); // To get fbId if needed
                         stats.setPointsPushedToFirestore(stats.getPointsPushedToFirestore() + 1);
                     } else if (local.getUpdatedAt() != null && remote.getUpdatedAt() != null) {
-                        if (local.getUpdatedAt().isAfter(remote.getUpdatedAt())) {
-                            // Local newer
+                        if (local.getUpdatedAt().isAfter(remote.getUpdatedAt()) && !pointDataEquals(local, remote)) {
+                            // Local newer and data different
                             overwriteFirestorePoint(local);
                             stats.setPointsUpdatedInFirestore(stats.getPointsUpdatedInFirestore() + 1);
-                        } else if (remote.getUpdatedAt().isAfter(local.getUpdatedAt())) {
-                            // Firestore newer
+                        } else if (remote.getUpdatedAt().isAfter(local.getUpdatedAt()) && !pointDataEquals(local, remote)) {
+                            // Firestore newer and data different
                             ensureUserExistsLocally(remote.getUser().getFbId());
                             overwriteLocalPoint(remote);
                             stats.setPointsUpdatedLocally(stats.getPointsUpdatedLocally() + 1);
                         } else {
-                            // identical timestamps: no op
+                            // identical timestamps or identical data: no op
                         }
                     } else {
                         // Handle cases where updatedAt is null
-                        if (local.getUpdatedAt() == null && remote.getUpdatedAt() != null) {
+                        if (local.getUpdatedAt() == null && remote.getUpdatedAt() != null && !pointDataEquals(local, remote)) {
                             ensureUserExistsLocally(remote.getUser().getFbId());
                             overwriteLocalPoint(remote);
                             stats.setPointsUpdatedLocally(stats.getPointsUpdatedLocally() + 1);
-                        } else if (local.getUpdatedAt() != null && remote.getUpdatedAt() == null) {
+                        } else if (local.getUpdatedAt() != null && remote.getUpdatedAt() == null && !pointDataEquals(local, remote)) {
                             overwriteFirestorePoint(local);
                             stats.setPointsUpdatedInFirestore(stats.getPointsUpdatedInFirestore() + 1);
                         }
-                        // if both null, no op
+                        // if both null or data same, no op
                     }
                 } catch (Exception e) {
                     stats.addError("Failed to sync point " + fbId + ": " + e.getMessage());
@@ -204,10 +204,20 @@ public class PointSyncService {
 
                     // Find missing remote historic entries
                     for (PointHistoric localHistoric : localHistory) {
-                        boolean existsRemotely = remoteHistory.stream().anyMatch(remote -> Objects.equals(remote.getFbId(), localHistoric.getFbId()));
-                        if (!existsRemotely) {
-                            insertRemotePointHistoric(localHistoric, point.getFbId());
-                            stats.setPointHistoricPushedToFirestore(stats.getPointHistoricPushedToFirestore() + 1);
+                        if (localHistoric.getFbId() == null || localHistoric.getFbId().isEmpty()) {
+                            // Push to Firestore to get fb_id
+                            PointHistoric savedRemote = insertRemotePointHistoric(localHistoric, point.getFbId());
+                            if (savedRemote != null && savedRemote.getFbId() != null) {
+                                localHistoric.setFbId(savedRemote.getFbId());
+                                RepositoryProvider.pointHistoricRepository.save(localHistoric);
+                                stats.setPointHistoricPushedToFirestore(stats.getPointHistoricPushedToFirestore() + 1);
+                            }
+                        } else {
+                            boolean existsRemotely = remoteHistory.stream().anyMatch(remote -> Objects.equals(remote.getFbId(), localHistoric.getFbId()));
+                            if (!existsRemotely) {
+                                insertRemotePointHistoric(localHistoric, point.getFbId());
+                                stats.setPointHistoricPushedToFirestore(stats.getPointHistoricPushedToFirestore() + 1);
+                            }
                         }
                     }
 
@@ -238,23 +248,25 @@ public class PointSyncService {
     }
 
     private PointHistoric insertRemotePointHistoric(PointHistoric localHistoric, String pointFbId) {
-        String fbId = localHistoric.getFbId() != null && !localHistoric.getFbId().isEmpty() ? localHistoric.getFbId() : pointFbId;
-        if (fbId == null || fbId.isEmpty()) {
-            logger.warn("Skipping insert remote historic for point with null or empty fbId");
+        if (localHistoric.getFbId() == null || localHistoric.getFbId().isEmpty()) {
+            logger.warn("Skipping insert remote historic for historic with null or empty fbId");
             return null;
         }
-        return firebasePointHistoricRepository.save(localHistoric, fbId);
+        return firebasePointHistoricRepository.save(localHistoric, localHistoric.getFbId());
     }
 
-    private boolean pointHistoricDataEquals(PointHistoric h1, PointHistoric h2) {
-        if (h1 == h2) return true;
-        if (h1 == null || h2 == null) return false;
-        return Objects.equals(h1.getDate(), h2.getDate()) &&
-               Objects.equals(h1.getSurface(), h2.getSurface()) &&
-               Objects.equals(h1.getBudget(), h2.getBudget()) &&
-               Objects.equals(h1.getPointState(), h2.getPointState()) &&
-               (h1.getCoordinates() != null && h2.getCoordinates() != null &&
-                h1.getCoordinates().getX() == h2.getCoordinates().getX() &&
-                h1.getCoordinates().getY() == h2.getCoordinates().getY());
+    private boolean pointDataEquals(Point p1, Point p2) {
+        if (p1 == p2) return true;
+        if (p1 == null || p2 == null) return false;
+        return Objects.equals(p1.getDate(), p2.getDate()) &&
+               Objects.equals(p1.getSurface(), p2.getSurface()) &&
+               Objects.equals(p1.getBudget(), p2.getBudget()) &&
+               Objects.equals(p1.getDeletedAt(), p2.getDeletedAt()) &&
+               Objects.equals(p1.getPointState(), p2.getPointState()) &&
+               Objects.equals(p1.getPointType(), p2.getPointType()) &&
+               Objects.equals(p1.getFactories(), p2.getFactories()) &&
+               (p1.getCoordinates() != null && p2.getCoordinates() != null &&
+                p1.getCoordinates().getX() == p2.getCoordinates().getX() &&
+                p1.getCoordinates().getY() == p2.getCoordinates().getY());
     }
 }

@@ -1,12 +1,15 @@
 package mg.serve.vlc.repository.point;
 
+import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.CollectionReference;
+import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.cloud.FirestoreClient;
 import mg.serve.vlc.model.map.PointHistoric;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 import org.springframework.stereotype.Repository;
 
@@ -22,13 +25,27 @@ public class FirebasePointHistoricRepository {
 
     public PointHistoric save(PointHistoric pointHistoric) {
         String pointFbId = pointHistoric.getFbId();
-        collectionReference.document(pointFbId).collection("history").add(pointHistoric.toMap());
-        return pointHistoric;
+        try {
+            DocumentReference docRef = collectionReference.document(pointFbId).collection("history").document();
+            String id = docRef.getId();
+            pointHistoric.setFbId(id);
+            docRef.set(pointHistoric.toMap()).get();
+            return pointHistoric;
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Failed to save point historic to Firestore", e);
+        }
     }
 
     public PointHistoric save(PointHistoric pointHistoric, String pointFbId) {
-        collectionReference.document(pointFbId).collection("history").add(pointHistoric.toMap());
-        return pointHistoric;
+        try {
+            DocumentReference docRef = collectionReference.document(pointFbId).collection("history").document();
+            String id = docRef.getId();
+            pointHistoric.setFbId(id);
+            docRef.set(pointHistoric.toMap()).get();
+            return pointHistoric;
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Failed to save point historic to Firestore", e);
+        }
     }
 
     public List<PointHistoric> findByPointFbId(String pointFbId) {

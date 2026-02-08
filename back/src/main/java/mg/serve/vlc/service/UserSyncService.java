@@ -193,10 +193,20 @@ public class UserSyncService {
 
                     // Find missing remote historic entries
                     for (UserHistoric localHistoric : localHistory) {
-                        boolean existsRemotely = remoteHistory.stream().anyMatch(remote -> Objects.equals(remote.getFbId(), localHistoric.getFbId()));
-                        if (!existsRemotely) {
-                            insertRemoteUserHistoric(localHistoric);
-                            stats.setHistoricPushedToFirestore(stats.getHistoricPushedToFirestore() + 1);
+                        if (localHistoric.getFbId() == null || localHistoric.getFbId().isEmpty()) {
+                            // Push to Firestore to get fb_id
+                            UserHistoric savedRemote = insertRemoteUserHistoric(localHistoric);
+                            if (savedRemote != null && savedRemote.getFbId() != null) {
+                                localHistoric.setFbId(savedRemote.getFbId());
+                                ((UserHistoricRepository) RepositoryProvider.jpaUserHistoricRepository).save(localHistoric);
+                                stats.setHistoricPushedToFirestore(stats.getHistoricPushedToFirestore() + 1);
+                            }
+                        } else {
+                            boolean existsRemotely = remoteHistory.stream().anyMatch(remote -> Objects.equals(remote.getFbId(), localHistoric.getFbId()));
+                            if (!existsRemotely) {
+                                insertRemoteUserHistoric(localHistoric);
+                                stats.setHistoricPushedToFirestore(stats.getHistoricPushedToFirestore() + 1);
+                            }
                         }
                     }
 
