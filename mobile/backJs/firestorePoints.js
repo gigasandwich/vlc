@@ -1,7 +1,7 @@
 import { assertFirebaseConfig, getFirebaseConfig } from './firebaseConfig.js'
 import { initializeApp, getApps } from 'firebase/app'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
-import { addDoc, collection, GeoPoint, getDocs, getFirestore, Timestamp } from 'firebase/firestore'
+import { collection, doc, getDocs, getFirestore, setDoc, Timestamp } from 'firebase/firestore'
 
 function logDevError(label, err, extra = undefined) {
   try {
@@ -126,8 +126,10 @@ export async function fetchFirestorePoints() {
 export async function createFirestorePoint({ coordinates, point_type_id }) {
   const user = await ensureSignedIn()
   let localUserId = null
+  let localUser = null
   try {
     const u = JSON.parse(localStorage.getItem('user') || 'null')
+    localUser = u
     const id = Number(u?.id)
     if (Number.isFinite(id)) localUserId = id
   } catch {
@@ -140,26 +142,59 @@ export async function createFirestorePoint({ coordinates, point_type_id }) {
   const now = new Date()
   const date_ = Timestamp.fromDate(now)
 
+  // Keep an int-sized id (backend Point.id is Integer). This is used by the UI and for de-dup.
+  // We can't safely use Date.now() (ms) because it exceeds Integer.MAX_VALUE.
+  const safeIntId = Math.floor(now.getTime() / 1000)
+
+  const roles = Array.isArray(localUser?.roles)
+    ? localUser.roles
+    : localUser?.role
+      ? [{ label: String(localUser.role), id: Number(localUser.id) || null }]
+      : []
+
+  const userMap = {
+    id: localUserId ?? null,
+    email: localUser?.email ?? null,
+    username: localUser?.username ?? null,
+    // Never store passwords in Firestore from a client.
+    password: null,
+    userStateId: localUser?.userStateId ?? null,
+    userState: localUser?.userState ?? null,
+    fbId: user?.uid ?? localUser?.fbId ?? null,
+    updatedAt: Timestamp.fromDate(now),
+    roles,
+  }
+
   const payload = {
-    budget: 0,
-    surface: 0,
+    id: safeIntId,
+    // Will be set to Firestore document id (see below)
+    fbId: null,
     date_,
-    coordinates: new GeoPoint(Number(coordinates.latitude), Number(coordinates.longitude)),
-    point_state: {
+    surface: 0,
+    budget: 0,
+    coordinates: {
+      longitude: Number(coordinates.longitude),
+      latitude: Number(coordinates.latitude),
+    },
+    user: userMap,
+    pointStateId: 1,
+    pointState: {
       id: 1,
       label: 'nouveau',
     },
-    point_type: {
+    pointTypeId: typeId,
+    pointType: {
       id: typeId,
       label: typeLabel,
     },
-    user_id: localUserId ?? null,
-    createdByUid: user?.uid || null,
+    factories: [],
   }
 
-  let ref
   try {
-    ref = await addDoc(collection(db, 'points'), payload)
+    // Generate a document id first, so we can store it in `fbId`
+    const ref = doc(collection(db, 'points'))
+    payload.fbId = ref.id
+    await setDoc(ref, payload)
   } catch (err) {
     const code = err?.code || err?.name
     const msg = err?.message || String(err)
@@ -174,5 +209,6 @@ export async function createFirestorePoint({ coordinates, point_type_id }) {
     logDevError('[Firestore] Write failed', err, { payload })
     throw new Error('Erreur de connexion. Réessaie plus tard.')
   }
-  return { id: ref.id, ...payload }
+
+  return payload
 }
