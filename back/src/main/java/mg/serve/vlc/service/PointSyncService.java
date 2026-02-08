@@ -5,6 +5,7 @@ import mg.serve.vlc.controller.response.SyncStatistics;
 import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.map.Point;
 import mg.serve.vlc.model.map.PointHistoric;
+import mg.serve.vlc.model.map.PointState;
 import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.repository.point.FirebasePointHistoricRepository;
 import mg.serve.vlc.repository.point.FirebasePointRepository;
@@ -118,7 +119,13 @@ public class PointSyncService {
         local.setFbId(remote.getFbId());
         local.setCoordinates(remote.getCoordinates().getX(), remote.getCoordinates().getY());
         local.setUser(remote.getUser());
-        local.setPointState(remote.getPointState());
+        if (remote.getPointState() != null) {
+            local.setPointState(remote.getPointState());
+        } else {
+            PointState defaultState = new PointState();
+            defaultState.setId(1);
+            local.setPointState(defaultState);
+        }
         local.setPointType(remote.getPointType());
         local.setFactories(remote.getFactories());
         ((PointRepository) RepositoryProvider.jpaPointRepository).save(local);
