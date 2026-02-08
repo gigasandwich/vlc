@@ -51,7 +51,7 @@ public class Point {
     )
     private org.locationtech.jts.geom.Point coordinates;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -135,14 +135,14 @@ public class Point {
     public Map<String, Object> toMap() {
         Map<String, Object> pointMap = new HashMap<>();
         pointMap.put("id", this.id);
-        pointMap.put("date", this.date);
+        pointMap.put("date_", this.date);
         pointMap.put("updatedAt", this.updatedAt);
         pointMap.put("deletedAt", this.deletedAt);
         pointMap.put("surface", this.surface);
         pointMap.put("budget", this.budget);
         pointMap.put("coordinates", Map.of("longitude", this.coordinates.getX(), "latitude", this.coordinates.getY()));
         if (this.user != null) {
-            pointMap.put("userId", this.user.getId());
+            pointMap.put("user", this.user.toMap());
         }
         if (this.pointState != null) {
             pointMap.put("pointStateId", this.pointState.getId());
