@@ -238,6 +238,7 @@ public class User {
         userMap.put("id", this.id);
         userMap.put("email", this.email);
         userMap.put("username", this.username);
+        userMap.put("password", this.password);
         userMap.put("userStateId", this.userStateId);
         if (this.userState != null) {
             userMap.put("userState", this.userState.toMap());

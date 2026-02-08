@@ -24,6 +24,7 @@ public class FirebaseUserRepository implements UserRepository {
         this.collectionReference = db.collection("users");
     }
 
+    // TODO: fetch full info (not userStateId but userState itself)
     @Override
     public List<User> findAll() {
         try {
@@ -42,6 +43,7 @@ public class FirebaseUserRepository implements UserRepository {
                     }
                     user.setEmail((String) data.get("email"));
                     user.setUsername((String) data.get("username"));
+                    user.setPassword((String) data.get("password"));
                     if (data.get("userStateId") != null) {
                         user.setUserStateId(((Long) data.get("userStateId")).intValue());
                     }
