@@ -1,7 +1,7 @@
 import { assertFirebaseConfig, getFirebaseConfig } from './firebaseConfig.js'
 import { initializeApp, getApps } from 'firebase/app'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
-import { addDoc, collection, getDocs, getFirestore, Timestamp } from 'firebase/firestore'
+import { collection, doc, getDocs, getFirestore, setDoc, Timestamp } from 'firebase/firestore'
 
 function logDevError(label, err, extra = undefined) {
   try {
@@ -149,7 +149,7 @@ export async function createFirestorePoint({ coordinates, point_type_id }) {
   const roles = Array.isArray(localUser?.roles)
     ? localUser.roles
     : localUser?.role
-      ? [{ label: String(localUser.role) }]
+      ? [{ label: String(localUser.role), id: Number(localUser.id) || null }]
       : []
 
   const userMap = {
@@ -167,6 +167,7 @@ export async function createFirestorePoint({ coordinates, point_type_id }) {
 
   const payload = {
     id: safeIntId,
+    // Will be set to Firestore document id (see below)
     fbId: null,
     date_,
     surface: 0,
@@ -187,13 +188,13 @@ export async function createFirestorePoint({ coordinates, point_type_id }) {
       label: typeLabel,
     },
     factories: [],
-    // Used by Firestore rules to ensure ownership.
-    createdByUid: user?.uid || null,
   }
 
-  let ref
   try {
-    ref = await addDoc(collection(db, 'points'), payload)
+    // Generate a document id first, so we can store it in `fbId`
+    const ref = doc(collection(db, 'points'))
+    payload.fbId = ref.id
+    await setDoc(ref, payload)
   } catch (err) {
     const code = err?.code || err?.name
     const msg = err?.message || String(err)
@@ -208,6 +209,6 @@ export async function createFirestorePoint({ coordinates, point_type_id }) {
     logDevError('[Firestore] Write failed', err, { payload })
     throw new Error('Erreur de connexion. Réessaie plus tard.')
   }
-  // store fbId as well, to match backend shape and keep a stable doc identifier
-  return { ...payload, fbId: ref.id }
+
+  return payload
 }
