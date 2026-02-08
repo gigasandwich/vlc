@@ -1,6 +1,7 @@
 package mg.serve.vlc.service;
 
 import mg.serve.vlc.controller.response.ApiResponse;
+import mg.serve.vlc.controller.response.SyncStatistics;
 import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.map.Point;
 import mg.serve.vlc.model.map.PointHistoric;
@@ -45,8 +46,7 @@ public class PointSyncService {
             Set<String> allPointFbIds = new HashSet<>(localMap.keySet());
             allPointFbIds.addAll(remoteMap.keySet());
 
-            List<String> errors = new ArrayList<>();
-            List<Point> syncedPoints = new ArrayList<>();
+            SyncStatistics stats = new SyncStatistics();
 
             for (String fbId : allPointFbIds) {
                 Point local = localMap.get(fbId);
@@ -57,22 +57,22 @@ public class PointSyncService {
                         // Firestore only
                         ensureUserExistsLocally(remote.getUser().getFbId());
                         createLocalPoint(remote);
-                        syncedPoints.add(remote);
+                        stats.setPointsCreatedLocally(stats.getPointsCreatedLocally() + 1);
                     } else if (local != null && remote == null) {
                         // Local only
                         Point updatedLocal = pushPointToFirestore(local);
                         local = ((PointRepository) RepositoryProvider.jpaPointRepository).save(updatedLocal); // To get fbId if needed
-                        syncedPoints.add(local);
+                        stats.setPointsPushedToFirestore(stats.getPointsPushedToFirestore() + 1);
                     } else if (local.getUpdatedAt() != null && remote.getUpdatedAt() != null) {
                         if (local.getUpdatedAt().isAfter(remote.getUpdatedAt())) {
                             // Local newer
                             overwriteFirestorePoint(local);
-                            syncedPoints.add(local);
+                            stats.setPointsUpdatedInFirestore(stats.getPointsUpdatedInFirestore() + 1);
                         } else if (remote.getUpdatedAt().isAfter(local.getUpdatedAt())) {
                             // Firestore newer
                             ensureUserExistsLocally(remote.getUser().getFbId());
                             overwriteLocalPoint(remote);
-                            syncedPoints.add(remote);
+                            stats.setPointsUpdatedLocally(stats.getPointsUpdatedLocally() + 1);
                         } else {
                             // identical timestamps: no op
                         }
@@ -81,25 +81,20 @@ public class PointSyncService {
                         if (local.getUpdatedAt() == null && remote.getUpdatedAt() != null) {
                             ensureUserExistsLocally(remote.getUser().getFbId());
                             overwriteLocalPoint(remote);
-                            syncedPoints.add(remote);
+                            stats.setPointsUpdatedLocally(stats.getPointsUpdatedLocally() + 1);
                         } else if (local.getUpdatedAt() != null && remote.getUpdatedAt() == null) {
                             overwriteFirestorePoint(local);
-                            syncedPoints.add(local);
+                            stats.setPointsUpdatedInFirestore(stats.getPointsUpdatedInFirestore() + 1);
                         }
                         // if both null, no op
                     }
                 } catch (Exception e) {
-                    errors.add("Failed to sync point " + fbId + ": " + e.getMessage());
+                    stats.addError("Failed to sync point " + fbId + ": " + e.getMessage());
                     logger.warn("Failed to sync point {}", fbId, e);
                 }
             }
 
-            String message = String.format("Synced %d points. %d errors occurred.", syncedPoints.size(), errors.size());
-            if (!errors.isEmpty()) {
-                message += " Errors: " + String.join("; ", errors);
-            }
-
-            return new ApiResponse("success", syncedPoints, message);
+            return new ApiResponse("success", stats, stats.generateSummaryMessage());
         } catch (Exception e) {
             logger.error("Sync points failed", e);
             return new ApiResponse("error", null, "Sync points failed: " + e.getMessage());
@@ -171,8 +166,7 @@ public class PointSyncService {
     public ApiResponse syncPointHistoric() {
         try {
             List<Point> allPoints = RepositoryProvider.jpaPointRepository.findAll();
-            List<String> errors = new ArrayList<>();
-            int totalSynced = 0;
+            SyncStatistics stats = new SyncStatistics();
 
             for (Point point : allPoints) {
                 if (point.getFbId() == null) continue; // TODO: To check if there are problems in firestore later
@@ -180,37 +174,44 @@ public class PointSyncService {
                     List<PointHistoric> localHistory = RepositoryProvider.pointHistoricRepository.findByPointId(point.getId());
                     List<PointHistoric> remoteHistory = firebasePointHistoricRepository.findByPointFbId(point.getFbId());
 
-                    // Find missing local historic entries
+                    // Find missing local historic entries or update existing
                     for (PointHistoric remoteHistoric : remoteHistory) {
-                        boolean existsLocally = localHistory.stream().anyMatch(local -> pointHistoricDataEquals(local, remoteHistoric));
-                        if (!existsLocally) {
+                        Optional<PointHistoric> existing = localHistory.stream()
+                            .filter(local -> Objects.equals(local.getFbId(), remoteHistoric.getFbId()))
+                            .findFirst();
+                        if (existing.isPresent()) {
+                            // Update existing local historic
+                            PointHistoric local = existing.get();
+                            local.setDate(remoteHistoric.getDate());
+                            local.setSurface(remoteHistoric.getSurface());
+                            local.setBudget(remoteHistoric.getBudget());
+                            local.setCoordinates(remoteHistoric.getCoordinates().getX(), remoteHistoric.getCoordinates().getY());
+                            local.setPointState(remoteHistoric.getPointState());
+                            RepositoryProvider.pointHistoricRepository.save(local);
+                            stats.setPointHistoricUpdatedLocally(stats.getPointHistoricUpdatedLocally() + 1);
+                        } else {
                             insertLocalPointHistoric(remoteHistoric, point);
-                            totalSynced++;
+                            stats.setPointHistoricCreatedLocally(stats.getPointHistoricCreatedLocally() + 1);
                         }
                     }
 
                     // Find missing remote historic entries
                     for (PointHistoric localHistoric : localHistory) {
-                        boolean existsRemotely = remoteHistory.stream().anyMatch(remote -> pointHistoricDataEquals(localHistoric, remote));
+                        boolean existsRemotely = remoteHistory.stream().anyMatch(remote -> Objects.equals(remote.getFbId(), localHistoric.getFbId()));
                         if (!existsRemotely) {
                             insertRemotePointHistoric(localHistoric, point.getFbId());
-                            totalSynced++;
+                            stats.setPointHistoricPushedToFirestore(stats.getPointHistoricPushedToFirestore() + 1);
                         }
                     }
 
                     logger.info("Synced history for point: {}", point.getFbId());
                 } catch (Exception e) {
-                    errors.add("Failed to sync history for point " + point.getFbId() + ": " + e.getMessage());
+                    stats.addError("Failed to sync history for point " + point.getFbId() + ": " + e.getMessage());
                     logger.warn("Failed to sync history for point {}", point.getFbId(), e);
                 }
             }
 
-            String message = String.format("Synced %d historic entries. %d errors occurred.", totalSynced, errors.size());
-            if (!errors.isEmpty()) {
-                message += " Errors: " + String.join("; ", errors);
-            }
-
-            return new ApiResponse("success", null, message);
+            return new ApiResponse("success", stats, stats.generateSummaryMessage());
         } catch (Exception e) {
             logger.error("Sync point historic failed", e);
             return new ApiResponse("error", null, "Sync point historic failed: " + e.getMessage());
@@ -225,7 +226,7 @@ public class PointSyncService {
         localHistoric.setCoordinates(remoteHistoric.getCoordinates().getX(), remoteHistoric.getCoordinates().getY());
         localHistoric.setPointId(point.getId());
         localHistoric.setPointState(remoteHistoric.getPointState());
-        localHistoric.setFbId(point.getFbId());
+        localHistoric.setFbId(remoteHistoric.getFbId());
         return RepositoryProvider.pointHistoricRepository.save(localHistoric);
     }
 

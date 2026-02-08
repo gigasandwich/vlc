@@ -1,17 +1,44 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { backendURL } from '../../constant';
+import SyncResultsModal from './SyncResultsModal';
+
+interface SyncStatistics {
+  usersCreatedLocally: number;
+  usersPushedToFirestore: number;
+  usersUpdatedLocally: number;
+  usersUpdatedInFirestore: number;
+  historicCreatedLocally: number;
+  historicPushedToFirestore: number;
+  historicUpdatedLocally: number;
+  historicUpdatedInFirestore: number;
+  pointsCreatedLocally: number;
+  pointsPushedToFirestore: number;
+  pointsUpdatedLocally: number;
+  pointsUpdatedInFirestore: number;
+  pointHistoricCreatedLocally: number;
+  pointHistoricPushedToFirestore: number;
+  pointHistoricUpdatedLocally: number;
+  pointHistoricUpdatedInFirestore: number;
+  totalErrors: number;
+  errorMessages: string[];
+}
 
 export default function AdminDashboard() {
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResults, setSyncResults] = useState<SyncStatistics | null>(null);
+  const [showResults, setShowResults] = useState(false);
 
   const handleSync = async () => {
     setIsSyncing(true);
+    setSyncResults(null);
+    setShowResults(false);
     try {
       const response = await fetch(`${backendURL}/sync/all`, { method: 'POST' });
       const data = await response.json();
       if (response.ok && data.status === 'success') {
-        alert('Sync completed successfully');
+        setSyncResults(data.data);
+        setShowResults(true);
       } else {
         alert(data.error || 'Sync failed');
       }
@@ -83,6 +110,13 @@ export default function AdminDashboard() {
           </div>
         </button>
       </div>
+
+      {/* Sync Results Modal */}
+      <SyncResultsModal
+        isOpen={showResults}
+        onClose={() => setShowResults(false)}
+        syncResults={syncResults}
+      />
       
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {adminActions.map((action, index) => (

@@ -1,6 +1,7 @@
 package mg.serve.vlc.service;
 
 import mg.serve.vlc.controller.response.ApiResponse;
+import mg.serve.vlc.controller.response.SyncStatistics;
 import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.model.user.UserHistoric;
@@ -68,8 +69,7 @@ public class UserSyncService {
             Set<String> allUserEmails = new HashSet<>(localMap.keySet());
             allUserEmails.addAll(remoteMap.keySet());
 
-            List<String> errors = new ArrayList<>();
-            List<User> syncedUsers = new ArrayList<>();
+            SyncStatistics stats = new SyncStatistics();
 
             for (String email : allUserEmails) {
                 User local = localMap.get(email);
@@ -79,47 +79,42 @@ public class UserSyncService {
                     if (local == null && remote != null) {
                         // Firestore only
                         createLocalUser(remote);
-                        syncedUsers.add(remote);
+                        stats.setUsersCreatedLocally(stats.getUsersCreatedLocally() + 1);
                     } else if (local != null && remote == null) {
                         // Local only
                         User updatedLocal = pushUserToFirestore(local);
                         ((UserRepository) RepositoryProvider.jpaUserRepository).save(updatedLocal); // To get fbId
-                        syncedUsers.add(updatedLocal);
+                        stats.setUsersPushedToFirestore(stats.getUsersPushedToFirestore() + 1);
                     } else if (local.getUpdatedAt() != null && remote.getUpdatedAt() != null) {
                         if (local.getUpdatedAt().isAfter(remote.getUpdatedAt()) && !userDataEquals(local, remote)) {
                             // Local newer and data different
                             overwriteFirestoreUser(local);
-                            syncedUsers.add(local);
+                            stats.setUsersUpdatedInFirestore(stats.getUsersUpdatedInFirestore() + 1);
                         } else if (remote.getUpdatedAt().isAfter(local.getUpdatedAt()) && !userDataEquals(local, remote)) {
                             // Firestore newer and data different
                             overwriteLocalUser(remote);
-                            syncedUsers.add(remote);
+                            stats.setUsersUpdatedLocally(stats.getUsersUpdatedLocally() + 1);
                         } else {
-                            // identical timestamps or identical data: no op, thank you chatgpt 
+                            // identical timestamps or identical data: no op, thank you chatgpt
                         }
                     } else {
                         // Handle cases where updatedAt is null
                         if (local.getUpdatedAt() == null && remote.getUpdatedAt() != null) {
                             overwriteLocalUser(remote);
-                            syncedUsers.add(remote);
+                            stats.setUsersUpdatedLocally(stats.getUsersUpdatedLocally() + 1);
                         } else if (local.getUpdatedAt() != null && remote.getUpdatedAt() == null) {
                             overwriteFirestoreUser(local);
-                            syncedUsers.add(local);
+                            stats.setUsersUpdatedInFirestore(stats.getUsersUpdatedInFirestore() + 1);
                         }
                         // if both null, no op
                     }
                 } catch (Exception e) {
-                    errors.add("Failed to sync user " + email + ": " + e.getMessage());
+                    stats.addError("Failed to sync user " + email + ": " + e.getMessage());
                     logger.warn("Failed to sync user {}", email, e);
                 }
             }
 
-            String message = String.format("Synced %d users. %d errors occurred.", syncedUsers.size(), errors.size());
-            if (!errors.isEmpty()) {
-                message += " Errors: " + String.join("; ", errors);
-            }
-
-            return new ApiResponse("success", syncedUsers, message);
+            return new ApiResponse("success", stats, stats.generateSummaryMessage());
         } catch (Exception e) {
             logger.error("Sync users failed", e);
             return new ApiResponse("error", null, "Sync users failed: " + e.getMessage());
@@ -168,45 +163,51 @@ public class UserSyncService {
     public ApiResponse syncUserHistoric() {
         try {
             List<User> allUsers = RepositoryProvider.jpaUserRepository.findAll();
-            List<String> errors = new ArrayList<>();
-            int totalSynced = 0;
+            SyncStatistics stats = new SyncStatistics();
 
             for (User user : allUsers) {
                 try {
                     List<UserHistoric> localHistory = RepositoryProvider.jpaUserHistoricRepository.findByUserId(user.getId());
                     List<UserHistoric> remoteHistory = firebaseUserHistoricRepository.findByUserFbId(user.getFbId());
 
-                    // Find missing local historic entries
+                    // Find missing local historic entries or update existing
                     for (UserHistoric remoteHistoric : remoteHistory) {
-                        boolean existsLocally = localHistory.stream().anyMatch(local -> historicDataEquals(local, remoteHistoric));
-                        if (!existsLocally) {
+                        Optional<UserHistoric> existing = localHistory.stream()
+                            .filter(local -> Objects.equals(local.getFbId(), remoteHistoric.getFbId()))
+                            .findFirst();
+                        if (existing.isPresent()) {
+                            // Update existing local historic
+                            UserHistoric local = existing.get();
+                            local.setEmail(remoteHistoric.getEmail());
+                            local.setPassword(remoteHistoric.getPassword());
+                            local.setUsername(remoteHistoric.getUsername());
+                            local.setDate(remoteHistoric.getDate());
+                            local.setUserStateId(remoteHistoric.getUserStateId());
+                            ((UserHistoricRepository) RepositoryProvider.jpaUserHistoricRepository).save(local);
+                            stats.setHistoricUpdatedLocally(stats.getHistoricUpdatedLocally() + 1);
+                        } else {
                             insertLocalUserHistoric(remoteHistoric, user);
-                            totalSynced++;
+                            stats.setHistoricCreatedLocally(stats.getHistoricCreatedLocally() + 1);
                         }
                     }
 
                     // Find missing remote historic entries
                     for (UserHistoric localHistoric : localHistory) {
-                        boolean existsRemotely = remoteHistory.stream().anyMatch(remote -> historicDataEquals(localHistoric, remote));
+                        boolean existsRemotely = remoteHistory.stream().anyMatch(remote -> Objects.equals(remote.getFbId(), localHistoric.getFbId()));
                         if (!existsRemotely) {
                             insertRemoteUserHistoric(localHistoric);
-                            totalSynced++;
+                            stats.setHistoricPushedToFirestore(stats.getHistoricPushedToFirestore() + 1);
                         }
                     }
 
                     logger.info("Synced history for user: {}", user.getEmail());
                 } catch (Exception e) {
-                    errors.add("Failed to sync history for user " + user.getEmail() + ": " + e.getMessage());
+                    stats.addError("Failed to sync history for user " + user.getEmail() + ": " + e.getMessage());
                     logger.warn("Failed to sync history for user {}", user.getEmail(), e);
                 }
             }
 
-            String message = String.format("Synced %d historic entries. %d errors occurred.", totalSynced, errors.size());
-            if (!errors.isEmpty()) {
-                message += " Errors: " + String.join("; ", errors);
-            }
-
-            return new ApiResponse("success", null, message);
+            return new ApiResponse("success", stats, stats.generateSummaryMessage());
         } catch (Exception e) {
             logger.error("Sync user historic failed", e);
             return new ApiResponse("error", null, "Sync user historic failed: " + e.getMessage());
@@ -242,7 +243,8 @@ public class UserSyncService {
     }
 
     private boolean historicDataEquals(UserHistoric h1, UserHistoric h2) {
-        return Objects.equals(h1.getEmail(), h2.getEmail()) &&
+        return Objects.equals(h1.getFbId(), h2.getFbId()) &&
+               Objects.equals(h1.getEmail(), h2.getEmail()) &&
                Objects.equals(h1.getUsername(), h2.getUsername()) &&
                Objects.equals(h1.getPassword(), h2.getPassword()) &&
                Objects.equals(h1.getDate(), h2.getDate()) &&
