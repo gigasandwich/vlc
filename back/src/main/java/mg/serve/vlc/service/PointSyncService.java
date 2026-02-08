@@ -31,6 +31,14 @@ public class PointSyncService {
             List<Point> localPoints = RepositoryProvider.jpaPointRepository.findAll();
             List<Point> remotePoints = firebasePointRepository.findAll();
 
+            // Push local points with null fbId to Firestore first
+            for (Point local : localPoints) {
+                if (local.getFbId() == null) {
+                    Point updatedLocal = pushPointToFirestore(local);
+                    local = ((PointRepository) RepositoryProvider.jpaPointRepository).save(updatedLocal);
+                }
+            }
+
             Map<String, Point> localMap = localPoints.stream().collect(Collectors.toMap(Point::getFbId, p -> p));
             Map<String, Point> remoteMap = remotePoints.stream().collect(Collectors.toMap(Point::getFbId, p -> p));
 
@@ -53,8 +61,8 @@ public class PointSyncService {
                     } else if (local != null && remote == null) {
                         // Local only
                         Point updatedLocal = pushPointToFirestore(local);
-                        ((PointRepository) RepositoryProvider.jpaPointRepository).save(updatedLocal); // To get fbId if needed
-                        syncedPoints.add(updatedLocal);
+                        local = ((PointRepository) RepositoryProvider.jpaPointRepository).save(updatedLocal); // To get fbId if needed
+                        syncedPoints.add(local);
                     } else if (local.getUpdatedAt() != null && remote.getUpdatedAt() != null) {
                         if (local.getUpdatedAt().isAfter(remote.getUpdatedAt())) {
                             // Local newer
