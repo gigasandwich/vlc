@@ -139,6 +139,7 @@ public class Point {
     public Map<String, Object> toMap() {
         Map<String, Object> pointMap = new HashMap<>();
         pointMap.put("id", this.id);
+        pointMap.put("fbId", this.fbId);
         pointMap.put("date_", Timestamp.of(Date.from(this.date.toInstant(ZoneOffset.UTC))));
         if (this.updatedAt != null) {
             pointMap.put("updatedAt", Timestamp.of(Date.from(this.updatedAt.toInstant(ZoneOffset.UTC))));

@@ -26,9 +26,13 @@ INSERT INTO user_state (label) VALUES
 
 INSERT INTO user_(email, password, username, user_state_id) VALUES
 ('admin@gmail.com', 'admin123', 'admin', 1);
-
 INSERT INTO user_historic (email, password, username, date_, user_state_id, user_id) VALUES
 ('admin@gmail.com', 'admin123', 'admin', NOW(), 1, 1);
+
+INSERT INTO user_(email, password, username, user_state_id) VALUES
+('user1@gmail.com', 'pass123', 'user1', 1);
+INSERT INTO user_historic (email, password, username, date_, user_state_id, user_id) VALUES
+('user1@gmail.com', 'pass123', 'user1', NOW(), 1, 2);
 
 INSERT INTO user_role (role_id, user_id) VALUES
 (2, 1);
