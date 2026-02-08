@@ -8,9 +8,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.auth.UserRecord.CreateRequest;
+import com.google.firebase.auth.UserRecord.UpdateRequest;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.Timestamp;
 import java.util.concurrent.ExecutionException;
 
 public class FirebaseUserRepository implements UserRepository {
@@ -43,6 +45,9 @@ public class FirebaseUserRepository implements UserRepository {
                     if (data.get("userStateId") != null) {
                         user.setUserStateId(((Long) data.get("userStateId")).intValue());
                     }
+                    if (data.get("updatedAt") != null) {
+                        user.setUpdatedAt(((com.google.cloud.Timestamp) data.get("updatedAt")).toSqlTimestamp().toLocalDateTime());
+                    }
 
                     // Handle roles
                     List<Map<String, Object>> rolesData = (List<Map<String, Object>>) data.get("roles");
@@ -72,21 +77,40 @@ public class FirebaseUserRepository implements UserRepository {
         return Collections.emptyList();
     }
 
+    // TODO: save all the fk too: roles, userState
     @Override
     public User save(User user) {
         try {
             System.out.println("Saving user to Firebase: " + user.getEmail());
 
-            CreateRequest request = new CreateRequest()
-                    .setEmail(user.getEmail())
-                    .setPassword(user.getPassword())
-                    .setDisplayName(user.getUsername());
+            UserRecord existing = null;
+            try {
+                existing = FirebaseAuth.getInstance().getUserByEmail(user.getEmail());
+            } catch (Exception e) {
+                // User not found, will create (l-101)
+            }
 
-            UserRecord userRecord = FirebaseAuth.getInstance().createUser(request);
-            String fbId = userRecord.getUid();
-            user.setFbId(fbId); // So that the historic can still use it
+            String fbId;
+            if (existing != null) {
+                fbId = existing.getUid();
+                // Update existing user, TODO: make it better
+                UpdateRequest updateRequest = new UpdateRequest(fbId)
+                        .setDisplayName(user.getUsername());
+                FirebaseAuth.getInstance().updateUser(updateRequest);
+                System.out.println("Successfully updated Firebase user: " + fbId);
+            } else {
+                // Create new user
+                CreateRequest request = new CreateRequest()
+                        .setEmail(user.getEmail())
+                        .setPassword(user.getPassword() != null ? user.getPassword() : "defaultpassword")
+                        .setDisplayName(user.getUsername());
+                UserRecord userRecord = FirebaseAuth.getInstance().createUser(request);
+                fbId = userRecord.getUid();
+                System.out.println("Successfully created Firebase user: " + fbId);
+            }
 
-            System.out.println("Successfully created Firebase user: " + userRecord.getUid());
+            user.setFbId(fbId);
+            user.setUpdatedAt(java.time.LocalDateTime.now());
 
             Firestore firestore = FirestoreClient.getFirestore();
             firestore.collection("users").document(fbId).set(user.toMap()).get();
@@ -138,6 +162,9 @@ public class FirebaseUserRepository implements UserRepository {
                     user.setEmail((String) data.get("email"));
                     user.setUsername((String) data.get("username"));
                     user.setUserStateId(((Long) data.get("userStateId")).intValue());
+                    if (data.get("updatedAt") != null) {
+                        user.setUpdatedAt(((Timestamp) data.get("updatedAt")).toSqlTimestamp().toLocalDateTime());
+                    }
                     users.add(user);
                 }
             }

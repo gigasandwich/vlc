@@ -57,7 +57,8 @@ public class SecurityConfig {
                 ).permitAll()
 
                 .requestMatchers(
-                    "/sync/users" // Debug
+                    "/sync/all", // Debug
+                    "/sync/users"
                 ).permitAll()
 
                 .anyRequest().authenticated()

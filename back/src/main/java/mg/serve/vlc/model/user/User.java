@@ -16,6 +16,7 @@ import mg.serve.vlc.repository.user.FirebaseUserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.UserRecord;
 import mg.serve.vlc.repository.userHistoric.UserHistoricRepository;
+import com.google.cloud.Timestamp;
 
 @Entity
 @Table(name = "user_")
@@ -42,6 +43,13 @@ public class User {
 
     @Column(name = "user_state_id")
     private Integer userStateId;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_state_id", insertable = false, updatable = false)
+    private UserState userState;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -202,6 +210,13 @@ public class User {
     /****************************
      * Getters/Setters
      ****************************/
+
+    @PrePersist
+    @PreUpdate
+    public void setUpdatedAt() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public void setEmail(String email) throws BusinessLogicException {
     if (email == null || !email.contains("@") || !email.contains(".")) {
             throw new BusinessLogicException("Invalid email address");
@@ -217,13 +232,18 @@ public class User {
     }
 
 
+    // TODO: only play with userState, not userStateId
     public Map<String, Object> toMap() {
         Map<String, Object> userMap = new HashMap<>();
         userMap.put("id", this.id);
         userMap.put("email", this.email);
         userMap.put("username", this.username);
         userMap.put("userStateId", this.userStateId);
+        if (this.userState != null) {
+            userMap.put("userState", this.userState.toMap());
+        }
         userMap.put("fbId", this.fbId);
+        userMap.put("updatedAt", this.updatedAt != null ? Timestamp.of(Date.from(this.updatedAt.toInstant(ZoneOffset.UTC))) : null);
 
         List<Map<String, Object>> rolesList = new ArrayList<>();
         for (Role role : this.roles) {
