@@ -167,35 +167,25 @@ public class PointSyncService {
             int totalSynced = 0;
 
             for (Point point : allPoints) {
-                if (point.getFbId() == null) continue; // TODO: Check later 
+                if (point.getFbId() == null) continue; // TODO: To check if there are problems in firestore later
                 try {
                     List<PointHistoric> localHistory = RepositoryProvider.pointHistoricRepository.findByPointId(point.getId());
                     List<PointHistoric> remoteHistory = firebasePointHistoricRepository.findByPointFbId(point.getFbId());
 
-                    Set<Integer> localIds = localHistory.stream().map(PointHistoric::getId).collect(Collectors.toSet());
-                    Set<Integer> remoteIds = remoteHistory.stream().map(PointHistoric::getId).collect(Collectors.toSet());
-
-                    Set<Integer> missingLocal = new HashSet<>(remoteIds);
-                    missingLocal.removeAll(localIds);
-
-                    Set<Integer> missingRemote = new HashSet<>(localIds);
-                    missingRemote.removeAll(remoteIds);
-
-                    Map<Integer, PointHistoric> remoteMap = remoteHistory.stream().collect(Collectors.toMap(PointHistoric::getId, h -> h));
-                    Map<Integer, PointHistoric> localMap = localHistory.stream().collect(Collectors.toMap(PointHistoric::getId, h -> h));
-
-                    for (Integer id : missingLocal) {
-                        PointHistoric remoteHistoric = remoteMap.get(id);
-                        if (remoteHistoric != null) {
+                    // Find missing local historic entries
+                    for (PointHistoric remoteHistoric : remoteHistory) {
+                        boolean existsLocally = localHistory.stream().anyMatch(local -> pointHistoricDataEquals(local, remoteHistoric));
+                        if (!existsLocally) {
                             insertLocalPointHistoric(remoteHistoric, point);
                             totalSynced++;
                         }
                     }
 
-                    for (Integer id : missingRemote) {
-                        PointHistoric localHistoric = localMap.get(id);
-                        if (localHistoric != null) {
-                            insertRemotePointHistoric(localHistoric);
+                    // Find missing remote historic entries
+                    for (PointHistoric localHistoric : localHistory) {
+                        boolean existsRemotely = remoteHistory.stream().anyMatch(remote -> pointHistoricDataEquals(localHistoric, remote));
+                        if (!existsRemotely) {
+                            insertRemotePointHistoric(localHistoric, point.getFbId());
                             totalSynced++;
                         }
                     }
@@ -231,11 +221,24 @@ public class PointSyncService {
         return RepositoryProvider.pointHistoricRepository.save(localHistoric);
     }
 
-    private PointHistoric insertRemotePointHistoric(PointHistoric localHistoric) {
-        if (localHistoric.getFbId() == null || localHistoric.getFbId().isEmpty()) {
+    private PointHistoric insertRemotePointHistoric(PointHistoric localHistoric, String pointFbId) {
+        String fbId = localHistoric.getFbId() != null && !localHistoric.getFbId().isEmpty() ? localHistoric.getFbId() : pointFbId;
+        if (fbId == null || fbId.isEmpty()) {
             logger.warn("Skipping insert remote historic for point with null or empty fbId");
             return null;
         }
-        return firebasePointHistoricRepository.save(localHistoric, localHistoric.getFbId());
+        return firebasePointHistoricRepository.save(localHistoric, fbId);
+    }
+
+    private boolean pointHistoricDataEquals(PointHistoric h1, PointHistoric h2) {
+        if (h1 == h2) return true;
+        if (h1 == null || h2 == null) return false;
+        return Objects.equals(h1.getDate(), h2.getDate()) &&
+               Objects.equals(h1.getSurface(), h2.getSurface()) &&
+               Objects.equals(h1.getBudget(), h2.getBudget()) &&
+               Objects.equals(h1.getPointState(), h2.getPointState()) &&
+               (h1.getCoordinates() != null && h2.getCoordinates() != null &&
+                h1.getCoordinates().getX() == h2.getCoordinates().getX() &&
+                h1.getCoordinates().getY() == h2.getCoordinates().getY());
     }
 }

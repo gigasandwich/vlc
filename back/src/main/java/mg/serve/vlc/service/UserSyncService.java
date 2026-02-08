@@ -86,16 +86,16 @@ public class UserSyncService {
                         ((UserRepository) RepositoryProvider.jpaUserRepository).save(updatedLocal); // To get fbId
                         syncedUsers.add(updatedLocal);
                     } else if (local.getUpdatedAt() != null && remote.getUpdatedAt() != null) {
-                        if (local.getUpdatedAt().isAfter(remote.getUpdatedAt())) {
-                            // Local newer
+                        if (local.getUpdatedAt().isAfter(remote.getUpdatedAt()) && !userDataEquals(local, remote)) {
+                            // Local newer and data different
                             overwriteFirestoreUser(local);
                             syncedUsers.add(local);
-                        } else if (remote.getUpdatedAt().isAfter(local.getUpdatedAt())) {
-                            // Firestore newer
+                        } else if (remote.getUpdatedAt().isAfter(local.getUpdatedAt()) && !userDataEquals(local, remote)) {
+                            // Firestore newer and data different
                             overwriteLocalUser(remote);
                             syncedUsers.add(remote);
                         } else {
-                            // identical timestamps: no op, chatgpt advised this
+                            // identical timestamps or identical data: no op, thank you chatgpt 
                         }
                     } else {
                         // Handle cases where updatedAt is null
@@ -176,29 +176,19 @@ public class UserSyncService {
                     List<UserHistoric> localHistory = RepositoryProvider.jpaUserHistoricRepository.findByUserId(user.getId());
                     List<UserHistoric> remoteHistory = firebaseUserHistoricRepository.findByUserFbId(user.getFbId());
 
-                    Set<Integer> localIds = localHistory.stream().map(UserHistoric::getId).collect(Collectors.toSet());
-                    Set<Integer> remoteIds = remoteHistory.stream().map(UserHistoric::getId).collect(Collectors.toSet());
-
-                    Set<Integer> missingLocal = new HashSet<>(remoteIds);
-                    missingLocal.removeAll(localIds);
-
-                    Set<Integer> missingRemote = new HashSet<>(localIds);
-                    missingRemote.removeAll(remoteIds);
-
-                    Map<Integer, UserHistoric> remoteMap = remoteHistory.stream().collect(Collectors.toMap(UserHistoric::getId, h -> h));
-                    Map<Integer, UserHistoric> localMap = localHistory.stream().collect(Collectors.toMap(UserHistoric::getId, h -> h));
-
-                    for (Integer id : missingLocal) {
-                        UserHistoric remoteHistoric = remoteMap.get(id);
-                        if (remoteHistoric != null) {
+                    // Find missing local historic entries
+                    for (UserHistoric remoteHistoric : remoteHistory) {
+                        boolean existsLocally = localHistory.stream().anyMatch(local -> historicDataEquals(local, remoteHistoric));
+                        if (!existsLocally) {
                             insertLocalUserHistoric(remoteHistoric, user);
                             totalSynced++;
                         }
                     }
 
-                    for (Integer id : missingRemote) {
-                        UserHistoric localHistoric = localMap.get(id);
-                        if (localHistoric != null) {
+                    // Find missing remote historic entries
+                    for (UserHistoric localHistoric : localHistory) {
+                        boolean existsRemotely = remoteHistory.stream().anyMatch(remote -> historicDataEquals(localHistoric, remote));
+                        if (!existsRemotely) {
                             insertRemoteUserHistoric(localHistoric);
                             totalSynced++;
                         }
@@ -241,5 +231,21 @@ public class UserSyncService {
             return null;
         }
         return firebaseUserHistoricRepository.save(localHistoric, localHistoric.getUser().getFbId());
+    }
+
+    private boolean userDataEquals(User u1, User u2) {
+        return Objects.equals(u1.getEmail(), u2.getEmail()) &&
+               Objects.equals(u1.getUsername(), u2.getUsername()) &&
+               Objects.equals(u1.getPassword(), u2.getPassword()) &&
+               Objects.equals(u1.getUserStateId(), u2.getUserStateId()) &&
+               Objects.equals(u1.getRoles(), u2.getRoles());
+    }
+
+    private boolean historicDataEquals(UserHistoric h1, UserHistoric h2) {
+        return Objects.equals(h1.getEmail(), h2.getEmail()) &&
+               Objects.equals(h1.getUsername(), h2.getUsername()) &&
+               Objects.equals(h1.getPassword(), h2.getPassword()) &&
+               Objects.equals(h1.getDate(), h2.getDate()) &&
+               Objects.equals(h1.getUserStateId(), h2.getUserStateId());
     }
 }
