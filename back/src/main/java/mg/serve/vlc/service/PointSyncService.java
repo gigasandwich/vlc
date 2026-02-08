@@ -248,11 +248,7 @@ public class PointSyncService {
     }
 
     private PointHistoric insertRemotePointHistoric(PointHistoric localHistoric, String pointFbId) {
-        if (localHistoric.getFbId() == null || localHistoric.getFbId().isEmpty()) {
-            logger.warn("Skipping insert remote historic for historic with null or empty fbId");
-            return null;
-        }
-        return firebasePointHistoricRepository.save(localHistoric, localHistoric.getFbId());
+        return firebasePointHistoricRepository.save(localHistoric, pointFbId);
     }
 
     private boolean pointDataEquals(Point p1, Point p2) {
