@@ -16,6 +16,7 @@ import mg.serve.vlc.repository.user.FirebaseUserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.UserRecord;
 import mg.serve.vlc.repository.userHistoric.UserHistoricRepository;
+import com.google.cloud.Timestamp;
 
 @Entity
 @Table(name = "user_")
@@ -211,7 +212,7 @@ public class User {
     public void setUpdatedAt() {
         this.updatedAt = LocalDateTime.now();
     }
-    
+
     public void setEmail(String email) throws BusinessLogicException {
     if (email == null || !email.contains("@") || !email.contains(".")) {
             throw new BusinessLogicException("Invalid email address");
@@ -234,7 +235,7 @@ public class User {
         userMap.put("username", this.username);
         userMap.put("userStateId", this.userStateId);
         userMap.put("fbId", this.fbId);
-        userMap.put("updatedAt", this.updatedAt);
+        userMap.put("updatedAt", this.updatedAt != null ? Timestamp.of(Date.from(this.updatedAt.toInstant(ZoneOffset.UTC))) : null);
 
         List<Map<String, Object>> rolesList = new ArrayList<>();
         for (Role role : this.roles) {

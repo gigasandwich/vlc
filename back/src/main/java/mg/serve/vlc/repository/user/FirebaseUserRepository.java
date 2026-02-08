@@ -77,6 +77,7 @@ public class FirebaseUserRepository implements UserRepository {
         return Collections.emptyList();
     }
 
+    // TODO: save all the fk too: roles, userState
     @Override
     public User save(User user) {
         try {
