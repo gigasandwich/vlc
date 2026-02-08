@@ -44,7 +44,9 @@ public class FirebaseUserHistoricRepository implements UserHistoricRepository {
                 Map<String, Object> data = doc.getData();
                 if (data != null) {
                     UserHistoric historic = new UserHistoric();
-                    historic.setId(((Long) data.get("id")).intValue());
+                    if (data.get("id") != null) {
+                        historic.setId(((Long) data.get("id")).intValue());
+                    }
                     historic.setEmail((String) data.get("email"));
                     historic.setPassword((String) data.get("password"));
                     historic.setUsername((String) data.get("username"));

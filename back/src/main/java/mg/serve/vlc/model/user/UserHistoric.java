@@ -42,7 +42,7 @@ public class UserHistoric {
         map.put("username", username);
         map.put("date", date != null ? Date.from(date.atZone(ZoneId.systemDefault()).toInstant()) : null);
         map.put("userId", this.user.getId());
-        // map.put("userFbId", userFbId);
+        map.put("userFbId", this.user.getFbId());
         map.put("userStateId", userStateId);
         return map;
     }
