@@ -193,7 +193,10 @@ type FirestorePoint = {
   coordinates?: { latitude: number; longitude: number } | any
   point_type_id?: number
   point_type?: { id: number; label?: string }
+  pointTypeId?: number
+  pointType?: { id: number; label?: string }
   user_id?: number
+  user?: { id?: number; fbId?: string; [key: string]: any }
   [key: string]: any
 }
 
@@ -374,7 +377,12 @@ function normalizeLatLng(point: FirestorePoint): { lat: number; lng: number } | 
 
 function markerColor(point: FirestorePoint): string {
   // heuristic colors by type id: 1=blue, 2=orange, 3=red
-  const typeId = Number(point.point_type?.id ?? point.point_type_id)
+  const typeId = Number(
+    (point as any).pointType?.id ??
+      (point as any).pointTypeId ??
+      point.point_type?.id ??
+      point.point_type_id
+  )
   if (typeId === 2) return '#f97316'
   if (typeId === 3) return '#ef4444'
   return '#3b82f6'
@@ -391,15 +399,20 @@ function renderPoints() {
     .filter((p: FirestorePoint) => {
       if (!filterMine.value) return true
       const localId = currentUserId.value
-      if (localId != null) return Number(p.user_id) === localId
+      if (localId != null) return Number((p as any).user?.id ?? p.user_id) === localId
 
       // fallback: if user_id isn't available in client, try matching Firebase uid
-      if (uid) return (p as any).createdByUid === uid
+      if (uid) return (p as any).createdByUid === uid || String((p as any).user?.fbId ?? '') === uid
       return false
     })
     .filter((p: FirestorePoint) => {
       if (filterShape.value === 'all') return true
-      const typeId = Number(p.point_type?.id ?? p.point_type_id)
+      const typeId = Number(
+        (p as any).pointType?.id ??
+          (p as any).pointTypeId ??
+          p.point_type?.id ??
+          p.point_type_id
+      )
       if (filterShape.value === 'circle') return typeId === 1
       if (filterShape.value === 'square') return typeId === 2
       if (filterShape.value === 'triangle') return typeId === 3
