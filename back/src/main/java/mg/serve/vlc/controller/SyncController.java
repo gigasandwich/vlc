@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import mg.serve.vlc.controller.response.ApiResponse;
+import mg.serve.vlc.controller.response.SyncStatistics;
 import mg.serve.vlc.service.UserSyncService;
 import mg.serve.vlc.service.PointSyncService;
 
@@ -24,12 +25,63 @@ public class SyncController {
     @PostMapping("/all")
     public ResponseEntity<ApiResponse> syncAll() {
         try {
-            userSyncService.syncUsers();
-            userSyncService.syncUserHistoric();
-            pointSyncService.syncPoints();
-            pointSyncService.syncPointHistoric();
-            
-            return ResponseEntity.ok(new ApiResponse("success", null, "All sync completed"));
+            SyncStatistics aggregatedStats = new SyncStatistics();
+
+            // Sync users
+            ApiResponse userResponse = userSyncService.syncUsers();
+            if ("success".equals(userResponse.getStatus()) && userResponse.getData() instanceof SyncStatistics) {
+                SyncStatistics userStats = (SyncStatistics) userResponse.getData();
+                aggregatedStats.setUsersCreatedLocally(userStats.getUsersCreatedLocally());
+                aggregatedStats.setUsersPushedToFirestore(userStats.getUsersPushedToFirestore());
+                aggregatedStats.setUsersUpdatedLocally(userStats.getUsersUpdatedLocally());
+                aggregatedStats.setUsersUpdatedInFirestore(userStats.getUsersUpdatedInFirestore());
+                aggregatedStats.setErrorMessages(userStats.getErrorMessages());
+                aggregatedStats.setTotalErrors(userStats.getTotalErrors());
+            }
+
+            // Sync user historic
+            ApiResponse userHistoricResponse = userSyncService.syncUserHistoric();
+            if ("success".equals(userHistoricResponse.getStatus()) && userHistoricResponse.getData() instanceof SyncStatistics) {
+                SyncStatistics userHistoricStats = (SyncStatistics) userHistoricResponse.getData();
+                aggregatedStats.setHistoricCreatedLocally(userHistoricStats.getHistoricCreatedLocally());
+                aggregatedStats.setHistoricPushedToFirestore(userHistoricStats.getHistoricPushedToFirestore());
+                aggregatedStats.setHistoricUpdatedLocally(userHistoricStats.getHistoricUpdatedLocally());
+                aggregatedStats.setHistoricUpdatedInFirestore(userHistoricStats.getHistoricUpdatedInFirestore());
+                // Merge errors
+                for (String error : userHistoricStats.getErrorMessages()) {
+                    aggregatedStats.addError(error);
+                }
+            }
+
+            // Sync points
+            ApiResponse pointResponse = pointSyncService.syncPoints();
+            if ("success".equals(pointResponse.getStatus()) && pointResponse.getData() instanceof SyncStatistics) {
+                SyncStatistics pointStats = (SyncStatistics) pointResponse.getData();
+                aggregatedStats.setPointsCreatedLocally(pointStats.getPointsCreatedLocally());
+                aggregatedStats.setPointsPushedToFirestore(pointStats.getPointsPushedToFirestore());
+                aggregatedStats.setPointsUpdatedLocally(pointStats.getPointsUpdatedLocally());
+                aggregatedStats.setPointsUpdatedInFirestore(pointStats.getPointsUpdatedInFirestore());
+                // Merge errors
+                for (String error : pointStats.getErrorMessages()) {
+                    aggregatedStats.addError(error);
+                }
+            }
+
+            // Sync point historic
+            ApiResponse pointHistoricResponse = pointSyncService.syncPointHistoric();
+            if ("success".equals(pointHistoricResponse.getStatus()) && pointHistoricResponse.getData() instanceof SyncStatistics) {
+                SyncStatistics pointHistoricStats = (SyncStatistics) pointHistoricResponse.getData();
+                aggregatedStats.setPointHistoricCreatedLocally(pointHistoricStats.getPointHistoricCreatedLocally());
+                aggregatedStats.setPointHistoricPushedToFirestore(pointHistoricStats.getPointHistoricPushedToFirestore());
+                aggregatedStats.setPointHistoricUpdatedLocally(pointHistoricStats.getPointHistoricUpdatedLocally());
+                aggregatedStats.setPointHistoricUpdatedInFirestore(pointHistoricStats.getPointHistoricUpdatedInFirestore());
+                // Merge errors
+                for (String error : pointHistoricStats.getErrorMessages()) {
+                    aggregatedStats.addError(error);
+                }
+            }
+
+            return ResponseEntity.ok(new ApiResponse("success", aggregatedStats, aggregatedStats.generateSummaryMessage()));
         } catch (Exception e) {
             logger.error("Sync all failed", e);
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, "Sync all failed: " + e.getMessage()));

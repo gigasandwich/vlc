@@ -1,6 +1,8 @@
 package mg.serve.vlc.repository.userHistoric;
 
+import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.CollectionReference;
+import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -26,13 +28,27 @@ public class FirebaseUserHistoricRepository implements UserHistoricRepository {
     @Override
     public UserHistoric save(UserHistoric userHistoric) {
         String userFbId = userHistoric.getUser().getFbId();
-        collectionReference.document(userFbId).collection("history").add(userHistoric.toMap());
-        return userHistoric;
+        try {
+            DocumentReference docRef = collectionReference.document(userFbId).collection("history").document();
+            String id = docRef.getId();
+            userHistoric.setFbId(id);
+            docRef.set(userHistoric.toMap()).get();
+            return userHistoric;
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Failed to save user historic to Firestore", e);
+        }
     }
 
     public UserHistoric save(UserHistoric userHistoric, String userFbId) {
-        collectionReference.document(userFbId).collection("history").add(userHistoric.toMap());
-        return userHistoric;
+        try {
+            DocumentReference docRef = collectionReference.document(userFbId).collection("history").document();
+            String id = docRef.getId();
+            userHistoric.setFbId(id);
+            docRef.set(userHistoric.toMap()).get();
+            return userHistoric;
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Failed to save user historic to Firestore", e);
+        }
     }
 
     public List<UserHistoric> findByUserFbId(String userFbId) {
@@ -56,7 +72,7 @@ public class FirebaseUserHistoricRepository implements UserHistoricRepository {
                     if (data.get("userStateId") != null) {
                         historic.setUserStateId(((Long) data.get("userStateId")).intValue());
                     }
-                    historic.setFbId((String) data.get("userFbId"));
+                    historic.setFbId((String) data.get("fbId"));
                     // Note: user is not set here, as it's not needed for sync
                     history.add(historic);
                 }
