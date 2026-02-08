@@ -9,6 +9,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Date;
+
+import com.google.cloud.Timestamp;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -135,9 +139,13 @@ public class Point {
     public Map<String, Object> toMap() {
         Map<String, Object> pointMap = new HashMap<>();
         pointMap.put("id", this.id);
-        pointMap.put("date_", this.date);
-        pointMap.put("updatedAt", this.updatedAt);
-        pointMap.put("deletedAt", this.deletedAt);
+        pointMap.put("date_", Timestamp.of(Date.from(this.date.toInstant(ZoneOffset.UTC))));
+        if (this.updatedAt != null) {
+            pointMap.put("updatedAt", Timestamp.of(Date.from(this.updatedAt.toInstant(ZoneOffset.UTC))));
+        }
+        if (this.deletedAt != null) {
+            pointMap.put("deletedAt", Timestamp.of(Date.from(this.deletedAt.toInstant(ZoneOffset.UTC))));
+        }
         pointMap.put("surface", this.surface);
         pointMap.put("budget", this.budget);
         pointMap.put("coordinates", Map.of("longitude", this.coordinates.getX(), "latitude", this.coordinates.getY()));
@@ -146,7 +154,7 @@ public class Point {
         }
         if (this.pointState != null) {
             pointMap.put("pointStateId", this.pointState.getId());
-    pointMap.put("pointState", Map.of("id", this.pointState.getId(), "label", this.pointState.getLabel()));
+            pointMap.put("pointState", Map.of("id", this.pointState.getId(), "label", this.pointState.getLabel()));
         }
         if (this.pointType != null) {
             pointMap.put("pointTypeId", this.pointType.getId());

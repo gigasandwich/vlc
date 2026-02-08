@@ -60,4 +60,6 @@ INSERT INTO factory (label) VALUES
 ('Factory A'),
 ('Factory B');
 
-INSERT INTO point_historic (date_, surface, budget, coordinates, user_id, point_state_id, point_type_id, point_id) VALUES
+-- UPDATE point SET surface = 500 WHERE id=7;
+-- INSERT INTO point_historic (date_, surface, budget, coordinates, point_state_id, point_id) VALUES
+-- (NOW(), 500, null, ST_GeomFromText('POINT(47.5260 -18.9095)', 4326), 1,  7);

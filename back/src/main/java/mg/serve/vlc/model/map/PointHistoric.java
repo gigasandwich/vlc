@@ -7,6 +7,11 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import com.google.cloud.Timestamp;
+import java.time.ZoneOffset;
+import java.util.Date;
 
 @Entity
 @Table(name = "point_historic")
@@ -45,4 +50,24 @@ public class PointHistoric
 
     @Column(length = 50, unique = true)
     private String fbId;
+
+    public void setCoordinates(double longitude, double latitude) {
+        org.locationtech.jts.geom.GeometryFactory geometryFactory = new org.locationtech.jts.geom.GeometryFactory();
+        this.coordinates = geometryFactory.createPoint(new org.locationtech.jts.geom.Coordinate(longitude, latitude));
+        this.coordinates.setSRID(4326); // Match PostGIS column
+    }
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> historicMap = new HashMap<>();
+        historicMap.put("id", this.id);
+        historicMap.put("date_", Timestamp.of(Date.from(this.date.toInstant(ZoneOffset.UTC))));
+        historicMap.put("surface", this.surface);
+        historicMap.put("budget", this.budget);
+        historicMap.put("coordinates", Map.of("longitude", this.coordinates.getX(), "latitude", this.coordinates.getY()));
+        historicMap.put("pointId", this.pointId); // TODO: use literal point ID or point fbId
+        if (this.pointState != null) {
+            historicMap.put("pointState", Map.of("id", this.pointState.getId(), "label", this.pointState.getLabel()));
+        }
+        return historicMap;
+    }
 }

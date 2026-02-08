@@ -13,6 +13,7 @@ import com.google.cloud.Timestamp;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.*;
 
 public class FirebasePointRepository implements PointRepository {
@@ -79,16 +80,13 @@ public class FirebasePointRepository implements PointRepository {
             point.setId(((Long) data.get("id")).intValue());
         }
         if (data.get("date_") != null) {
-            Timestamp ts = (Timestamp) data.get("date_");
-            point.setDate(ts.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+            point.setDate(parseTimestamp(data.get("date_")));
         }
         if (data.get("updatedAt") != null) {
-            Timestamp ts = (Timestamp) data.get("updatedAt");
-            point.setUpdatedAt(ts.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+            point.setUpdatedAt(parseTimestamp(data.get("updatedAt")));
         }
         if (data.get("deletedAt") != null) {
-            Timestamp ts = (Timestamp) data.get("deletedAt");
-            point.setDeletedAt(ts.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+            point.setDeletedAt(parseTimestamp(data.get("deletedAt")));
         }
         if (data.get("surface") != null) {
             point.setSurface(((Number) data.get("surface")).doubleValue());
@@ -165,5 +163,19 @@ public class FirebasePointRepository implements PointRepository {
         }
 
         return point;
+    }
+
+    // Too lazy to create a new class, God forgive me
+    private LocalDateTime parseTimestamp(Object timestampObj) {
+        if (timestampObj instanceof com.google.cloud.Timestamp) {
+            return ((com.google.cloud.Timestamp) timestampObj).toSqlTimestamp().toLocalDateTime();
+        } else if (timestampObj instanceof Map) {
+            Map<String, Object> tsMap = (Map<String, Object>) timestampObj;
+            long seconds = ((Number) tsMap.get("seconds")).longValue();
+            int nanoseconds = ((Number) tsMap.get("nanoseconds")).intValue();
+            return LocalDateTime.ofInstant(java.time.Instant.ofEpochSecond(seconds, nanoseconds), ZoneId.systemDefault());
+        } else {
+            throw new IllegalArgumentException("Unsupported timestamp type: " + timestampObj.getClass());
+        }
     }
 }
