@@ -81,6 +81,7 @@ CREATE TABLE user_(
    password VARCHAR(50) NOT NULL,
    username VARCHAR(50),
    fb_id VARCHAR(50),
+   updated_at TIMESTAMP,
    user_state_id INTEGER NOT NULL,
    PRIMARY KEY(id),
    UNIQUE(email),

@@ -43,6 +43,9 @@ public class User {
     @Column(name = "user_state_id")
     private Integer userStateId;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_role",
@@ -202,6 +205,13 @@ public class User {
     /****************************
      * Getters/Setters
      ****************************/
+
+    @PrePersist
+    @PreUpdate
+    public void setUpdatedAt() {
+        this.updatedAt = LocalDateTime.now();
+    }
+    
     public void setEmail(String email) throws BusinessLogicException {
     if (email == null || !email.contains("@") || !email.contains(".")) {
             throw new BusinessLogicException("Invalid email address");
@@ -224,6 +234,7 @@ public class User {
         userMap.put("username", this.username);
         userMap.put("userStateId", this.userStateId);
         userMap.put("fbId", this.fbId);
+        userMap.put("updatedAt", this.updatedAt);
 
         List<Map<String, Object>> rolesList = new ArrayList<>();
         for (Role role : this.roles) {
