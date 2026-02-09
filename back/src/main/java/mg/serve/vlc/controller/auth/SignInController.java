@@ -56,6 +56,12 @@ public class SignInController {
                 String token = jwtService.generateToken(signInResult.get("email"));
                 Instant exp = jwtService.getExpiryFromNow();
 
+                // Should be in another function but too lazy to refactor for now
+                User userFromToken = jwtService.getUserFromToken(token);
+                if (!userFromToken.isAdmin()) {
+                    throw new BusinessLogicException("Access denied: Admins only");
+                }
+
                 Map<String, String> data = new HashMap<>();
                 data.put("token", token);
                 data.put("expiresAt", exp.toString());
