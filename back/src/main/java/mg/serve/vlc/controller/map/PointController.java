@@ -270,6 +270,7 @@ public class PointController {
      */
     @PutMapping("/{id}")
     @Transactional(Transactional.TxType.REQUIRES_NEW)
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse> updatePoint(@PathVariable("id") Integer id, @RequestBody PointUpdateDTO dto, @RequestHeader("Authorization") String authHeader) {
         try {
             User user = jwtService.getUserFromAuthHeader(authHeader);
@@ -360,6 +361,7 @@ public class PointController {
     }
 
     @DeleteMapping("/{id}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse> deletePoint(@PathVariable("id") Integer id, @RequestHeader("Authorization") String authHeader) {
         try {
             User user = jwtService.getUserFromAuthHeader(authHeader);

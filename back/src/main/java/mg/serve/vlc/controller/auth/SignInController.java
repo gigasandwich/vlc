@@ -8,6 +8,8 @@ import mg.serve.vlc.model.UserLog;
 import mg.serve.vlc.repository.user.UserRepository;
 import mg.serve.vlc.security.*;
 import mg.serve.vlc.util.RepositoryProvider;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.Operation;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -74,6 +76,7 @@ public class SignInController {
     }
 
     @PostMapping("/reset-block/{userId}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse> resetBlock(@PathVariable Integer userId, @RequestHeader("Authorization") String authHeader) {
         try {
             // Control

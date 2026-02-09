@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import mg.serve.vlc.controller.response.ApiResponse;
 import mg.serve.vlc.controller.response.SyncStatistics;
 import mg.serve.vlc.exception.BusinessLogicException;
@@ -30,6 +31,7 @@ public class SyncController {
 
 
     @PostMapping("/all")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse> syncAll(@RequestHeader("Authorization") String authHeader) {
         try {
             jwtService.throwIfUserNotAdmin(authHeader);

@@ -7,6 +7,8 @@ import mg.serve.vlc.repository.user.UserRepository;
 import mg.serve.vlc.util.RepositoryProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import mg.serve.vlc.security.JwtService;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,6 +23,7 @@ public class UserController {
     }
 
     @GetMapping("/blocked")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse> getBlockedUsers(@RequestHeader("Authorization") String authHeader) {
         try {
             jwtService.throwIfUserNotAdmin(authHeader);
@@ -43,6 +46,7 @@ public class UserController {
     }
 
     @PutMapping("/update")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse> updateUser(@RequestParam String email, @RequestParam(required = false) String password, @RequestParam(required = false) String username, @RequestHeader("Authorization") String authHeader) {
         try {
             jwtService.throwIfUserNotAdmin(authHeader);
@@ -65,6 +69,7 @@ public class UserController {
     }
 
     @DeleteMapping("/delete")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse> deleteUser(@RequestParam String email, @RequestHeader("Authorization") String authHeader) {
         try {
             jwtService.throwIfUserNotAdmin(authHeader);
@@ -82,6 +87,7 @@ public class UserController {
     }
 
     @GetMapping
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse> getAllUsers(@RequestHeader("Authorization") String authHeader) { // @RequestHeader("Authorization") String authHeader
         try {
             // User user = jwtService.getUserFromAuthHeader(authHeader);
