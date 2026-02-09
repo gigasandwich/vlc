@@ -22,6 +22,7 @@ async function refreshPoints() {
   errorMessage.value = null
   try {
     points.value = await fetchFirestorePoints()
+    console.log(points.value)
   } catch (err: any) {
     errorMessage.value = err?.message || 'Erreur lors du chargement des points'
     points.value = []

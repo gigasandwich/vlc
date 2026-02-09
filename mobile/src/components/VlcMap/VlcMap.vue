@@ -1,5 +1,7 @@
 <template>
   <div class="vlc-map-root">
+    <PointDetail v-if="selectedPoint" :point="selectedPoint" @close="selectedPoint = null" />
+    
     <main class="vlc-map-main">
       <div ref="mapEl" class="vlc-leaflet" />
 
@@ -183,6 +185,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { createFirestorePoint } from '@/backJs/router.js'
 import authStore from '@/stores/authStore'
+import PointDetail from './PointDetail.vue'
 // test if it works
 console.log(authStore?.state?.email ?? null)
 type PointType = 'circle' | 'square' | 'triangle' | 'all'
@@ -217,6 +220,7 @@ const isLegendOpen = ref(true)
 const isFilterOpen = ref(false)
 
 const extraPoints = ref<FirestorePoint[]>([])
+const selectedPoint = ref<FirestorePoint | null>(null)
 const placementStatus = ref<string | null>(null)
 const placementError = ref<string | null>(null)
 
@@ -431,7 +435,10 @@ function renderPoints() {
       fillOpacity: 0.85,
     })
 
-    marker.bindPopup(`Point ${p.id}`)
+    marker.on('click', () => {
+      selectedPoint.value = p
+    })
+
     marker.addTo(pointsLayer)
   }
 }
