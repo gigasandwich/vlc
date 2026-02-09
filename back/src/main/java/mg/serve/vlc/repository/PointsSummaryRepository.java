@@ -14,9 +14,11 @@ public interface PointsSummaryRepository extends JpaRepository<Point, Long> {
     @Query("""
         SELECT new mg.serve.vlc.dto.PointsSummaryDTO(
             COUNT(p),
-            COALESCE(SUM(p.surface), 0),
+            /* Sum of surfaces coming from point_historic rows whose state label is 'nouveau' */
+            (SELECT COALESCE(SUM(ph.surface), 0) FROM PointHistoric ph WHERE ph.pointState.label = 'nouveau'),
             COALESCE(AVG(ps.progress), 0),
-            COALESCE(SUM(p.budget), 0)
+            /* Sum of budgets from points plus budgets present in point_historic (full join equivalent) */
+            (COALESCE((SELECT SUM(ph2.budget) FROM PointHistoric ph2), 0))
         )
         FROM Point p
         JOIN p.pointState ps
