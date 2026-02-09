@@ -57,7 +57,9 @@ public class FirebasePointHistoricRepository {
                 Map<String, Object> data = doc.getData();
                 if (data != null) {
                     PointHistoric historic = mapToPointHistoric(data);
-                    historic.setFbId(pointFbId);
+                    // IMPORTANT: fbId is the Firestore document id of the historic entry,
+                    // not the parent point fbId. Sync relies on this to de-dup.
+                    historic.setFbId(doc.getId());
                     history.add(historic);
                 }
             }
