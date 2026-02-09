@@ -89,6 +89,10 @@ async function onSubmit() {
     const profile = await fetchUserProfileByFirebaseUid(firebaseUser?.uid)
     assertUserRole(profile)
 
+    const roles = Array.isArray(profile?.roles) ? profile.roles : []
+    const userRole = roles.find((r: any) => String(r?.label || '').toUpperCase() === 'USER')
+    const roleId = userRole?.id ?? roles?.[0]?.id ?? null
+
     // Persist user profile for filtering/profile page
     try {
       localStorage.setItem(
@@ -98,6 +102,8 @@ async function onSubmit() {
           email: profile?.email ?? firebaseUser?.email ?? email.value,
           name: profile?.username ?? profile?.name ?? null,
           role: 'USER',
+          roleId,
+          roles,
           fbId: profile?.fbId ?? firebaseUser?.uid ?? null,
         })
       )

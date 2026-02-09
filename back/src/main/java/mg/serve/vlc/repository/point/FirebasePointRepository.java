@@ -126,8 +126,8 @@ public class FirebasePointRepository implements PointRepository {
         }
 
         // Handle pointState
-        if (data.get("point_state") != null) {
-            Map<String, Object> psMap = (Map<String, Object>) data.get("point_state");
+        if (data.get("pointState") != null) {
+            Map<String, Object> psMap = (Map<String, Object>) data.get("pointState");
             PointState pointState = new PointState();
             if (psMap.get("id") != null) {
                 pointState.setId(((Long) psMap.get("id")).intValue());
@@ -137,8 +137,8 @@ public class FirebasePointRepository implements PointRepository {
         }
 
         // Handle pointType
-        if (data.get("point_type") != null) {
-            Map<String, Object> ptMap = (Map<String, Object>) data.get("point_type");
+        if (data.get("pointType") != null) {
+            Map<String, Object> ptMap = (Map<String, Object>) data.get("pointType");
             PointType pointType = new PointType();
             if (ptMap.get("id") != null) {
                 pointType.setId(((Long) ptMap.get("id")).intValue());

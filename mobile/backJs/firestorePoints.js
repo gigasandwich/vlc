@@ -148,8 +148,16 @@ export async function createFirestorePoint({ coordinates, point_type_id }) {
 
   const roles = Array.isArray(localUser?.roles)
     ? localUser.roles
+        .map((r) => ({
+          label: r?.label != null ? String(r.label) : null,
+          id: Number.isFinite(Number(r?.id)) ? Number(r.id) : null,
+        }))
+        .filter((r) => r.label)
     : localUser?.role
-      ? [{ label: String(localUser.role), id: Number(localUser.id) || null }]
+      ? [{
+          label: String(localUser.role),
+          id: Number.isFinite(Number(localUser?.roleId)) ? Number(localUser.roleId) : null,
+        }]
       : []
 
   const userMap = {

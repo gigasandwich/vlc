@@ -37,6 +37,7 @@ public class UserHistoric {
     public Map<String, Object> toMap() {
         Map<String, Object> map = new HashMap<>();
         map.put("id", id);
+        map.put("fbId", this.fbId);
         map.put("email", email);
         map.put("password", password);
         map.put("username", username);

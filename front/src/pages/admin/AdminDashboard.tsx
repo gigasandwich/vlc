@@ -1,7 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { backendURL } from '../../constant';
+import SyncResultsModal from './SyncResultsModal';
+
+interface SyncStatistics {
+  usersCreatedLocally: number;
+  usersPushedToFirestore: number;
+  usersUpdatedLocally: number;
+  usersUpdatedInFirestore: number;
+  historicCreatedLocally: number;
+  historicPushedToFirestore: number;
+  historicUpdatedLocally: number;
+  historicUpdatedInFirestore: number;
+  pointsCreatedLocally: number;
+  pointsPushedToFirestore: number;
+  pointsUpdatedLocally: number;
+  pointsUpdatedInFirestore: number;
+  pointHistoricCreatedLocally: number;
+  pointHistoricPushedToFirestore: number;
+  pointHistoricUpdatedLocally: number;
+  pointHistoricUpdatedInFirestore: number;
+  totalErrors: number;
+  errorMessages: string[];
+}
 
 export default function AdminDashboard() {
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResults, setSyncResults] = useState<SyncStatistics | null>(null);
+  const [showResults, setShowResults] = useState(false);
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    setSyncResults(null);
+    setShowResults(false);
+    try {
+      const response = await fetch(`${backendURL}/sync/all`, { method: 'POST' });
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        setSyncResults(data.data);
+        setShowResults(true);
+      } else {
+        alert(data.error || 'Sync failed');
+      }
+    } catch (error) {
+      alert('Error syncing: ' + error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
   const adminActions = [
     {
       title: 'Gestion des Points',
@@ -45,6 +91,33 @@ export default function AdminDashboard() {
   return (
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-50">
       <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Tableau de Bord Administration</h2>
+
+      <div className="mt-6">
+        <button
+          onClick={handleSync}
+          disabled={isSyncing}
+          className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 no-underline cursor-pointer w-full disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <div className="flex items-center">
+            <div className="text-blue-600 mr-3 flex-shrink-0">
+              <svg className={`w-8 h-8 ${isSyncing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 flex-1 text-center">
+              {isSyncing ? 'Synchronisation en cours...' : 'Synchronisation'}
+            </h3>
+          </div>
+        </button>
+      </div>
+
+      {/* Sync Results Modal */}
+      <SyncResultsModal
+        isOpen={showResults}
+        onClose={() => setShowResults(false)}
+        syncResults={syncResults}
+      />
+      
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {adminActions.map((action, index) => (
           <Link

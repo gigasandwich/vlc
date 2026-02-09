@@ -1,5 +1,11 @@
 <template>
   <div class="vlc-map-root">
+    <PointDetail
+      v-if="selectedPoint"
+      :point="(selectedPoint as any)"
+      @close="selectedPoint = null"
+    />
+    
     <main class="vlc-map-main">
       <div ref="mapEl" class="vlc-leaflet" />
 
@@ -11,6 +17,25 @@
         <div v-if="placementStatus" class="vlc-map-status__line">{{ placementStatus }}</div>
         <div v-if="placementError" class="vlc-map-status__line vlc-map-status__line--error">
           {{ placementError }}
+        </div>
+      </div>
+
+      <div v-if="pendingPlacement" class="vlc-confirm" @click.stop>
+        <div class="vlc-confirm__title">Confirmer le placement ?</div>
+        <div class="vlc-confirm__text">
+          Type: <b>{{ pendingPlacementLabel }}</b>
+          <span v-if="pendingPlacementCoords" class="vlc-confirm__coords">
+            ({{ pendingPlacementCoords.lat.toFixed(5) }}, {{ pendingPlacementCoords.lng.toFixed(5) }})
+          </span>
+        </div>
+
+        <div class="vlc-confirm__actions">
+          <button type="button" class="vlc-confirm__btn" :disabled="isPlacing" @click="cancelPendingPlacement">
+            Annuler
+          </button>
+          <button type="button" class="vlc-confirm__btn vlc-confirm__btn--primary" :disabled="isPlacing" @click="confirmPendingPlacement">
+            {{ isPlacing ? 'Enregistrement…' : 'Valider' }}
+          </button>
         </div>
       </div>
 
@@ -183,8 +208,8 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { createFirestorePoint } from '@/backJs/router.js'
 import authStore from '@/stores/authStore'
-// test if it works
-console.log(authStore?.state?.email ?? null)
+import { assertUserRole, fetchUserProfileByFirebaseUid } from '@backjs/firestoreUsers'
+import PointDetail from './PointDetail.vue'
 type PointType = 'circle' | 'square' | 'triangle' | 'all'
 type PlacementType = 'circle' | 'square' | 'triangle' | 'none'
 
@@ -217,14 +242,37 @@ const isLegendOpen = ref(true)
 const isFilterOpen = ref(false)
 
 const extraPoints = ref<FirestorePoint[]>([])
+const selectedPoint = ref<FirestorePoint | null>(null)
 const placementStatus = ref<string | null>(null)
 const placementError = ref<string | null>(null)
+
+const isPlacing = ref(false)
+
+const pendingPlacement = ref<{
+  lat: number
+  lng: number
+  typeId: number
+  shape: PlacementType
+} | null>(null)
 
 const placementShapeLabel = computed(() => {
   if (placementShape.value === 'circle') return 'Peu grave'
   if (placementShape.value === 'square') return 'Grave'
   if (placementShape.value === 'triangle') return 'Très grave'
   return ''
+})
+
+const pendingPlacementLabel = computed(() => {
+  const shape = pendingPlacement.value?.shape
+  if (shape === 'circle') return 'Peu grave'
+  if (shape === 'square') return 'Grave'
+  if (shape === 'triangle') return 'Très grave'
+  return ''
+})
+
+const pendingPlacementCoords = computed(() => {
+  if (!pendingPlacement.value) return null
+  return { lat: pendingPlacement.value.lat, lng: pendingPlacement.value.lng }
 })
 
 const currentUserId = computed<number | null>(() => {
@@ -237,13 +285,94 @@ const currentUserId = computed<number | null>(() => {
   }
 })
 
-function getFirebaseUid(): string | null {
+const firebaseUid = computed(() => authStore.state.uid)
+
+const lastPlaceValidation = ref<{ uid: string | null; ok: boolean; at: number }>({
+  uid: null,
+  ok: false,
+  at: 0,
+})
+
+async function validateBeforePlacement(): Promise<boolean> {
+  // Must be authenticated & not anonymous
+  const uid = firebaseUid.value
+  if (!uid || authStore.state.isAnonymous) {
+    placementError.value = 'Veuillez vous connecter.'
+    return false
+  }
+
+  // Cache validation briefly to avoid querying on every map click
+  const now = Date.now()
+  if (lastPlaceValidation.value.uid === uid && lastPlaceValidation.value.ok && now - lastPlaceValidation.value.at < 60_000) {
+    return true
+  }
+
   try {
-    const fb = window.firebase
-    const user = fb?.auth ? fb.auth().currentUser : null
-    return user?.uid || null
-  } catch {
-    return null
+    const profile = await fetchUserProfileByFirebaseUid(uid)
+    assertUserRole(profile)
+
+    // Keep local storage in sync for filtering/profile
+    try {
+      const existing = JSON.parse(localStorage.getItem('user') || 'null')
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          ...(existing && typeof existing === 'object' ? existing : {}),
+          id: profile?.id ?? (existing?.id ?? null),
+          email: profile?.email ?? (existing?.email ?? authStore.state.email ?? null),
+          name: profile?.username ?? profile?.name ?? (existing?.name ?? null),
+          role: 'USER',
+          fbId: profile?.fbId ?? uid,
+        })
+      )
+    } catch {
+      // ignore
+    }
+
+    lastPlaceValidation.value = { uid, ok: true, at: now }
+    return true
+  } catch (err) {
+    console.error('[Auth] Placement role validation failed', err)
+    lastPlaceValidation.value = { uid, ok: false, at: now }
+    placementError.value = 'Accès refusé.'
+    return false
+  }
+}
+
+function cancelPendingPlacement() {
+  pendingPlacement.value = null
+}
+
+async function confirmPendingPlacement() {
+  if (!pendingPlacement.value) return
+
+  placementStatus.value = 'Enregistrement du point…'
+  placementError.value = null
+  isPlacing.value = true
+
+  const { lat, lng, typeId } = pendingPlacement.value
+
+  try {
+    const created = await createFirestorePoint({
+      coordinates: { latitude: lat, longitude: lng },
+      point_type_id: typeId,
+    })
+
+    extraPoints.value.push(created as FirestorePoint)
+    pendingPlacement.value = null
+    placementStatus.value = 'Point ajouté.'
+    renderPoints()
+    setTimeout(() => {
+      placementStatus.value = null
+    }, 1800)
+  } catch (err: any) {
+    placementStatus.value = null
+    placementError.value = err?.message || "Erreur lors de l'enregistrement du point"
+    setTimeout(() => {
+      placementError.value = null
+    }, 4000)
+  } finally {
+    isPlacing.value = false
   }
 }
 
@@ -326,9 +455,20 @@ onMounted(async () => {
   map.on('click', async (e: any) => {
     if (!e?.latlng) return
     if (placementShape.value === 'none') return
+    if (pendingPlacement.value) return
+
+    // Validate before attempting to write
+    placementError.value = null
+    const ok = await validateBeforePlacement()
+    if (!ok) {
+      placementStatus.value = null
+      setTimeout(() => {
+        placementError.value = null
+      }, 4000)
+      return
+    }
 
     placementStatus.value = 'Enregistrement du point…'
-    placementError.value = null
 
     const typeId = shapeToTypeId(placementShape.value)
     if (!typeId) {
@@ -336,24 +476,13 @@ onMounted(async () => {
       return
     }
 
-    try {
-      const created = await createFirestorePoint({
-        coordinates: { latitude: e.latlng.lat, longitude: e.latlng.lng },
-        point_type_id: typeId,
-      })
-
-      extraPoints.value.push(created as FirestorePoint)
-      placementStatus.value = 'Point ajouté.'
-      renderPoints()
-      setTimeout(() => {
-        placementStatus.value = null
-      }, 1800)
-    } catch (err: any) {
-      placementStatus.value = null
-      placementError.value = err?.message || 'Erreur lors de l\'enregistrement du point'
-      setTimeout(() => {
-        placementError.value = null
-      }, 4000)
+    // Open confirmation window instead of writing immediately
+    placementStatus.value = null
+    pendingPlacement.value = {
+      lat: Number(e.latlng.lat),
+      lng: Number(e.latlng.lng),
+      typeId,
+      shape: placementShape.value,
     }
   })
 })
@@ -388,13 +517,39 @@ function markerColor(point: FirestorePoint): string {
   return '#3b82f6'
 }
 
+function getPointShape(point: FirestorePoint): 'circle' | 'square' | 'triangle' {
+  const typeId = Number(
+    (point as any).pointType?.id ??
+      (point as any).pointTypeId ??
+      point.point_type?.id ??
+      point.point_type_id
+  )
+  if (typeId === 2) return 'square'
+  if (typeId === 3) return 'triangle'
+  return 'circle'
+}
+
+function createIcon(color: string, shape: 'circle' | 'square' | 'triangle') {
+  let svgContent = ''
+  if (shape === 'circle') svgContent = `<circle cx="12" cy="12" r="8" fill="${color}" stroke="white" stroke-width="2"/>`
+  else if (shape === 'square') svgContent = `<rect x="4" y="4" width="16" height="16" fill="${color}" stroke="white" stroke-width="2"/>`
+  else if (shape === 'triangle') svgContent = `<polygon points="12,3 21,20 3,20" fill="${color}" stroke="white" stroke-width="2"/>`
+
+  return L.divIcon({
+    className: '',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    html: `<svg width="24" height="24" viewBox="0 0 24 24" style="filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));">${svgContent}</svg>`
+  })
+}
+
 function renderPoints() {
   if (!map || !L || !pointsLayer) return
 
   pointsLayer.clearLayers()
   const pts = [...(props.points || []), ...(extraPoints.value || [])]
 
-  const uid = getFirebaseUid()
+  const uid = firebaseUid.value
   const filteredPts = pts
     .filter((p: FirestorePoint) => {
       if (!filterMine.value) return true
@@ -423,15 +578,14 @@ function renderPoints() {
     if (!ll) continue
 
     const color = markerColor(p)
-    const marker = L.circleMarker([ll.lat, ll.lng], {
-      radius: 8,
-      color,
-      weight: 2,
-      fillColor: color,
-      fillOpacity: 0.85,
+    const shape = getPointShape(p)
+    const icon = createIcon(color, shape)
+    const marker = L.marker([ll.lat, ll.lng], { icon })
+
+    marker.on('click', () => {
+      selectedPoint.value = p
     })
 
-    marker.bindPopup(`Point ${p.id}`)
     marker.addTo(pointsLayer)
   }
 }
