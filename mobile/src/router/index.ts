@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
 import TabsPage from '../views/TabsPage.vue'
 import authStore from '@/stores/authStore'
+import { logout } from '@backjs/firebaseAuth'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -42,7 +43,27 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  const isAuthed = !!authStore.state?.uid
+  // Enforce app-level session expiration
+  if (authStore.state?.uid && authStore.isSessionExpired?.()) {
+    try {
+      authStore.clearUser()
+    } catch {
+      // ignore
+    }
+    try {
+      localStorage.removeItem('user')
+    } catch {
+      // ignore
+    }
+    // Best-effort Firebase sign out (do not block navigation)
+    try {
+      void logout()
+    } catch {
+      // ignore
+    }
+  }
+
+  const isAuthed = !!authStore.isAuthenticated?.value
 
   // If not authenticated, only allow /auth
   if (!isAuthed && to.path.startsWith('/tabs')) {

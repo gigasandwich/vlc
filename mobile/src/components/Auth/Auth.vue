@@ -32,6 +32,9 @@ function onSuccess(payload: any) {
   // store user in auth store
   try {
     authStore.setUser(firebaseUser)
+
+    const expMins = payload?.sessionExpirationMinutes
+    authStore.setSession(expMins)
   } catch (e) {
     console.warn('Failed to set user in store', e)
   }

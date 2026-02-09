@@ -45,7 +45,15 @@
 <script setup lang="ts">
 import { ref, watch, toRef, onMounted } from 'vue'
 import { login } from '@backjs/firebaseAuth'
-import { assertUserRole, fetchUserProfileByFirebaseUid } from '@backjs/firestoreUsers'
+import {
+  assertUserNotDisabled,
+  assertUserRole,
+  fetchUserProfileByEmail,
+  fetchUserProfileByFirebaseUid,
+  resetAttemptByFirebaseUid,
+} from '@backjs/firestoreUsers'
+import { getAuthConfig } from '@backjs/firestoreConfig'
+import { trackFailedLoginAttempt } from '@backjs/firebaseFunctions'
 
 const props = defineProps<{ mode?: 'login' | 'register' }>()
 const emit = defineEmits<{
@@ -75,8 +83,34 @@ onMounted(() => {
   requestAnimationFrame(() => emailInput.value?.focus())
 })
 
+function normalizeEmailKey(v: string) {
+  return String(v || '').trim().toLowerCase()
+}
+
 async function onSubmit() {
   error.value = null
+
+  const emailKey = normalizeEmailKey(email.value)
+  const cfg = await getAuthConfig().catch(() => ({
+    tokenExpirationMinutes: 180,
+    loginAttemptLimit: 3,
+  }))
+
+  // Best-effort: block disabled users before even trying Firebase login
+  if (emailKey) {
+    try {
+      const profileByEmail = await fetchUserProfileByEmail(emailKey)
+      if (profileByEmail) {
+        assertUserNotDisabled(profileByEmail)
+      }
+    } catch (e: any) {
+      if (String(e?.message || '') === 'Compte bloqué') {
+        error.value = 'Compte bloqué.'
+        return
+      }
+      // ignore (rules may forbid pre-auth lookup)
+    }
+  }
 
   loading.value = true
   try {
@@ -87,6 +121,7 @@ async function onSubmit() {
     // 2) Role check using Firestore `users` collection
     const firebaseUser = res.user
     const profile = await fetchUserProfileByFirebaseUid(firebaseUser?.uid)
+    assertUserNotDisabled(profile)
     assertUserRole(profile)
 
     const roles = Array.isArray(profile?.roles) ? profile.roles : []
@@ -111,9 +146,52 @@ async function onSubmit() {
       // ignore
     }
 
-    emit('success', res)
+    // Reset attempt counter after successful login
+    try {
+      if (firebaseUser?.uid) {
+        await resetAttemptByFirebaseUid(firebaseUser.uid)
+      }
+    } catch {
+      // ignore
+    }
+
+    emit('success', {
+      ...res,
+      sessionExpirationMinutes: cfg.tokenExpirationMinutes,
+    })
   }
   catch (err: any) {
+    // Track failed attempts and disable the Firebase Auth user when limit is reached.
+    if (emailKey) {
+      try {
+        const r: any = await trackFailedLoginAttempt(emailKey)
+        if (r?.disabled === true) {
+          error.value = 'Compte bloqué.'
+          return
+        }
+      } catch {
+        // Fallback (if Cloud Functions not deployed or blocked by rules)
+        try {
+          const limit = Math.max(1, Number(cfg.loginAttemptLimit || 3))
+          // Lazy import to avoid circular deps
+          const mod = await import('@backjs/firestoreUsers')
+          const r2 = await mod.incrementAttemptByEmail(emailKey)
+          const attempt = Number(r2?.attempt)
+          if (Number.isFinite(attempt) && attempt >= limit) {
+            try {
+              await mod.disableUserByEmail(emailKey)
+            } catch {
+              // ignore
+            }
+            error.value = 'Compte bloqué.'
+            return
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     error.value = err?.message || 'Connexion refusée'
   } finally {
     loading.value = false

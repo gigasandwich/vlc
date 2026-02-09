@@ -3,6 +3,8 @@ import type { ComputedRef } from 'vue'
 declare const authStore: {
   state: {
     auth: any
+    sessionStartedAt: number | null
+    sessionExpiresAt: number | null
     accessToken: string | null
     uid: string | null
     displayName: string | null
@@ -20,6 +22,8 @@ declare const authStore: {
     [key: string]: any
   }
   setUser: (firebaseUser: any) => void
+  setSession: (expirationMinutes: number | string | null | undefined) => void
+  isSessionExpired: () => boolean
   clearUser: () => void
   isAuthenticated: ComputedRef<boolean>
 }
