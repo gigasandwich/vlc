@@ -3,6 +3,9 @@ package mg.serve.vlc.config;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
 
 @Configuration
 public class SwaggerConfig {
@@ -49,9 +52,21 @@ public class SwaggerConfig {
         return GroupedOpenApi.builder()
                 .group("sync")
                 .pathsToMatch(
-                    "/sync/all",
-                    "/sync/users"
+                    "/sync/all"
                 )
                 .build();
+    }
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .components(new io.swagger.v3.oas.models.Components()
+                        .addSecuritySchemes("bearerAuth",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        .description("JWT Bearer token")));
     }
 }

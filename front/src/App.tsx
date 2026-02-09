@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import LoginUser from './pages/auth/LoginUser';
 import RecapGlob from './pages/dashboard/recapGlob';
@@ -12,6 +12,7 @@ import './App.css';
 
 function App() {
   const [user, setUser] = useState<any>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
     const jwt = localStorage.getItem('jwt');
@@ -23,11 +24,26 @@ function App() {
         .then(j => {
           if (j.status === 'success') {
             setUser(j.data);
+          } else {
+            setSessionExpired(true);
+            localStorage.removeItem('jwt');
+            setUser(null);
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          setSessionExpired(true);
+          localStorage.removeItem('jwt');
+          setUser(null);
+        });
     }
   }, []);
+
+  useEffect(() => {
+    if (sessionExpired) {
+      alert('Your session has expired. Please log in again.');
+      setSessionExpired(false);
+    }
+  }, [sessionExpired]);
 
   return (
     <BrowserRouter>
@@ -43,9 +59,9 @@ function App() {
                 <RecapGlob onResponse={() => {}} />
               </div>
             } />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/points" element={<AdminPoints />} />
-            <Route path="/admin/reset-blocking" element={<ResetBlockingPage />} />
+            <Route path="/admin" element={user && user.role === 'admin' ? <AdminDashboard /> : <Navigate to="/profile" replace />} />
+            <Route path="/admin/points" element={user && user.role === 'admin' ? <AdminPoints /> : <Navigate to="/profile" replace />} />
+            <Route path="/admin/reset-blocking" element={user && user.role === 'admin' ? <ResetBlockingPage /> : <Navigate to="/profile" replace />} />
             <Route path="/profile" element={
               <div className="h-full w-full bg-gray-50 flex items-center justify-center p-4 overflow-y-auto">
                 <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg border border-gray-200">
