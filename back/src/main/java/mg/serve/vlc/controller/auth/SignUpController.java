@@ -1,17 +1,30 @@
 package mg.serve.vlc.controller.auth;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import mg.serve.vlc.controller.response.*;
 import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.user.User;
+import mg.serve.vlc.security.JwtService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.Operation;
 
 @RestController
 @RequestMapping("/auth/sign-up")
 public class SignUpController {
+    @Autowired
+    private JwtService jwtService;
+
     @PostMapping
-    ResponseEntity<ApiResponse> signUp(@RequestParam String email, @RequestParam String password, @RequestParam(required = false) String username, @RequestParam(defaultValue = "USER") String role) {
+    @SecurityRequirement(name = "bearerAuth")
+    // @Operation(summary = "Sign up a new user", description = "Uh, sign up a new user ?")
+    ResponseEntity<ApiResponse> signUp(@RequestParam String email, @RequestParam String password,
+                                        @RequestParam(required = false) String username, @RequestParam(defaultValue = "USER") String role,
+                                        @RequestHeader("Authorization") String authHeader) {
         try {
+            jwtService.throwIfUserNotAdmin(authHeader);
+
             User user = new User(email, password, username);
             user.signUp(role);
 

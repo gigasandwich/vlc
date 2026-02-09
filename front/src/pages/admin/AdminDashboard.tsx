@@ -34,7 +34,9 @@ export default function AdminDashboard() {
     setSyncResults(null);
     setShowResults(false);
     try {
-      const response = await fetch(`${backendURL}/sync/all`, { method: 'POST' });
+      const response = await fetch(`${backendURL}/sync/all`, { method: 'POST', headers: {
+        Authorization: `Bearer ${localStorage.getItem('jwt')}` || '',
+      } });
       const data = await response.json();
       if (response.ok && data.status === 'success') {
         setSyncResults(data.data);
