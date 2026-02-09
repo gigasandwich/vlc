@@ -81,4 +81,10 @@ public class JwtService {
         System.out.println("Email from header: " + email);
         return RepositoryProvider.getRepository(UserRepository.class).findByEmail(email).get();
     }
+
+    public User getUserFromToken(String token) {
+        String email = validateAndGetSubject(token);
+        System.out.println("Email from token: " + email);
+        return RepositoryProvider.jpaUserRepository.findByEmail(email).get();
+    }
 }
