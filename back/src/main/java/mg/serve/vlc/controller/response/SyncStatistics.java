@@ -32,6 +32,12 @@ public class SyncStatistics {
     private int pointHistoricUpdatedLocally; // Firestore data overwrote local
     private int pointHistoricUpdatedInFirestore; // local data overwrote Firestore
 
+    // Dashboard statistics
+    private int dashboardSnapshotsCreatedLocally; // created locally (if any)
+    private int dashboardSnapshotsPushedToFirestore; // pushed to Firestore (if any)
+    private int dashboardSnapshotsUpdatedLocally; // updated locally
+    private int dashboardSnapshotsUpdatedInFirestore; // updated in Firestore
+
     // Error tracking
     private int totalErrors;
     private java.util.List<String> errorMessages = new java.util.ArrayList<>();
@@ -79,6 +85,15 @@ public class SyncStatistics {
             if (pointHistoricPushedToFirestore > 0) sb.append("  - ").append(pointHistoricPushedToFirestore).append(" pushed to Firestore (from local)\n");
             if (pointHistoricUpdatedLocally > 0) sb.append("  - ").append(pointHistoricUpdatedLocally).append(" updated locally (from Firestore)\n");
             if (pointHistoricUpdatedInFirestore > 0) sb.append("  - ").append(pointHistoricUpdatedInFirestore).append(" updated in Firestore (from local)\n");
+        }
+
+        // Dashboard section
+        if (dashboardSnapshotsCreatedLocally > 0 || dashboardSnapshotsPushedToFirestore > 0 || dashboardSnapshotsUpdatedLocally > 0 || dashboardSnapshotsUpdatedInFirestore > 0) {
+            sb.append("\nDashboard:\n");
+            if (dashboardSnapshotsCreatedLocally > 0) sb.append("  - ").append(dashboardSnapshotsCreatedLocally).append(" created locally\n");
+            if (dashboardSnapshotsPushedToFirestore > 0) sb.append("  - ").append(dashboardSnapshotsPushedToFirestore).append(" pushed to Firestore\n");
+            if (dashboardSnapshotsUpdatedLocally > 0) sb.append("  - ").append(dashboardSnapshotsUpdatedLocally).append(" updated locally\n");
+            if (dashboardSnapshotsUpdatedInFirestore > 0) sb.append("  - ").append(dashboardSnapshotsUpdatedInFirestore).append(" updated in Firestore\n");
         }
 
         if (totalErrors > 0) {

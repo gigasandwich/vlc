@@ -54,8 +54,8 @@ const emit = defineEmits<{
 
 const mode = toRef(props, 'mode')
 
-const email = ref('')
-const password = ref('')
+const email = ref('user1@gmail.com')
+const password = ref('pass123')
 const loading = ref(false)
 const error = ref<string | null>(null)
 
