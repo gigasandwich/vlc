@@ -392,6 +392,32 @@ function markerColor(point: FirestorePoint): string {
   return '#3b82f6'
 }
 
+function getPointShape(point: FirestorePoint): 'circle' | 'square' | 'triangle' {
+  const typeId = Number(
+    (point as any).pointType?.id ??
+      (point as any).pointTypeId ??
+      point.point_type?.id ??
+      point.point_type_id
+  )
+  if (typeId === 2) return 'square'
+  if (typeId === 3) return 'triangle'
+  return 'circle'
+}
+
+function createIcon(color: string, shape: 'circle' | 'square' | 'triangle') {
+  let svgContent = ''
+  if (shape === 'circle') svgContent = `<circle cx="12" cy="12" r="8" fill="${color}" stroke="white" stroke-width="2"/>`
+  else if (shape === 'square') svgContent = `<rect x="4" y="4" width="16" height="16" fill="${color}" stroke="white" stroke-width="2"/>`
+  else if (shape === 'triangle') svgContent = `<polygon points="12,3 21,20 3,20" fill="${color}" stroke="white" stroke-width="2"/>`
+
+  return L.divIcon({
+    className: '',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    html: `<svg width="24" height="24" viewBox="0 0 24 24" style="filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));">${svgContent}</svg>`
+  })
+}
+
 function renderPoints() {
   if (!map || !L || !pointsLayer) return
 
@@ -427,13 +453,9 @@ function renderPoints() {
     if (!ll) continue
 
     const color = markerColor(p)
-    const marker = L.circleMarker([ll.lat, ll.lng], {
-      radius: 8,
-      color,
-      weight: 2,
-      fillColor: color,
-      fillOpacity: 0.85,
-    })
+    const shape = getPointShape(p)
+    const icon = createIcon(color, shape)
+    const marker = L.marker([ll.lat, ll.lng], { icon })
 
     marker.on('click', () => {
       selectedPoint.value = p
