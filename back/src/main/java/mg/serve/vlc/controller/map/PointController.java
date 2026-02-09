@@ -281,6 +281,16 @@ public class PointController {
             if (point == null) {
                 return ResponseEntity.badRequest().body(new ApiResponse("error", null, "Point not found"));
             }
+            
+            boolean noRowInHistoric = RepositoryProvider.pointHistoricRepository.countByPointId(point.getId()) == 0;
+            if (point.getPointState().getId().equals(1) && (dto.getSurface() == null || dto.getSurface() == 0) && noRowInHistoric) {
+                throw new BusinessLogicException("Surface must be provided and greater than 0 for new points");
+            }
+            
+            // Save previous state
+            if (point.getPointState().getId().equals(1) && dto.getSurface() != null && dto.getSurface() != 0 && noRowInHistoric) {
+                point.saveHistoric();
+            }
 
             if (dto.getSurface() != null) {
                 point.setSurface(dto.getSurface());
@@ -289,6 +299,23 @@ public class PointController {
                 point.setBudget(dto.getBudget());
             }
             if (dto.getPointStateId() != null) {
+                if (dto.getPointStateId() < point.getPointState().getId()) {
+                    throw new BusinessLogicException("Cannot set point state to an earlier state");
+                }
+
+                if (dto.getPointStateId() == 2) {
+                    if ((dto.getSurface() == null || dto.getSurface() == 0)) {
+                        throw new BusinessLogicException("Surface shouldn't be 0");
+                    }
+                    if (point.getBudget() == null || point.getBudget() == 0) {
+                        throw new BusinessLogicException("Budget shouldn't be 0");
+                    }
+
+                    if (dto.getFactoryIds() == null) {
+                        throw new BusinessLogicException("Factories are needed");
+                    }
+                }
+
                 PointStateRepository pointStateRepo = RepositoryProvider.getRepository(PointStateRepository.class);
                 PointState pointState = pointStateRepo.findById(dto.getPointStateId()).orElse(null);
                 if (pointState != null) {

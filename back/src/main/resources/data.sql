@@ -67,3 +67,6 @@ INSERT INTO factory (label) VALUES
 ('Factory B');
 
 UPDATE point_state SET progress=0 WHERE label='nouveau';
+
+INSERT INTO point (date_, surface, budget, coordinates, user_id, point_state_id, point_type_id) VALUES
+(NOW() - INTERVAL '14 days', null, null, ST_GeomFromText('POINT(47.5210 -18.9070)', 4326), 3, 1, (SELECT id FROM point_type WHERE label='tres grave'));
