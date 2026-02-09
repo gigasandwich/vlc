@@ -24,8 +24,50 @@ function getOrInitFirebaseApp() {
 const app = getOrInitFirebaseApp()
 const db = getFirestore(app)
 
+function normalizeRole(role) {
+  if (!role) return null
+
+  // Supports shapes:
+  // - { id: number, label: string }
+  // - { roleTypeId: number, label: string }
+  // - { label: string }
+  // - 'USER'
+  const label =
+    typeof role === 'string'
+      ? role
+      : typeof role?.label === 'string'
+        ? role.label
+        : typeof role?.name === 'string'
+          ? role.name
+          : null
+
+  const rawId =
+    typeof role === 'object'
+      ? (role?.id ?? role?.roleTypeId ?? role?.role_id ?? role?.typeRoleId ?? null)
+      : null
+  const id = rawId == null ? null : Number(rawId)
+
+  return {
+    id: Number.isFinite(id) ? id : null,
+    label: label != null ? String(label) : null,
+  }
+}
+
+function normalizeRoles(userDoc) {
+  const roles = Array.isArray(userDoc?.roles)
+    ? userDoc.roles
+    : userDoc?.role
+      ? [userDoc.role]
+      : []
+
+  return roles
+    .map(normalizeRole)
+    .filter((r) => r && r.label)
+    .map((r) => ({ id: r.id ?? null, label: String(r.label) }))
+}
+
 function hasUserRole(userDoc) {
-  const roles = Array.isArray(userDoc?.roles) ? userDoc.roles : []
+  const roles = normalizeRoles(userDoc)
   return roles.some((r) => String(r?.label || '').toUpperCase() === 'USER')
 }
 
@@ -41,7 +83,13 @@ export async function fetchUserProfileByFirebaseUid(uid) {
     const snap = await getDocs(q)
     const doc = snap.docs[0]
     if (!doc) return null
-    return { _docId: doc.id, ...doc.data() }
+
+    const data = doc.data() || {}
+    return {
+      _docId: doc.id,
+      ...data,
+      roles: normalizeRoles(data),
+    }
   } catch (err) {
     logDevError('[Firestore] Failed to fetch user profile', err, { uid })
     throw err
