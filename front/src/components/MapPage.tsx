@@ -4,13 +4,12 @@ import {
   MapContainer,
   TileLayer,
   Marker,
-  Popup,
   Tooltip
 } from 'react-leaflet';
 
 import 'leaflet/dist/leaflet.css';
 import { backendURL } from '../constant';
-import { formatDate } from '../utils';
+import { formatDate, formatNumber } from '../utils';
 
 // --- 1. TYPES & CONFIGURATION ---
 
@@ -26,6 +25,7 @@ interface BackendPointData {
   lon?: number | null;
   stateId?: number | null;
   stateLabel?: string | null;
+  stateProgress?: number | null;
   typeId?: number | null;
   typeLabel?: string | null;
   // legacy names sometimes used by other endpoints
@@ -125,14 +125,12 @@ const MapPage: React.FC = () => {
     fetchPoints().finally(() => setLoading(false));
   }, []);
 
-  const handleDeletePoint = (id: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setAllPoints((prev) => prev.filter((p) => p.id !== id));
-    console.log(`🗑️ (local) Point ID ${id} supprimé`);
-  };
-
   const renderPoint = (point: MapPoint) => {
+    const progress = point.backendData.stateProgress ? Math.round(point.backendData.stateProgress * 100) : 0;
+    let progressColor = '#ef4444';
+    if (progress > 66) progressColor = '#22c55e';
+    else if (progress > 33) progressColor = '#f97316';
+
     let icon;
     if (point.type === 'circle') icon = createIcon('#3b82f6', 'circle');
     else if (point.type === 'square') icon = createIcon('#f97316', 'square');
@@ -140,27 +138,21 @@ const MapPage: React.FC = () => {
 
     return (
       <Marker key={point.id} position={[point.lat, point.lng]} icon={icon}>
-        <Popup>
-          <div className="text-center min-w-[140px]">
-            <div className="font-bold text-slate-700 mb-1">Point #{point.id}</div>
-            <div className="text-xs text-slate-500 mb-3">{point.backendData.typeLabel ?? point.backendData.type_label}</div>
-            <button 
-              onClick={(e) => handleDeletePoint(point.id, e)}
-              className="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1 px-3 rounded shadow transition-colors w-full"
-            >
-              Supprimer
-            </button>
-          </div>
-        </Popup>
         <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent={false}>
-          <div className="bg-gradient-to-br from-white to-slate-50 p-4 rounded-xl shadow-xl border border-slate-300 text-sm text-slate-700 max-w-[320px] relative">
+          <div className="bg-white p-4 rounded-lg shadow-xl border border-slate-200 text-sm text-slate-700 max-w-[320px] relative">
             <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white"></div>
-            <div className="font-bold text-lg mb-4 text-slate-900 border-b-2 border-slate-200 pb-2 text-center">Point #{point.id}</div>
+            <div className="font-bold text-lg mb-4 text-slate-900 border-b-2 border-slate-200 text-center">Point #{point.id}</div>
+            <div className="mb-3">
+              <div className="text-xs font-medium mb-1 text-center text-slate-600">Progression: <span className="font-bold text-slate-800">{progress}%</span></div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="h-2 rounded-full" style={{width: `${progress}%`, backgroundColor: progressColor}}></div>
+              </div>
+            </div>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  <span className="font-medium">Date:</span>
+                  <span className="font-medium">Date de signalement:</span>
                 </div>
                 <span className="ml-5 text-right">{point.backendData.date ? formatDate(point.backendData.date) : '-'}</span>
               </div>
@@ -176,19 +168,19 @@ const MapPage: React.FC = () => {
                   <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 6H3m18 0v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6m18 0V4a2 2 0 00-2-2H5a2 2 0 00-2 2v2m0 0h18m-9 4v2m0 4v2m4-6v2m0 4v2" /></svg>
                   <span className="font-medium">Surface:</span>
                 </div>
-                <span className="ml-5 text-right">{point.backendData.surface ?? '-'} m²</span>
+                <span className="ml-5 text-right">{point.backendData.surface ? formatNumber(point.backendData.surface) : '-'} m²</span>
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>
                   <span className="font-medium">Budget:</span>
                 </div>
-                <span className="ml-5 text-right">{point.backendData.budget ?? '-'} Ar</span>
+                <span className="ml-5 text-right">{point.backendData.budget ? formatNumber(point.backendData.budget) : '-'} Ar</span>
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                  <span className="font-medium">Usines:</span>
+                  <span className="font-medium">Usine(s):</span>
                 </div>
                 <span className="ml-5 text-right truncate max-w-[120px]">{point.backendData.factoryLabels ?? '-'}</span>
               </div>

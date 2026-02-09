@@ -73,6 +73,7 @@ public class PointController {
              
 
                 String stateLabel = p.getPointState() != null ? p.getPointState().getLabel() : null;
+                Double stateProgress = p.getPointState() != null ? p.getPointState().getProgress() : null;
                 String typeLabel = p.getPointType() != null ? p.getPointType().getLabel() : null;
                 List<Integer> factoryIds = p.getFactories().stream().map(f -> f.getId()).collect(Collectors.toList());
                 String factoryLabels = p.getFactories().stream().map(f -> f.getLabel()).collect(Collectors.joining(", "));
@@ -86,6 +87,7 @@ public class PointController {
                 map.put("lon", lon);
                 map.put("stateId", p.getPointState() != null ? p.getPointState().getId() : null);
                 map.put("stateLabel", stateLabel);
+                map.put("stateProgress", stateProgress);
                 map.put("typeId", p.getPointType() != null ? p.getPointType().getId() : null);
                 map.put("typeLabel", typeLabel);
                 map.put("factoryIds", factoryIds);

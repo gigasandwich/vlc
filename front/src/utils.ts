@@ -11,4 +11,8 @@ const formatDate = (dateString: string) => {
     return `${year}-${month}-${day} ${hour12}:${minutes}${ampm}`;
 };
 
-export { formatDate };
+const formatNumber = (num: number) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
+export { formatDate, formatNumber };
