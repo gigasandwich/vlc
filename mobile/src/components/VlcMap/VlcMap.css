@@ -8,6 +8,7 @@
   --vlc-blue: #3b82f6;
   --vlc-orange: #f97316;
   --vlc-red: #ef4444;
+  --vlc-mine: #10b981;
 }
 
 .vlc-map-root {
@@ -229,13 +230,29 @@
 }
 
 .vlc-legend-close {
-  font-size: 12px;
-  color: #94a3b8;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
   border: 0;
-  background: transparent;
+  background: rgba(15,23,42,0.03);
+  color: #475569;
   padding: 0;
   line-height: 1;
   cursor: pointer;
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+
+.vlc-legend-close:hover {
+  background: rgba(15,23,42,0.06);
+  transform: translateY(-1px);
+}
+
+.vlc-legend-close svg {
+  width: 18px;
+  height: 18px;
 }
 
 .vlc-legend-list {
@@ -259,6 +276,8 @@
   height: 16px;
   display: inline-flex;
 }
+.vlc-legend-dot.vlc-dot-mine { width:16px; height:16px; background:var(--vlc-mine); border-radius:6px; box-shadow:0 4px 8px rgba(16,185,129,0.12) }
+.vlc-legend-dot.vlc-dot-all { width:16px; height:16px; background:#f1f5f9; border-radius:6px; border:1px solid var(--vlc-border) }
 
 .vlc-legend-open-btn {
   pointer-events: auto;
@@ -385,3 +404,32 @@
   font-size: 12px;
   color: #64748b;
 }
+
+/* Glowing add button */
+.vlc-add-open-btn {
+  pointer-events: auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: 0;
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+  box-shadow: 0 10px 30px rgba(37,99,235,0.28), 0 0 0 0 rgba(59,130,246,0.0);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.vlc-glow {
+  animation: vlcGlow 2400ms infinite ease-in-out;
+}
+
+@keyframes vlcGlow {
+  0% { box-shadow: 0 10px 30px rgba(37,99,235,0.18); transform: translateY(0) scale(1); }
+  50% { box-shadow: 0 18px 42px rgba(37,99,235,0.28); transform: translateY(-2px) scale(1.03); }
+  100% { box-shadow: 0 10px 30px rgba(37,99,235,0.18); transform: translateY(0) scale(1); }
+}
+
+/* Slightly tweak legend appearance to match new component spacing */
+.vlc-legend { min-width: 240px; }
+

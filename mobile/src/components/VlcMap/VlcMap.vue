@@ -40,151 +40,32 @@
       </div>
 
       <div class="vlc-legend-wrap">
-        <div v-if="isLegendOpen" class="vlc-legend" @click.stop>
-          <div class="vlc-legend-header">
-            <div class="vlc-legend-title">Choix problème</div>
-            <button type="button" class="vlc-legend-close" @click.stop="isLegendOpen = false">✕</button>
-          </div>
+        <ProblemChooser
+          v-if="isLegendOpen"
+          :placement-shape="placementShape"
+          @select-shape="onSelectShape"
+          @close="isLegendOpen = false"
+        />
 
-          <ul class="vlc-legend-list">
-            <li class="vlc-legend-item">
-              <span class="vlc-legend-dot">
-                <svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#3b82f6" /></svg>
-              </span>
-              <span>Peu grave</span>
-            </li>
-            <li class="vlc-legend-item">
-              <span class="vlc-legend-dot">
-                <svg width="16" height="16" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="#f97316" /></svg>
-              </span>
-              <span>Grave</span>
-            </li>
-            <li class="vlc-legend-item">
-              <span class="vlc-legend-dot">
-                <svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,3 21,20 3,20" fill="#ef4444" /></svg>
-              </span>
-              <span>Très grave</span>
-            </li>
-          </ul>
-
-          <!-- Placement buttons (do NOT filter the map) -->
-          <div class="vlc-shape-select">
-            <button
-              type="button"
-              :class="[
-                'vlc-shape-btn',
-                'vlc-shape-btn--circle',
-                placementShape === 'circle' && 'vlc-shape-btn--active',
-              ]"
-              @click="placementShape = placementShape === 'circle' ? 'none' : 'circle'"
-              title="Peu grave"
-            >
-              <span aria-hidden="true">●</span>
-            </button>
-
-            <button
-              type="button"
-              :class="[
-                'vlc-shape-btn',
-                'vlc-shape-btn--square',
-                placementShape === 'square' && 'vlc-shape-btn--active',
-              ]"
-              @click="placementShape = placementShape === 'square' ? 'none' : 'square'"
-              title="Grave"
-            >
-              <span aria-hidden="true">■</span>
-            </button>
-
-            <button
-              type="button"
-              :class="[
-                'vlc-shape-btn',
-                'vlc-shape-btn--triangle',
-                placementShape === 'triangle' && 'vlc-shape-btn--active',
-              ]"
-              @click="placementShape = placementShape === 'triangle' ? 'none' : 'triangle'"
-              title="Très grave"
-            >
-              <span aria-hidden="true">▲</span>
-            </button>
-          </div>
-
-          <div class="vlc-placement-hint" @click.stop>
-            <div class="vlc-placement-hint__title">Placer sur la carte</div>
-            <div v-if="placementShape === 'none'" class="vlc-placement-hint__text">
-              Sélectionne un type (● ■ ▲), puis touche la carte pour le placer.
-            </div>
-            <div v-else class="vlc-placement-hint__text">
-              Mode placement actif: <b>{{ placementShapeLabel }}</b>. Touche la carte pour ajouter un point.
-            </div>
-          </div>
-        </div>
-
-        <div v-if="isFilterOpen" class="vlc-filter" @click.stop>
-          <div class="vlc-legend-header">
-            <div class="vlc-legend-title">Filtre</div>
-            <button type="button" class="vlc-legend-close" @click.stop="isFilterOpen = false">✕</button>
-          </div>
-
-          <div class="vlc-filter-section">
-            <div class="vlc-filter-label">Type de problème</div>
-            <div class="vlc-filter-types">
-              <button
-                type="button"
-                :class="['vlc-filter-type-btn', filterShape === 'all' && 'vlc-filter-type-btn--active']"
-                @click="filterShape = 'all'"
-              >
-                Tous
-              </button>
-              <button
-                type="button"
-                :class="['vlc-filter-type-btn', filterShape === 'circle' && 'vlc-filter-type-btn--active']"
-                @click="filterShape = 'circle'"
-                title="Peu grave"
-              >
-                ●
-              </button>
-              <button
-                type="button"
-                :class="['vlc-filter-type-btn', filterShape === 'square' && 'vlc-filter-type-btn--active']"
-                @click="filterShape = 'square'"
-                title="Grave"
-              >
-                ■
-              </button>
-              <button
-                type="button"
-                :class="['vlc-filter-type-btn', filterShape === 'triangle' && 'vlc-filter-type-btn--active']"
-                @click="filterShape = 'triangle'"
-                title="Très grave"
-              >
-                ▲
-              </button>
-            </div>
-          </div>
-
-          <div class="vlc-filter-section">
-            <label class="vlc-filter-mine">
-              <input type="checkbox" v-model="filterMine" />
-              <span>Mes points</span>
-            </label>
-            <div v-if="filterMine && currentUserId == null" class="vlc-filter-hint">
-              Aucun user_id local détecté (localStorage). Filtrage utilisera le compte Firebase si disponible.
-            </div>
-          </div>
-        </div>
+        <FilterChooser
+          v-if="isFilterOpen"
+          :filter-shape="filterShape"
+          :filter-mine="filterMine"
+          @set-filter-shape="onSetFilterShape"
+          @set-filter-mine="onSetFilterMine"
+          @close="isFilterOpen = false"
+        />
 
         <button
           v-if="!isLegendOpen"
           type="button"
-          class="vlc-legend-open-btn"
-          title="Ouvrir la légende"
+          class="vlc-add-open-btn vlc-glow"
+          title="Ajouter un point"
           @pointerdown.prevent.stop="isLegendOpen = true"
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:#334155">
-            <circle cx="12" cy="5" r="2" />
-            <circle cx="12" cy="12" r="2" />
-            <circle cx="12" cy="19" r="2" />
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:#fff">
+            <rect x="10" y="4" width="4" height="16" rx="2" />
+            <rect x="4" y="10" width="16" height="4" rx="2" />
           </svg>
         </button>
 
@@ -210,6 +91,8 @@ import { createFirestorePoint } from '@/backJs/router.js'
 import authStore from '@/stores/authStore'
 import { assertUserRole, fetchUserProfileByFirebaseUid } from '@backjs/firestoreUsers'
 import PointDetail from './PointDetail.vue'
+import ProblemChooser from './ProblemChooser.vue'
+import FilterChooser from './FilterChooser.vue'
 type PointType = 'circle' | 'square' | 'triangle' | 'all'
 type PlacementType = 'circle' | 'square' | 'triangle' | 'none'
 
@@ -374,6 +257,24 @@ async function confirmPendingPlacement() {
   } finally {
     isPlacing.value = false
   }
+}
+
+function onSelectShape(shape: PlacementType | 'none') {
+  placementShape.value = shape as PlacementType
+}
+
+function onSetFilterShape(shape: PointType | 'all') {
+  // normalize 'all' to filterShape 'all'
+  if (shape === 'all') {
+    filterShape.value = 'all'
+    // ensure 'Tous' shows all points regardless of previous "Mes points" toggle
+    filterMine.value = false
+  } else filterShape.value = shape as PointType
+}
+
+
+function onSetFilterMine(v: boolean) {
+  filterMine.value = !!v
 }
 
 const mapEl = ref<HTMLDivElement | null>(null)
