@@ -75,7 +75,7 @@ const mapTypeFromLabel = (label?: string | null): PointType => {
 
 const MapPage: React.FC = () => {
   const [allPoints, setAllPoints] = useState<MapPoint[]>([]);
-  const [selectedShape, setSelectedShape] = useState<PointType>('all');
+  const [selectedShapes, setSelectedShapes] = useState<PointType[]>(['all']);
   const [isLegendOpen, setIsLegendOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -191,29 +191,10 @@ const MapPage: React.FC = () => {
     );
   };
 
-  // --- LOGIQUE DES COULEURS (Gravité) ---
-  
-  const getBtnClasses = (type: PointType) => {
-    const baseClasses = "flex flex-1 flex-col items-center justify-center py-2 rounded border transition-all duration-200 gap-1";
-    
-    // Si l'onglet est actif
-    if (selectedShape === type) {
-      if (type === 'circle') return `${baseClasses} bg-blue-100 border-blue-500 text-blue-700 shadow-md`;
-      if (type === 'square') return `${baseClasses} bg-orange-100 border-orange-500 text-orange-700 shadow-md`;
-      if (type === 'triangle') return `${baseClasses} bg-red-100 border-red-500 text-red-700 shadow-md`;
-    }
-    
-    // Inactif
-    return `${baseClasses} bg-white text-slate-400 border-slate-200 hover:bg-slate-50 hover:text-slate-600`;
-  };
-
-  const IconCircle = () => <svg className="w-5 h-5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>;
-  const IconSquare = () => <svg className="w-5 h-5" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="currentColor"/></svg>;
-  const IconTriangle = () => <svg className="w-5 h-5" viewBox="0 0 24 24"><polygon points="12,3 21,20 3,20" fill="currentColor"/></svg>;
   const IconFilter = () => <svg className="w-6 h-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>;
 
-  // compute displayed points based on selectedShape ('all' shows everything)
-  const displayedPoints = selectedShape === 'all' ? allPoints : allPoints.filter(p => p.type === selectedShape);
+  // compute displayed points based on selectedShapes ('all' shows everything, else filter to selected types)
+  const displayedPoints = selectedShapes.includes('all') ? allPoints : allPoints.filter(p => selectedShapes.includes(p.type));
 
   return (
     <div className="h-full w-full flex flex-col bg-gray-100 font-sans relative">
@@ -239,31 +220,99 @@ const MapPage: React.FC = () => {
             
             {isLegendOpen && (
               <div 
-                onClick={(e) => {
-                   e.stopPropagation(); 
-                   setIsLegendOpen(false);
-                }}
-                className="bg-white/95 backdrop-blur p-4 rounded-lg shadow-xl border border-gray-200 pointer-events-auto cursor-pointer transition-all duration-300 transform origin-top-right"
+                className="bg-white/95 backdrop-blur-sm p-5 rounded-xl shadow-2xl border-2 border-slate-200/60 pointer-events-auto transition-all duration-300 transform origin-top-right w-64"
               >
-                <div className="flex justify-between items-center mb-3">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700">Légende & Filtres</h4>
-                  <span className="text-gray-400 text-xs">✕</span>
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="font-semibold text-sm uppercase tracking-wide text-slate-800">Filtre</h4>
+                  <button 
+                    type="button" 
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 active:bg-slate-300 transition-all duration-200 hover:scale-105 shadow-lg border border-slate-300"
+                    onClick={(e) => { e.stopPropagation(); setIsLegendOpen(false); }}
+                    aria-label="Fermer"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-slate-600">
+                      <path d="M6 6l12 12" />
+                      <path d="M18 6L6 18" />
+                    </svg>
+                  </button>
                 </div>
-                <ul className="space-y-3 text-xs text-slate-700 mb-4">
-                  <li className="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#3b82f6"/></svg><span>Peu grave</span></li>
-                  <li className="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="#f97316"/></svg><span>Grave</span></li>
-                  <li className="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,3 21,20 3,20" fill="#ef4444"/></svg><span>Très grave</span></li>
-                </ul>
-                {/* Filter buttons */}
-                <div className="flex gap-2 w-[250px] h-[50px] bg-slate-50 p-2 rounded-lg border border-slate-200">
-                  <button onClick={() => setSelectedShape(prev => prev === 'circle' ? 'all' : 'circle')} className={getBtnClasses('circle')} title="Peu grave">
-                    <IconCircle />
+                <div className="flex flex-col gap-3">
+                  <button
+                    type="button"
+                    className={`flex items-center gap-3 p-4 bg-white border-2 rounded-xl text-left cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.98] ${selectedShapes.includes('all') ? 'border-slate-500 bg-slate-100 shadow-xl ring-2 ring-slate-300' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md'}`}
+                    onClick={(e) => { e.stopPropagation(); setSelectedShapes(['all']); }}
+                  >
+                    <span className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${selectedShapes.includes('all') ? 'bg-slate-600 border-slate-600' : 'bg-slate-200 border-slate-400'}`}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 ${selectedShapes.includes('all') ? 'text-white' : 'text-slate-600'}`}>
+                        <path d="M5 12l5 5L20 7" />
+                      </svg>
+                    </span>
+                    <div>
+                      <div className={`font-semibold text-sm transition-colors ${selectedShapes.includes('all') ? 'text-slate-900' : 'text-slate-700'}`}>Tous</div>
+                    </div>
                   </button>
-                  <button onClick={() => setSelectedShape(prev => prev === 'square' ? 'all' : 'square')} className={getBtnClasses('square')} title="Grave">
-                    <IconSquare />
+
+                  <button
+                    type="button"
+                    className={`flex items-center gap-3 p-4 bg-white border-2 rounded-xl text-left cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.98] ${selectedShapes.includes('circle') ? 'border-blue-500 bg-blue-50 shadow-xl ring-2 ring-blue-200' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md'}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedShapes(prev => {
+                        if (prev.includes('circle')) {
+                          const newShapes = prev.filter(s => s !== 'circle');
+                          return newShapes.length === 0 ? ['all'] : newShapes;
+                        } else {
+                          return [...prev.filter(s => s !== 'all'), 'circle'];
+                        }
+                      });
+                    }}
+                  >
+                    <span className="w-6 h-6 bg-blue-500 rounded-full shadow-sm"></span>
+                    <div>
+                      <div className={`font-semibold text-sm transition-colors ${selectedShapes.includes('circle') ? 'text-slate-900' : 'text-slate-700'}`}>Peu grave</div>
+                    </div>
                   </button>
-                  <button onClick={() => setSelectedShape(prev => prev === 'triangle' ? 'all' : 'triangle')} className={getBtnClasses('triangle')} title="Très grave">
-                    <IconTriangle />
+
+                  <button
+                    type="button"
+                    className={`flex items-center gap-3 p-4 bg-white border-2 rounded-xl text-left cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.98] ${selectedShapes.includes('square') ? 'border-orange-500 bg-orange-50 shadow-xl ring-2 ring-orange-200' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md'}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedShapes(prev => {
+                        if (prev.includes('square')) {
+                          const newShapes = prev.filter(s => s !== 'square');
+                          return newShapes.length === 0 ? ['all'] : newShapes;
+                        } else {
+                          return [...prev.filter(s => s !== 'all'), 'square'];
+                        }
+                      });
+                    }}
+                  >
+                    <span className="w-6 h-6 bg-orange-500 rounded-md shadow-sm"></span>
+                    <div>
+                      <div className={`font-semibold text-sm transition-colors ${selectedShapes.includes('square') ? 'text-slate-900' : 'text-slate-700'}`}>Grave</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`flex items-center gap-3 p-4 bg-white border-2 rounded-xl text-left cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.98] ${selectedShapes.includes('triangle') ? 'border-red-500 bg-red-50 shadow-xl ring-2 ring-red-200' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md'}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedShapes(prev => {
+                        if (prev.includes('triangle')) {
+                          const newShapes = prev.filter(s => s !== 'triangle');
+                          return newShapes.length === 0 ? ['all'] : newShapes;
+                        } else {
+                          return [...prev.filter(s => s !== 'all'), 'triangle'];
+                        }
+                      });
+                    }}
+                  >
+                    <span className="w-6 h-6 bg-red-500 shadow-sm" style={{clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)'}}></span>
+                    <div>
+                      <div className={`font-semibold text-sm transition-colors ${selectedShapes.includes('triangle') ? 'text-slate-900' : 'text-slate-700'}`}>Très grave</div>
+                    </div>
                   </button>
                 </div>
               </div>
