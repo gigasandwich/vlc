@@ -72,7 +72,7 @@
 import { ref, computed, onMounted } from 'vue'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - local JS module without type declaration
-import { getSummary } from '../../../backJs/firestoreRecap.js'
+import { getDashboardSnapshot } from '../../../backJs/firestoreRecap.js'
 
 const nbPoints = ref<number>(0)
 const totalSurface = ref<number>(0)
@@ -92,15 +92,27 @@ const formattedTotalBudget = computed(() => {
 })
 
 onMounted(async () => {
-  try {
-    const s = await getSummary()
-    nbPoints.value = s.count ?? nbPoints.value
-    totalSurface.value = s.surface ?? totalSurface.value
-    avgProgress.value = s.avgProgress ?? avgProgress.value
-    totalBudget.value = s.budget ?? totalBudget.value
-  } catch (err) {
-    console.error('[Recap] getSummary failed', err)
-  }
+    try {
+      const snap = await getDashboardSnapshot()
+      if (snap?.summary) {
+        const s = snap.summary
+        // Support both legacy keys (count/surface/budget) and server-side DTO keys (nbPoints/totalSurface/totalBudget)
+        nbPoints.value = s.nbPoints
+        totalSurface.value = s.totalSurface
+        // avgProgress uses the same key on both sides (avgProgress)
+        avgProgress.value = (s.avgProgress)
+        totalBudget.value = s.totalBudget
+      }
+
+      if (snap?.workDelay && Array.isArray(snap.workDelay.workTreatments)) {
+        workDelays.value = snap.workDelay.workTreatments
+        avgNewLabel.value = snap.workDelay.average0to05Label ?? null
+        avgInProgLabel.value = snap.workDelay.average05to1Label ?? null
+        avg0to1Label.value = snap.workDelay.average0to1Label ?? null
+      }
+    } catch (err) {
+      console.error('[Recap] getDashboardSnapshot failed', err)
+    }
 })
 </script>
 
