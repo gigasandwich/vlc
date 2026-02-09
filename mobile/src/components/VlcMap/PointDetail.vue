@@ -7,6 +7,13 @@
       </div>
 
       <div class="point-detail-content">
+        <div class="point-detail-progress-section">
+          <div class="progress-label">Progression: <span class="progress-value">{{ progress }}%</span></div>
+          <div class="progress-bar">
+            <div class="progress-bar-fill" :style="{ width: `${progress}%`, backgroundColor: progressColor }"></div>
+          </div>
+        </div>
+
         <div class="point-detail-row">
           <div class="point-detail-label">
             <svg class="point-detail-icon" style="color: #3b82f6;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -35,7 +42,7 @@
             </svg>
             <span>Surface:</span>
           </div>
-          <span class="point-detail-value">{{ point.surface ?? '-' }} m²</span>
+          <span class="point-detail-value">{{ formatNumber(point.surface) ?? '-' }} m²</span>
         </div>
 
         <div class="point-detail-row">
@@ -45,7 +52,7 @@
             </svg>
             <span>Budget:</span>
           </div>
-          <span class="point-detail-value">{{ point.budget ?? '-' }} Ar</span>
+          <span class="point-detail-value">{{ formatNumber(point.budget) ?? '-' }} Ar</span>
         </div>
 
         <div class="point-detail-row">
@@ -151,6 +158,21 @@ const factoriesLabel = computed(() => {
   
   return '-'
 })
+
+const progress = computed(() => {
+  return props.point.stateProgress ? Math.round(props.point.stateProgress * 100) : 0;
+});
+
+const progressColor = computed(() => {
+  if (progress.value > 66) return '#22c55e';
+  if (progress.value > 33) return '#f97316';
+  return '#ef4444';
+});
+
+const formatNumber = (num: number | null | undefined) => {
+  if (num == null) return '-';
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
 </script>
 
 <style scoped>
@@ -248,6 +270,48 @@ const factoriesLabel = computed(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.unknown-value {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.point-detail-progress-section {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: linear-gradient(to right, #f8fafc, #ffffff);
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.progress-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.progress-value {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background-color: #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 6px;
 }
 </style>
 
