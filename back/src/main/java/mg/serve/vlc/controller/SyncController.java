@@ -12,6 +12,7 @@ import mg.serve.vlc.controller.response.SyncStatistics;
 import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.service.UserSyncService;
 import mg.serve.vlc.service.PointSyncService;
+import mg.serve.vlc.service.DashboardSyncService;
 import mg.serve.vlc.model.user.*;
 import mg.serve.vlc.security.JwtService;
 
@@ -25,6 +26,9 @@ public class SyncController {
 
     @Autowired
     private PointSyncService pointSyncService;
+
+    @Autowired
+    private DashboardSyncService dashboardSyncService;
 
     @Autowired
     private JwtService jwtService;
@@ -92,6 +96,21 @@ public class SyncController {
                 }
             }
 
+            // Sync dashboard (create/update a Firestore document named 'stats')
+           
+            ApiResponse dashboardResp = dashboardSyncService.syncDashboard();
+            if ("success".equals(dashboardResp.getStatus()) && dashboardResp.getData() instanceof SyncStatistics) {
+                SyncStatistics dashStats = (SyncStatistics) dashboardResp.getData();
+                aggregatedStats.setDashboardSnapshotsCreatedLocally(dashStats.getDashboardSnapshotsCreatedLocally());
+                aggregatedStats.setDashboardSnapshotsPushedToFirestore(dashStats.getDashboardSnapshotsPushedToFirestore());
+                aggregatedStats.setDashboardSnapshotsUpdatedLocally(dashStats.getDashboardSnapshotsUpdatedLocally());
+                aggregatedStats.setDashboardSnapshotsUpdatedInFirestore(dashStats.getDashboardSnapshotsUpdatedInFirestore());
+                for (String err : dashStats.getErrorMessages()) {
+                    aggregatedStats.addError(err);
+                }
+            }
+            
+
             return ResponseEntity.ok(new ApiResponse("success", aggregatedStats, aggregatedStats.generateSummaryMessage()));
         } catch (Exception e) {
             logger.error("Sync all failed", e);
@@ -132,6 +151,16 @@ public class SyncController {
     @PostMapping("/pointHistoric")
     public ResponseEntity<ApiResponse> syncPointHistoric() {
         ApiResponse response = pointSyncService.syncPointHistoric();
+        if ("success".equals(response.getStatus())) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/dashboard")
+    public ResponseEntity<ApiResponse> syncDashboard() {
+        ApiResponse response = dashboardSyncService.syncDashboard();
         if ("success".equals(response.getStatus())) {
             return ResponseEntity.ok(response);
         } else {
