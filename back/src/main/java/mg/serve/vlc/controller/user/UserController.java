@@ -23,10 +23,7 @@ public class UserController {
     @GetMapping("/blocked")
     public ResponseEntity<ApiResponse> getBlockedUsers(@RequestHeader("Authorization") String authHeader) {
         try {
-            User user = jwtService.getUserFromAuthHeader(authHeader);
-            if (!user.isAdmin()) {
-                return ResponseEntity.status(403).body(new ApiResponse("error", null, "Only admins can view blocked users"));
-            }
+            jwtService.throwIfUserNotAdmin(authHeader);
 
             UserRepository userRepository = RepositoryProvider.getRepository(UserRepository.class);
             List<User> blockedUsers = userRepository.findByUserStateId(3);
@@ -48,10 +45,12 @@ public class UserController {
     @PutMapping("/update")
     public ResponseEntity<ApiResponse> updateUser(@RequestParam String email, @RequestParam(required = false) String password, @RequestParam(required = false) String username, @RequestHeader("Authorization") String authHeader) {
         try {
-            String tokenEmail = jwtService.getTokenEmailFromHeader(authHeader);
-            if (!email.equals(tokenEmail)) {
-                return ResponseEntity.status(403).body(new ApiResponse("error", null, "You can only update your own account"));
-            }
+            jwtService.throwIfUserNotAdmin(authHeader);
+
+            // String tokenEmail = jwtService.getTokenEmailFromHeader(authHeader);
+            // if (!email.equals(tokenEmail)) {
+            //     return ResponseEntity.status(403).body(new ApiResponse("error", null, "You can only update your own account"));
+            // }
 
             UserRepository userRepository = RepositoryProvider.getRepository(UserRepository.class);
             User user = userRepository.findByEmail(email).get();
@@ -68,13 +67,7 @@ public class UserController {
     @DeleteMapping("/delete")
     public ResponseEntity<ApiResponse> deleteUser(@RequestParam String email, @RequestHeader("Authorization") String authHeader) {
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ResponseEntity.status(401).body(new ApiResponse("error", null, "Missing or invalid Authorization header"));
-            }
-            String tokenEmail = jwtService.getTokenEmailFromHeader(authHeader);
-            if (!email.equals(tokenEmail)) {
-                return ResponseEntity.status(403).body(new ApiResponse("error", null, "You can only delete your own account"));
-            }
+            jwtService.throwIfUserNotAdmin(authHeader);
 
             UserRepository userRepository = RepositoryProvider.getRepository(UserRepository.class);
             User user = userRepository.findByEmail(email).get();
@@ -89,12 +82,13 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse> getAllUsers() { // @RequestHeader("Authorization") String authHeader
+    public ResponseEntity<ApiResponse> getAllUsers(@RequestHeader("Authorization") String authHeader) { // @RequestHeader("Authorization") String authHeader
         try {
             // User user = jwtService.getUserFromAuthHeader(authHeader);
             // if (!user.isAdmin()) {
             //     throw new BusinessLogicException("Only admins can view all users");
             // }
+            jwtService.throwIfUserNotAdmin(authHeader);
 
             UserRepository userRepository = RepositoryProvider.getRepository(UserRepository.class);
             List<User> users = userRepository.findAll();

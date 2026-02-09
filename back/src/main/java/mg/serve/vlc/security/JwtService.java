@@ -4,6 +4,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.repository.ConfigRepository;
 import mg.serve.vlc.util.RepositoryProvider;
@@ -86,5 +87,12 @@ public class JwtService {
         String email = validateAndGetSubject(token);
         System.out.println("Email from token: " + email);
         return RepositoryProvider.jpaUserRepository.findByEmail(email).get();
+    }
+
+    public void throwIfUserNotAdmin(String authHeader) throws BusinessLogicException {
+        User user = getUserFromAuthHeader(authHeader);
+        if (!user.isAdmin()) {
+            throw new BusinessLogicException("Only admins can perform this action");
+        }
     }
 }

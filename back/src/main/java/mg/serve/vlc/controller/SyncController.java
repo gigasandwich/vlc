@@ -8,8 +8,11 @@ import org.springframework.web.bind.annotation.*;
 
 import mg.serve.vlc.controller.response.ApiResponse;
 import mg.serve.vlc.controller.response.SyncStatistics;
+import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.service.UserSyncService;
 import mg.serve.vlc.service.PointSyncService;
+import mg.serve.vlc.model.user.*;
+import mg.serve.vlc.security.JwtService;
 
 @RestController
 @RequestMapping("/sync")
@@ -22,9 +25,15 @@ public class SyncController {
     @Autowired
     private PointSyncService pointSyncService;
 
+    @Autowired
+    private JwtService jwtService;
+
+
     @PostMapping("/all")
-    public ResponseEntity<ApiResponse> syncAll() {
+    public ResponseEntity<ApiResponse> syncAll(@RequestHeader("Authorization") String authHeader) {
         try {
+            jwtService.throwIfUserNotAdmin(authHeader);
+
             SyncStatistics aggregatedStats = new SyncStatistics();
 
             // Sync users
