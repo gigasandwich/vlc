@@ -4,6 +4,7 @@ import LoginUser from './pages/auth/LoginUser';
 import RecapGlob from './pages/dashboard/recapGlob';
 import MapPage from './components/MapPage';
 import AdminPoints from './pages/admin/AdminPoints';
+import PriceModification from './pages/admin/PriceModification';
 import ResetBlockingPage from './pages/admin/ResetBlockingPage';
 import BottomNav from './components/BottomNav';
 import UserInfo from './components/UserInfo';
@@ -17,27 +18,39 @@ function App() {
   const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
-    const jwt = localStorage.getItem('jwt');
-    if (jwt) {
-      fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:1234'}/auth/me`, {
-        headers: { Authorization: `Bearer ${jwt}` }
-      })
-        .then(r => r.json())
-        .then(j => {
-          if (j.status === 'success') {
-            setUser(j.data);
-          } else {
+    const checkToken = () => {
+      const jwt = localStorage.getItem('jwt');
+      if (jwt) {
+        fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:1234'}/auth/me`, {
+          headers: { Authorization: `Bearer ${jwt}` }
+        })
+          .then(r => r.json())
+          .then(j => {
+            if (j.status === 'success') {
+              setUser(j.data);
+            } else {
+              setSessionExpired(true);
+              localStorage.removeItem('jwt');
+              setUser(null);
+            }
+          })
+          .catch(() => {
             setSessionExpired(true);
             localStorage.removeItem('jwt');
             setUser(null);
-          }
-        })
-        .catch(() => {
-          setSessionExpired(true);
-          localStorage.removeItem('jwt');
-          setUser(null);
-        });
-    }
+          });
+      } else {
+        setUser(null);
+      }
+    };
+
+    // Check on mount
+    checkToken();
+
+    // Check every 5 seconds
+    const interval = setInterval(checkToken, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -48,7 +61,7 @@ function App() {
   }, [sessionExpired]);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="h-screen w-screen flex flex-col bg-gray-50 font-sans overflow-hidden">
         {user && user.role === 'admin' && <AdminNavbar user={user} />}
         {user && user.role !== 'admin' && <UserInfo user={user} />}
@@ -64,6 +77,7 @@ function App() {
             } />
             <Route path="/admin" element={<Navigate to="/" replace />} />
             <Route path="/admin/points" element={user && user.role === 'admin' ? <AdminPoints /> : <Navigate to="/profile" replace />} />
+            <Route path="/admin/points/price" element={user && user.role === 'admin' ? <PriceModification /> : <Navigate to="/profile" replace />} />
             <Route path="/admin/reset-blocking" element={user && user.role === 'admin' ? <ResetBlockingPage /> : <Navigate to="/profile" replace />} />
             <Route path="/admin/users" element={user && user.role === 'admin' ? <UserManagement /> : <Navigate to="/profile" replace />} />
             <Route path="/admin/configs" element={user && user.role === 'admin' ? <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-50"><h2 className="text-2xl font-bold text-gray-800 mb-6">Configurations</h2><p>Fonctionnalité à venir...</p></div> : <Navigate to="/profile" replace />} />
