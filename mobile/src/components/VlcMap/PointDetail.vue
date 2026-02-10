@@ -7,6 +7,24 @@
       </div>
 
       <div class="point-detail-content">
+              <div class="point-detail-photo-row">
+                <div v-if="currentPhoto" style="text-align:center;margin-bottom:8px;position:relative;">
+                  <button v-if="photosList.length > 1" @click.stop="prevPhoto" :disabled="currentIndex===0" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);z-index:2;background:rgba(255,255,255,0.8);border:none;padding:6px;border-radius:4px;">◀</button>
+                  <img :src="currentPhoto" alt="point photo" style="max-width:100%;max-height:260px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;" />
+                  <button v-if="photosList.length > 1" @click.stop="nextPhoto" :disabled="currentIndex>=photosList.length-1" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:2;background:rgba(255,255,255,0.8);border:none;padding:6px;border-radius:4px;">▶</button>
+                </div>
+                <div style="text-align:center;margin-bottom:8px;">
+                  <button type="button" class="point-detail-add-photo" @click="triggerFile">Choisir une photo</button>
+                  <input ref="fileInput" type="file" accept="image/*" capture="camera" style="display:none" @change="onFileChange" />
+                  <div v-if="selectedPreview" style="margin-top:8px;">
+                    <img :src="selectedPreview" alt="preview" style="max-width:120px;max-height:90px;object-fit:cover;border-radius:4px;border:1px solid #e2e8f0;display:block;margin:0 auto 8px;" />
+                    <div style="display:flex;gap:8px;justify-content:center;">
+                      <button type="button" class="point-detail-submit-photo" @click="submitPhoto" :disabled="uploading">{{ uploading ? 'Envoi...' : 'Envoyer' }}</button>
+                      <button type="button" class="point-detail-cancel-photo" @click="cancelSelected" :disabled="uploading">Annuler</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
         <div class="point-detail-progress-section">
           <div class="progress-label">Progression: <span class="progress-value">{{ progress }}%</span></div>
           <div class="progress-bar">
@@ -70,7 +88,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { initializeApp, getApps } from 'firebase/app'
+import { getFirestore, collection, query, orderBy, onSnapshot } from 'firebase/firestore'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { addPhotoToPoint } from '../../../backJs/firestorePoints.js'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { getFirebaseConfig, assertFirebaseConfig } from '../../../backJs/firebaseConfig.js'
 
 type PointData = {
   id: string | number
@@ -173,6 +199,138 @@ const formatNumber = (num: number | null | undefined) => {
   if (num == null) return '-';
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
+
+// Photo state & file handling
+const photosList = ref<Array<any>>([])
+const currentIndex = ref<number>(0)
+const currentPhoto = computed(() => photosList.value[currentIndex.value]?.data ?? null)
+
+const photoUrl = ref<string | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+let photosUnsub: any = null
+const selectedFile = ref<File | null>(null)
+const selectedPreview = ref<string | null>(null)
+const uploading = ref<boolean>(false)
+
+function triggerFile() {
+  fileInput.value?.click()
+}
+
+async function compressFileToDataUrl(file: File) {
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new Image()
+      img.onload = () => {
+        const maxW = 1200
+        const maxH = 1200
+        let { width, height } = img
+        let ratio = Math.min(maxW / width, maxH / height, 1)
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(width * ratio)
+        canvas.height = Math.round(height * ratio)
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return reject(new Error('Canvas context not available'))
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.75)
+        resolve(dataUrl)
+      }
+      img.onerror = reject
+      img.src = String(reader.result)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+async function onFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const f = input?.files?.[0]
+  if (!f) return
+  selectedFile.value = f
+  // Create a preview quickly (no compression) for user to confirm
+  try {
+    const reader = new FileReader()
+    reader.onload = () => {
+      selectedPreview.value = String(reader.result)
+    }
+    reader.readAsDataURL(f)
+  } catch (err) {
+    console.error('Failed to preview file', err)
+    selectedPreview.value = null
+  }
+}
+
+function initPhotosListener() {
+  try {
+    const config = getFirebaseConfig()
+    assertFirebaseConfig(config)
+    const app = !getApps().length ? initializeApp(config) : getApps()[0]
+    const db = getFirestore(app)
+    const photosCol = collection(db, 'points', String(props.point.id), 'photos')
+    const q = query(photosCol, orderBy('uploadedAt', 'desc'))
+    photosUnsub = onSnapshot(q, (snap: any) => {
+      const items: any[] = []
+      snap.forEach((doc: any) => {
+        const d = doc.data() || {}
+        items.push({ id: doc.id, data: d.data ?? null, uploadedAt: d.uploadedAt ?? null })
+      })
+      photosList.value = items
+      // reset to first (most recent) when list updates
+      currentIndex.value = 0
+      photoUrl.value = currentPhoto.value
+    }, (err: any) => {
+      console.debug('photo onSnapshot error', err)
+    })
+  } catch (err) {
+    console.debug('initPhotosListener error', err)
+  }
+}
+
+async function submitPhoto() {
+  if (!selectedFile.value) return
+  uploading.value = true
+  try {
+    const dataUrl = await compressFileToDataUrl(selectedFile.value)
+    await addPhotoToPoint(String(props.point.id), dataUrl)
+    // success: clear selected preview/file; onSnapshot will update displayed photo
+    selectedFile.value = null
+    selectedPreview.value = null
+  } catch (err) {
+    console.error('Failed to upload photo', err)
+    alert('Erreur lors de l\'envoi de la photo')
+  } finally {
+    uploading.value = false
+    if (fileInput.value) fileInput.value.value = ''
+  }
+}
+
+function cancelSelected() {
+  selectedFile.value = null
+  selectedPreview.value = null
+  if (fileInput.value) fileInput.value.value = ''
+}
+
+onMounted(() => {
+  initPhotosListener()
+})
+
+onBeforeUnmount(() => {
+  if (typeof photosUnsub === 'function') photosUnsub()
+})
+
+watch(() => props.point?.id, (v: any, old: any) => {
+  if (typeof photosUnsub === 'function') photosUnsub()
+  initPhotosListener()
+})
+
+function prevPhoto() {
+  if (currentIndex.value > 0) currentIndex.value -= 1
+}
+
+function nextPhoto() {
+  if (currentIndex.value < photosList.value.length - 1) currentIndex.value += 1
+}
 </script>
 
 <style scoped>

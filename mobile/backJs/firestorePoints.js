@@ -240,3 +240,36 @@ export async function createFirestorePoint({ coordinates, point_type_id, photos 
 
   return payload
 }
+
+/**
+ * Add a photo document under points/{pointId}/photos
+ * @param {string} pointId
+ * @param {string} dataUrl
+ */
+export async function addPhotoToPoint(pointId, dataUrl) {
+  const user = await ensureSignedIn()
+
+  try {
+    const photoRef = doc(collection(db, 'points', String(pointId), 'photos'))
+    await setDoc(photoRef, {
+      data: dataUrl,
+      uploadedAt: Timestamp.fromDate(new Date()),
+      id: photoRef.id,
+      userFbId: user?.uid ?? null,
+    })
+    return { id: photoRef.id }
+  } catch (err) {
+    const code = err?.code || err?.name
+    const msg = err?.message || String(err)
+    if (code === 'unauthenticated') {
+      throw new Error('Veuillez vous connecter.')
+    }
+    if (code === 'permission-denied' || /insufficient permissions/i.test(msg)) {
+      const authInfo = getAuthDebug()
+      logDevError('[Firestore] Write photo permission denied', err, { authInfo, pointId })
+      throw new Error('Connexion refusée : pas de permission.')
+    }
+    logDevError('[Firestore] Write photo failed', err, { pointId })
+    throw new Error('Erreur de connexion. Réessaie plus tard.')
+  }
+}
