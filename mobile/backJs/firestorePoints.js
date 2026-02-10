@@ -121,9 +121,10 @@ export async function fetchFirestorePoints() {
  * Create a new point in `points` collection.
  * @param {{ latitude: number, longitude: number }} coordinates
  * @param {number} point_type_id
+ * @param {number} level_
  * @returns {Promise<{ id: string } & Record<string, any>>}
  */
-export async function createFirestorePoint({ coordinates, point_type_id }) {
+export async function createFirestorePoint({ coordinates, point_type_id, level_ }) {
   const user = await ensureSignedIn()
   let localUserId = null
   let localUser = null
@@ -178,6 +179,7 @@ export async function createFirestorePoint({ coordinates, point_type_id }) {
     // Will be set to Firestore document id (see below)
     fbId: null,
     date_,
+    level_: Number.isFinite(Number(level_)) ? Number(level_) : 1,
     surface: 0,
     budget: 0,
     coordinates: {
