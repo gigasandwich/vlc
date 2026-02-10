@@ -124,7 +124,7 @@ export async function fetchFirestorePoints() {
  * @param {number} level_
  * @returns {Promise<{ id: string } & Record<string, any>>}
  */
-export async function createFirestorePoint({ coordinates, point_type_id, level_ }) {
+export async function createFirestorePoint({ coordinates, point_type_id, level_,photos }) {
   const user = await ensureSignedIn()
   let localUserId = null
   let localUser = null
@@ -198,6 +198,7 @@ export async function createFirestorePoint({ coordinates, point_type_id, level_ 
       label: typeLabel,
     },
     factories: [],
+    level_:1,
     // photos: optional array of data URLs (base64) uploaded on client-side
 }
   // Generate a document id first, so we can store it in `fbId`
@@ -264,6 +265,7 @@ export async function addPhotoToPoint(pointId, dataUrl) {
         pointTypeId: 1,
         pointType: { id: 1, label: 'peu grave' },
         factories: [],
+        level_:1,
       }
 
       try {

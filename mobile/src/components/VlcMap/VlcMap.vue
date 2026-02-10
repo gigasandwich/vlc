@@ -34,20 +34,7 @@
         </div>
 
         <div class="vlc-confirm__body">
-          <div class="vlc-confirm__photos">
-            <label class="vlc-photo-input">
-              <input id="photo-input" type="file" accept="image/*" capture="camera" multiple @change="onPhotoFilesSelected" />
-              <span class="vlc-photo-input__btn">Ajouter une photo</span>
-            </label>
-
-            <div class="vlc-photo-list">
-              <div v-for="(p, idx) in selectedPhotos" :key="p.id" class="vlc-photo-item">
-                <img :src="p.dataUrl" alt="photo" class="vlc-photo-thumb" />
-                <button type="button" class="vlc-photo-remove" @click="removePhoto(idx)">✕</button>
-              </div>
-            </div>
-          </div>
-
+          <!-- Photo input removed -->
         </div>
 
         <div class="vlc-confirm__actions">
@@ -127,7 +114,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { createFirestorePoint } from '@/backJs/router.js'
-import { compressFileToDataUrl, addPhotoToPoint } from '@/composables/usePhoto'
 import authStore from '@/stores/authStore'
 import { assertUserRole, fetchUserProfileByFirebaseUid } from '@backjs/firestoreUsers'
 import PointDetail from './PointDetail.vue'
@@ -182,31 +168,7 @@ const pendingPlacement = ref<{
   level: number
 } | null>(null)
 
-// photos selected for the pending placement (client-side only)
-const selectedPhotos = ref<Array<{ id: string; dataUrl: string }>>([])
-
-async function onPhotoFilesSelected(ev: Event) {
-  const input = ev.target as HTMLInputElement
-  const files = input.files
-  if (!files || files.length === 0) return
-
-  // Read files, compress and store data URLs
-  for (const f of Array.from(files)) {
-    try {
-      const compressed = await compressFileToDataUrl(f) 
-      selectedPhotos.value.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, dataUrl: compressed })
-    } catch (err) {
-      // fallback: read original as dataUrl
-    }
-  }
-
-  // reset input so the same file can be re-selected if needed
-  input.value = ''
-}
-
-function removePhoto(idx: number) {
-  selectedPhotos.value.splice(idx, 1)
-}
+// Photo upload flow removed from VlcMap (handled elsewhere or disabled)
 
 const placementShapeLabel = computed(() => {
   if (placementShape.value === 'circle') return 'Peu grave'
@@ -294,7 +256,6 @@ async function validateBeforePlacement(): Promise<boolean> {
 
 function cancelPendingPlacement() {
   pendingPlacement.value = null
-  selectedPhotos.value = []
 }
 
 async function confirmPendingPlacement() {
@@ -310,29 +271,12 @@ async function confirmPendingPlacement() {
     const created = await createFirestorePoint({
       coordinates: { latitude: lat, longitude: lng },
       point_type_id: typeId,
-      level_: level,
     })
 
-    // Upload compressed photos (if any) using addPhotoToPoint so stored photos match compression output
-    const pointId = (created as any)?.fbId ?? (created as any)?.id ?? null
-    if (pointId && Array.isArray(selectedPhotos.value) && selectedPhotos.value.length > 0) {
-  const uploads = selectedPhotos.value.map((p: { id: string; dataUrl: string }) => addPhotoToPoint(String(pointId), p.dataUrl))
-  const settled = await Promise.allSettled(uploads)
-  const failed = settled.filter((r: PromiseSettledResult<unknown>) => r.status !== 'fulfilled')
-      if (failed.length > 0) {
-        console.warn('Some photo uploads failed', failed)
-        placementStatus.value = 'Point ajouté (certaines photos ont échoué)'
-      } else {
-        placementStatus.value = 'Point et photos ajoutés.'
-      }
-    } else {
-      placementStatus.value = 'Point ajouté.'
-    }
+    placementStatus.value = 'Point ajouté.'
 
     extraPoints.value.push(created as FirestorePoint)
     pendingPlacement.value = null
-    // clear selected photos after successful upload attempt
-    selectedPhotos.value = []
     renderPoints()
     setTimeout(() => {
       placementStatus.value = null
