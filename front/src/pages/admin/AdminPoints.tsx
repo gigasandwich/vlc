@@ -11,6 +11,7 @@ export default function AdminPoints() {
   const [budgetDebounceTimer, setBudgetDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   const [isCalculatingBudget, setIsCalculatingBudget] = useState(false);
   const [budgetError, setBudgetError] = useState<string | null>(null);
+  const [shouldAutoCalculateBudget, setShouldAutoCalculateBudget] = useState(false);
 
   const [factories, setFactories] = useState<any[]>([]);
   const [pointStates, setPointStates] = useState<any[]>([]);
@@ -23,7 +24,7 @@ export default function AdminPoints() {
     budget: '',
     pointStateId: '',
     pointTypeId: '',
-    level: '',
+    // level: '',
     factoryIds: [] as number[],
     updatedAt: '',
   });
@@ -82,8 +83,12 @@ export default function AdminPoints() {
     const updatedAt = new Date().toISOString().slice(0, 16);
     let calculatedBudget = point.budget || '';
     
-    // Get the price effective at the current time and calculate budget
-    if (surface && level) {
+    // Check if budget already exists from endpoint
+    const hasBudgetFromEndpoint = point.budget && parseFloat(point.budget) > 0;
+    setShouldAutoCalculateBudget(!hasBudgetFromEndpoint); // Only auto-calculate if no budget exists
+    
+    // Get the price effective at the current time and calculate budget (only if no budget exists)
+    if (!hasBudgetFromEndpoint && surface && level) {
       try {
         const now = new Date().toISOString();
         const res = await fetch(`${backendURL}/prices/at?date=${encodeURIComponent(now)}`);
@@ -115,6 +120,11 @@ export default function AdminPoints() {
   };
 
   const updateBudgetFromInputsWithDebounce = async (surface: string, level: string, dateString?: string) => {
+    // Skip auto-calculation if budget already existed from endpoint
+    if (!shouldAutoCalculateBudget) {
+      return;
+    }
+    
     // Clear previous timer
     if (budgetDebounceTimer) {
       clearTimeout(budgetDebounceTimer);
@@ -191,6 +201,7 @@ export default function AdminPoints() {
       });
       if (res.ok) {
         setIsEditing(false);
+        setShouldAutoCalculateBudget(false);
         load();
       } else {
         const data = await res.json();
@@ -453,6 +464,7 @@ export default function AdminPoints() {
                 <button type="button" onClick={() => {
                   setIsEditing(false);
                   setBudgetError(null);
+                  setShouldAutoCalculateBudget(false);
                 }} className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md transition-all duration-200 flex items-center space-x-1">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

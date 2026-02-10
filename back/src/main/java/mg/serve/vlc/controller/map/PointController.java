@@ -302,10 +302,6 @@ public class PointController {
             if (dto.getSurface() != null) {
                 point.setSurface(dto.getSurface());
             }
-            
-            if (dto.getLevel() != null) {
-                throw new BusinessLogicException("Can't update level");
-            }
 
             // Auto-calculate budget once
             if (dto.getSurface() != null && noRowInHistoric) {
@@ -313,7 +309,6 @@ public class PointController {
                 Integer level = point.getLevel();
                 
                 if (surface != null && level != null) {
-                    // Get price effective at the specified update date (or now if not specified)
                     LocalDateTime referenceDate = dto.getUpdatedAt() != null ? dto.getUpdatedAt() : LocalDateTime.now();
                     Double currentPrice = getLatestPrice(referenceDate);
                     if (currentPrice != null) {
@@ -321,9 +316,7 @@ public class PointController {
                         point.setBudget(calculatedBudget);
                     }
                 }
-            } else if (dto.getBudget() != null) {
-                point.setBudget(dto.getBudget());
-            }
+            } 
             
             if (dto.getPointStateId() != null) {
                 if (dto.getPointStateId() < point.getPointState().getId()) {

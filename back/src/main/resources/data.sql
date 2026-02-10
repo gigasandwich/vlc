@@ -73,11 +73,7 @@ INSERT INTO point (date_, surface, budget, coordinates, user_id, point_state_id,
 
 INSERT INTO config (key, value_, type, date_) VALUES
 ('PRICE', '1000', 'double', '2026-02-09:00:00:00');
-
-
 INSERT INTO config (key, value_, type, date_) VALUES
 ('PRICE', '2000', 'double', '2026-02-09:12:00:00');
-
-
 INSERT INTO config (key, value_, type, date_) VALUES
 ('PRICE', '5000', 'double', '2026-02-10:00:00:00');
