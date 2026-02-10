@@ -53,7 +53,6 @@ import {
   resetAttemptByFirebaseUid,
 } from '@backjs/firestoreUsers'
 import { getAuthConfig } from '@backjs/firestoreConfig'
-import { trackFailedLoginAttempt } from '@backjs/firebaseFunctions'
 
 const props = defineProps<{ mode?: 'login' | 'register' }>()
 const emit = defineEmits<{
@@ -114,9 +113,39 @@ async function onSubmit() {
 
   loading.value = true
   try {
+    // cfg already loaded above, reuse it
+
     // 1) Firebase login (email/password). Anonymous is not used.
-    const res = await login(email.value, password.value)
-    if (res.error) throw res.error
+    const maxAttempts = Math.max(1, Number(cfg.loginAttemptLimit || 3))
+    const res = await login(email.value, password.value, maxAttempts)
+    
+    // Handle login failure with attempt tracking
+    if (res.error) {
+      console.error('[Auth] Login error:', res.error?.message, 'Disabled:', res.disabled, 'Attempt:', res.error?.attempt)
+      
+      // Check if account is disabled
+      if (res.disabled === true) {
+        error.value = 'Compte bloqué.'
+        return
+      }
+
+      // Show attempt tracking feedback - ALWAYS SHOW MESSAGE
+      const attempt = Number(res?.error?.attempt)
+      const attemptsRemaining = Number(res?.error?.attemptsRemaining)
+      
+      if (Number.isFinite(attemptsRemaining)) {
+        if (attemptsRemaining <= 0) {
+          error.value = 'Compte bloqué après trop de tentatives.'
+        } else if (attemptsRemaining <= 2) {
+          error.value = `${res.error?.message || 'Connexion refusée'} (${attemptsRemaining} tentative${attemptsRemaining > 1 ? 's' : ''} restante${attemptsRemaining > 1 ? 's' : ''})`
+        } else {
+          error.value = res.error?.message || 'Connexion refusée'
+        }
+      } else {
+        error.value = res.error?.message || 'Connexion refusée'
+      }
+      return
+    }
 
     // 2) Role check using Firestore `users` collection
     const firebaseUser = res.user
@@ -156,42 +185,11 @@ async function onSubmit() {
     }
 
     emit('success', {
-      ...res,
+      user: res.user,
       sessionExpirationMinutes: cfg.tokenExpirationMinutes,
     })
   }
   catch (err: any) {
-    // Track failed attempts and disable the Firebase Auth user when limit is reached.
-    if (emailKey) {
-      try {
-        const r: any = await trackFailedLoginAttempt(emailKey)
-        if (r?.disabled === true) {
-          error.value = 'Compte bloqué.'
-          return
-        }
-      } catch {
-        // Fallback (if Cloud Functions not deployed or blocked by rules)
-        try {
-          const limit = Math.max(1, Number(cfg.loginAttemptLimit || 3))
-          // Lazy import to avoid circular deps
-          const mod = await import('@backjs/firestoreUsers')
-          const r2 = await mod.incrementAttemptByEmail(emailKey)
-          const attempt = Number(r2?.attempt)
-          if (Number.isFinite(attempt) && attempt >= limit) {
-            try {
-              await mod.disableUserByEmail(emailKey)
-            } catch {
-              // ignore
-            }
-            error.value = 'Compte bloqué.'
-            return
-          }
-        } catch {
-          // ignore
-        }
-      }
-    }
-
     error.value = err?.message || 'Connexion refusée'
   } finally {
     loading.value = false

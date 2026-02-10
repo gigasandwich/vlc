@@ -6,7 +6,12 @@ function logDevError(label, err, extra = undefined) {
   try {
     const code = err?.code || err?.name
     const message = err?.message || String(err)
-    console.error(label, { code, message, err, ...(extra ? { extra } : {}) })
+    // Suppress permission-denied errors (expected when Firestore rules block pre-auth access)
+    if (code === 'permission-denied') {
+      console.debug(label, { code, message, ...(extra ? { extra } : {}) })
+    } else {
+      console.error(label, { code, message, err, ...(extra ? { extra } : {}) })
+    }
   } catch {
     // ignore
   }
@@ -145,22 +150,49 @@ async function updateUserDoc(docId, patch) {
 
 /**
  * Increment login attempt counter for the given email.
- * Returns the updated attempt count when possible.
+ * Directly updates the user document by finding it via email query.
+ * Returns the updated attempt count.
  */
 export async function incrementAttemptByEmail(email) {
-  const profile = await fetchUserProfileByEmail(email)
-  if (!profile?._docId) return { attempt: null, profile: null }
-
-  const prev = Number(profile?.attempt)
-  const next = (Number.isFinite(prev) ? prev : 0) + 1
-  try {
-    await updateUserDoc(profile._docId, { attempt: next })
-  } catch (err) {
-    logDevError('[Firestore] Failed to update attempt', err, { email })
-    throw err
+  const emailKey = String(email || '').trim().toLowerCase()
+  if (!emailKey) {
+    console.error('[Firestore] Invalid email for incrementAttemptByEmail')
+    return { attempt: null, profile: null }
   }
 
-  return { attempt: next, profile: { ...profile, attempt: next } }
+  try {
+    console.log("TRYYYY")
+    // Query user by email
+    const q = query(collection(db, 'users'), where('email', '==', emailKey), limit(1))
+    console.log(q)
+    const snap = await getDocs(q)
+    console.log(snap)
+    const doc = snap.docs[0]
+
+    console.log(doc)
+    
+    if (!doc) {
+      console.warn('[Firestore] User not found by email:', emailKey)
+      return { attempt: null, profile: null }
+    }
+
+    const docId = doc.id
+    const currentAttempt = Number(doc.data()?.attempt ?? 0)
+    const nextAttempt = currentAttempt + 1
+
+    // Update the attempt counter
+    const { doc: docRef } = await import('firebase/firestore')
+    const userRef = docRef(db, 'users', docId)
+    await updateDoc(userRef, { attempt: nextAttempt })
+
+    console.log('[Firestore] Updated attempt for', emailKey, ':', nextAttempt)
+    return { attempt: nextAttempt, profile: { ...doc.data(), attempt: nextAttempt } }
+  } catch (err) {
+    const code = err?.code || err?.name
+    const message = err?.message || String(err)
+    console.error('[Firestore] Failed to increment attempt', { code, message, err, email: emailKey })
+    throw err
+  }
 }
 
 /**
@@ -181,13 +213,29 @@ export async function resetAttemptByFirebaseUid(uid) {
  * This does NOT disable the Firebase Authentication user (requires Admin SDK).
  */
 export async function disableUserByEmail(email) {
-  const profile = await fetchUserProfileByEmail(email)
-  if (!profile?._docId) return
+  const emailKey = String(email || '').trim().toLowerCase()
+  if (!emailKey) return
+
   try {
-    await updateUserDoc(profile._docId, { disabled: true })
+    // Query user by email
+    const q = query(collection(db, 'users'), where('email', '==', emailKey), limit(1))
+    const snap = await getDocs(q)
+    const doc = snap.docs[0]
+    
+    if (!doc) {
+      console.warn('[Firestore] User not found by email for disabling:', emailKey)
+      return
+    }
+
+    const docId = doc.id
+    const { doc: docRef } = await import('firebase/firestore')
+    const userRef = docRef(db, 'users', docId)
+    await updateDoc(userRef, { disabled: true })
+    console.log('[Firestore] Disabled user:', emailKey)
   } catch (err) {
-    logDevError('[Firestore] Failed to disable user', err, { email })
-    throw err
+    const code = err?.code || err?.name
+    const message = err?.message || String(err)
+    console.error('[Firestore] Failed to disable user', { code, message, err, email: emailKey })
   }
 }
 

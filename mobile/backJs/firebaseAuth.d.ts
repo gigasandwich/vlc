@@ -1,7 +1,10 @@
 export function login(
   email: string,
-  password: string
-): Promise<{ user?: any; error?: any }>
+  password: string,
+  maxAttempts?: number
+): Promise<{
+  disabled: boolean; user?: any; error?: any 
+}>
 
 export function logout(): Promise<{ success?: true; error?: any }>
 
