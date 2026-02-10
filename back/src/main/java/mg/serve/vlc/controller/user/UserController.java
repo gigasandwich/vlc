@@ -5,6 +5,7 @@ import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.repository.user.UserRepository;
 import mg.serve.vlc.util.RepositoryProvider;
+import mg.serve.vlc.service.FirestoreUserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +18,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/users")
 public class UserController {
     private final JwtService jwtService;
+    private final FirestoreUserService firestoreUserService;
 
-    public UserController(JwtService jwtService) {
+    public UserController(JwtService jwtService, FirestoreUserService firestoreUserService) {
         this.jwtService = jwtService;
+        this.firestoreUserService = firestoreUserService;
     }
 
     @GetMapping("/blocked")
@@ -28,18 +31,10 @@ public class UserController {
         try {
             jwtService.throwIfUserNotAdmin(authHeader);
 
-            UserRepository userRepository = RepositoryProvider.getRepository(UserRepository.class);
-            List<User> blockedUsers = userRepository.findByUserStateId(3);
+            // Fetch blocked users from Firestore (attempt >= 3)
+            List<Map<String, Object>> blockedUsers = firestoreUserService.getBlockedUsers();
 
-            List<Map<String, Object>> data = blockedUsers.stream().map(u -> {
-                Map<String, Object> m = new HashMap<>();
-                m.put("id", u.getId());
-                m.put("email", u.getEmail());
-                m.put("username", u.getUsername());
-                return m;
-            }).collect(Collectors.toList());
-
-            return ResponseEntity.ok(new ApiResponse("success", data, null));
+            return ResponseEntity.ok(new ApiResponse("success", blockedUsers, null));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }
@@ -81,6 +76,21 @@ public class UserController {
             }
             user.delete();
             return ResponseEntity.ok(new ApiResponse("success", "User deleted (state updated)", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
+
+    @PutMapping("/deblock/{fbId}")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse> deblockUser(@PathVariable String fbId, @RequestHeader("Authorization") String authHeader) {
+        try {
+            jwtService.throwIfUserNotAdmin(authHeader);
+            
+            // attempt = 0
+            firestoreUserService.deblockUser(fbId);
+            
+            return ResponseEntity.ok(new ApiResponse("success", null, "User deblocked successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }
