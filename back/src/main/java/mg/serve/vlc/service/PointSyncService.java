@@ -12,6 +12,7 @@ import mg.serve.vlc.repository.point.FirebasePointRepository;
 import mg.serve.vlc.repository.point.PointRepository;
 import mg.serve.vlc.repository.PointHistoricRepository;
 import mg.serve.vlc.util.RepositoryProvider;
+import mg.serve.vlc.service.FcmNotificationService;
 
 import org.hibernate.Hibernate;
 import org.slf4j.Logger;
@@ -27,6 +28,12 @@ public class PointSyncService {
     private static final Logger logger = LoggerFactory.getLogger(PointSyncService.class);
     FirebasePointRepository firebasePointRepository = new FirebasePointRepository();
     FirebasePointHistoricRepository firebasePointHistoricRepository = new FirebasePointHistoricRepository();
+
+    private final FcmNotificationService fcmNotificationService;
+
+    public PointSyncService(FcmNotificationService fcmNotificationService) {
+        this.fcmNotificationService = fcmNotificationService;
+    }
 
     public ApiResponse syncPoints() {
         try {
@@ -71,9 +78,21 @@ public class PointSyncService {
                             stats.setPointsUpdatedInFirestore(stats.getPointsUpdatedInFirestore() + 1);
                         } else if (remote.getUpdatedAt().isAfter(local.getUpdatedAt()) && !pointDataEquals(local, remote)) {
                             // Firestore newer and data different
+                            Integer prevStateId = getStateId(local);
                             ensureUserExistsLocally(remote.getUser().getFbId());
                             overwriteLocalPoint(remote);
                             stats.setPointsUpdatedLocally(stats.getPointsUpdatedLocally() + 1);
+
+                            Integer newStateId = getStateId(remote);
+                            if (prevStateId == null || !prevStateId.equals(newStateId)) {
+                                String userFbId = remote.getUser() != null ? remote.getUser().getFbId() : null;
+                                String newStateLabel = getStateLabel(remote);
+                                try {
+                                    fcmNotificationService.notifyUserStatusChange(userFbId, remote.getId(), newStateLabel);
+                                } catch (Exception ignored) {
+                                    // notification failure should not block sync
+                                }
+                            }
                         } else {
                             // identical timestamps or identical data: no op
                         }
@@ -100,6 +119,14 @@ public class PointSyncService {
             logger.error("Sync points failed", e);
             return new ApiResponse("error", null, "Sync points failed: " + e.getMessage());
         }
+    }
+
+    private Integer getStateId(Point p) {
+        return p != null && p.getPointState() != null ? p.getPointState().getId() : null;
+    }
+
+    private String getStateLabel(Point p) {
+        return p != null && p.getPointState() != null ? p.getPointState().getLabel() : null;
     }
 
     private void ensureUserExistsLocally(String userFbId) throws BusinessLogicException {

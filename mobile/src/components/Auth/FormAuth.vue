@@ -71,6 +71,7 @@ import {
   resetAttemptByFirebaseUid,
 } from '@backjs/firestoreUsers'
 import { getAuthConfig } from '@backjs/firestoreConfig'
+import { registerPushNotificationsForUser } from '@backjs/pushNotifications'
 
 const props = defineProps<{ mode?: 'login' | 'register' }>()
 const emit = defineEmits<{
@@ -181,6 +182,7 @@ async function onSubmit() {
         'user',
         JSON.stringify({
           id: profile?.id ?? null,
+          userDocId: profile?._docId ?? null,
           email: profile?.email ?? firebaseUser?.email ?? email.value,
           name: profile?.username ?? profile?.name ?? null,
           role: 'USER',
@@ -189,6 +191,15 @@ async function onSubmit() {
           fbId: profile?.fbId ?? firebaseUser?.uid ?? null,
         })
       )
+    } catch {
+      // ignore
+    }
+
+    // Best-effort: register push notifications for this user
+    try {
+      if (profile?._docId) {
+        await registerPushNotificationsForUser({ userDocId: String(profile._docId) })
+      }
     } catch {
       // ignore
     }

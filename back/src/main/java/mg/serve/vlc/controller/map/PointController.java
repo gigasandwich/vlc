@@ -14,6 +14,7 @@ import mg.serve.vlc.repository.PointTypeRepository;
 import mg.serve.vlc.repository.FactoryRepository;
 import mg.serve.vlc.repository.pointState.PointStateRepository;
 import mg.serve.vlc.security.JwtService;
+import mg.serve.vlc.service.FcmNotificationService;
 import mg.serve.vlc.util.RepositoryProvider;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,9 @@ import java.util.stream.Collectors;
 public class PointController {
     @Autowired
     private final JwtService jwtService;
+
+    @Autowired
+    private final FcmNotificationService fcmNotificationService;
 
     /**
      * Liste complète des points.
@@ -284,6 +288,8 @@ public class PointController {
             if (point == null) {
                 return ResponseEntity.badRequest().body(new ApiResponse("error", null, "Point not found"));
             }
+
+            Integer prevStateId = point.getPointState() != null ? point.getPointState().getId() : null;
             
             boolean noRowInHistoric = RepositoryProvider.pointHistoricRepository.countByPointId(point.getId()) == 0;
             if (point.getPointState().getId().equals(1) && (dto.getSurface() == null || dto.getSurface() == 0) && noRowInHistoric) {
@@ -353,6 +359,17 @@ public class PointController {
 
             point.saveHistoric();
             Point savedPoint = point.save();
+
+            Integer newStateId = savedPoint.getPointState() != null ? savedPoint.getPointState().getId() : null;
+            if (prevStateId == null || !prevStateId.equals(newStateId)) {
+                String userFbId = savedPoint.getUser() != null ? savedPoint.getUser().getFbId() : null;
+                String newStateLabel = savedPoint.getPointState() != null ? savedPoint.getPointState().getLabel() : null;
+                try {
+                    fcmNotificationService.notifyUserStatusChange(userFbId, savedPoint.getId(), newStateLabel);
+                } catch (Exception ignored) {
+                    // notification failure should not block admin update
+                }
+            }
 
             return ResponseEntity.ok(new ApiResponse("success", savedPoint.getId(), null));
         } catch (BusinessLogicException e) {

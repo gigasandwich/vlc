@@ -36,6 +36,7 @@ import './theme/variables.css';
 
 import authStore from '@/stores/authStore'
 import { logout } from '@backjs/firebaseAuth'
+import { registerPushNotificationsForUser } from '@backjs/pushNotifications'
 
 const app = createApp(App)
   .use(IonicVue)
@@ -43,6 +44,17 @@ const app = createApp(App)
 
 router.isReady().then(() => {
   app.mount('#app');
+
+  // Best-effort: register push notifications if user profile is already stored
+  try {
+    const stored = JSON.parse(localStorage.getItem('user') || 'null')
+    const userDocId = stored?.userDocId
+    if (userDocId) {
+      void registerPushNotificationsForUser({ userDocId: String(userDocId) })
+    }
+  } catch {
+    // ignore
+  }
 
   // Auto-enforce app session expiration even without navigation.
   setInterval(() => {

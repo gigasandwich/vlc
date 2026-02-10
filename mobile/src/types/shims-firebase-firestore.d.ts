@@ -19,4 +19,10 @@ declare module 'firebase/firestore' {
     onNext: (snapshot: any) => void,
     onError?: (error: any) => void
   ): () => void
+
+  export function doc(db: any, ...pathSegments: Array<string>): any
+
+  export function setDoc(ref: any, data: any, options?: { merge?: boolean }): Promise<void>
+
+  export function serverTimestamp(): any
 }

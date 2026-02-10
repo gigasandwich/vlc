@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 public class FirebaseInitializer {
 
     @PostConstruct
-    public static void init() {
+    public void init() {
         Logger logger = Logger.getLogger(FirebaseInitializer.class.getName());
         try {
             if (FirebaseApp.getApps().isEmpty()) {
