@@ -123,7 +123,7 @@ export async function fetchFirestorePoints() {
  * @param {number} point_type_id
  * @returns {Promise<{ id: string } & Record<string, any>>}
  */
-export async function createFirestorePoint({ coordinates, point_type_id }) {
+export async function createFirestorePoint({ coordinates, point_type_id, photos }) {
   const user = await ensureSignedIn()
   let localUserId = null
   let localUser = null
@@ -196,13 +196,33 @@ export async function createFirestorePoint({ coordinates, point_type_id }) {
       label: typeLabel,
     },
     factories: [],
-  }
+    // photos: optional array of data URLs (base64) uploaded on client-side
+}
 
   try {
     // Generate a document id first, so we can store it in `fbId`
     const ref = doc(collection(db, 'points'))
     payload.fbId = ref.id
     await setDoc(ref, payload)
+    // If photos were provided (array of base64 data URLs), store each as a document in the photos subcollection
+    if (Array.isArray(photos) && photos.length > 0) {
+      try {
+        for (const p of photos) {
+          // create a doc under points/{ref.id}/photos/{photoId}
+          const photoRef = doc(collection(db, 'points', ref.id, 'photos'))
+          await setDoc(photoRef, {
+            data: p,
+            uploadedAt: Timestamp.fromDate(new Date()),
+            id: photoRef.id,
+           // include owner fb uid so rules can validate ownership
+           userFbId: user?.uid ?? null,
+          })
+        }
+      } catch (err) {
+        logDevError('[Firestore] Write photos failed', err, { pointId: ref.id })
+        // don't block point creation on photo failures, but propagate an error if you prefer
+      }
+    }
   } catch (err) {
     const code = err?.code || err?.name
     const msg = err?.message || String(err)
