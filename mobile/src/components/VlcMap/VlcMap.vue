@@ -29,6 +29,23 @@
           </span>
         </div>
 
+        <div class="vlc-confirm__body">
+          <div class="vlc-confirm__photos">
+            <label class="vlc-photo-input">
+              <input id="photo-input" type="file" accept="image/*" capture="environment" multiple @change="onPhotoFilesSelected" />
+              <span class="vlc-photo-input__btn">Ajouter une photo</span>
+            </label>
+
+            <div class="vlc-photo-list">
+              <div v-for="(p, idx) in selectedPhotos" :key="p.id" class="vlc-photo-item">
+                <img :src="p.dataUrl" alt="photo" class="vlc-photo-thumb" />
+                <button type="button" class="vlc-photo-remove" @click="removePhoto(idx)">✕</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
         <div class="vlc-confirm__actions">
           <button type="button" class="vlc-confirm__btn" :disabled="isPlacing" @click="cancelPendingPlacement">
             Annuler
@@ -138,6 +155,79 @@ const pendingPlacement = ref<{
   shape: PlacementType
 } | null>(null)
 
+// photos selected for the pending placement (client-side only)
+const selectedPhotos = ref<Array<{ id: string; dataUrl: string }>>([])
+
+function onPhotoFilesSelected(ev: Event) {
+  const input = ev.target as HTMLInputElement
+  const files = input.files
+  if (!files || files.length === 0) return
+
+  // Read files, compress and store data URLs
+  for (const f of Array.from(files)) {
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const dataUrl = String(e.target?.result || '')
+        // compress to reasonable size before storing
+        const compressed = await compressDataUrl(dataUrl, 1024, 0.7)
+        selectedPhotos.value.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, dataUrl: compressed })
+      } catch (err) {
+        // fallback to original
+        const dataUrl = String(e.target?.result || '')
+        selectedPhotos.value.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, dataUrl })
+      }
+    }
+    reader.readAsDataURL(f)
+  }
+
+  // reset input so the same file can be re-selected if needed
+  input.value = ''
+}
+
+/**
+ * Compress a data URL image by drawing it to canvas and exporting as JPEG.
+ * @param {string} dataUrl
+ * @param {number} maxWidth
+ * @param {number} quality 0..1
+ * @returns {Promise<string>} compressed data URL
+ */
+function compressDataUrl(dataUrl: string, maxWidth = 1024, quality = 0.7): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      try {
+        let w = img.width
+        let h = img.height
+        if (w > maxWidth) {
+          const ratio = maxWidth / w
+          w = Math.round(maxWidth)
+          h = Math.round(h * ratio)
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return reject(new Error('Canvas not supported'))
+        // draw white background to avoid black for PNG transparency when converting to JPEG
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, w, h)
+        ctx.drawImage(img, 0, 0, w, h)
+        const out = canvas.toDataURL('image/jpeg', quality)
+        resolve(out)
+      } catch (err) {
+        reject(err)
+      }
+    }
+    img.onerror = (e) => reject(new Error('Image load error'))
+    img.src = dataUrl
+  })
+}
+
+function removePhoto(idx: number) {
+  selectedPhotos.value.splice(idx, 1)
+}
+
 const placementShapeLabel = computed(() => {
   if (placementShape.value === 'circle') return 'Peu grave'
   if (placementShape.value === 'square') return 'Grave'
@@ -224,6 +314,7 @@ async function validateBeforePlacement(): Promise<boolean> {
 
 function cancelPendingPlacement() {
   pendingPlacement.value = null
+  selectedPhotos.value = []
 }
 
 async function confirmPendingPlacement() {
@@ -236,13 +327,17 @@ async function confirmPendingPlacement() {
   const { lat, lng, typeId } = pendingPlacement.value
 
   try {
+    const photosForUpload = (selectedPhotos.value || []).map((p) => p.dataUrl)
     const created = await createFirestorePoint({
       coordinates: { latitude: lat, longitude: lng },
       point_type_id: typeId,
+      photos: photosForUpload,
     })
 
     extraPoints.value.push(created as FirestorePoint)
-    pendingPlacement.value = null
+  pendingPlacement.value = null
+  // clear selected photos after successful upload
+  selectedPhotos.value = []
     placementStatus.value = 'Point ajouté.'
     renderPoints()
     setTimeout(() => {
@@ -495,8 +590,8 @@ watch(
   () => props.points,
   () => {
     // Drop locally-added points once they appear in the server list.
-    const ids = new Set((props.points || []).map((p) => p.id))
-    extraPoints.value = (extraPoints.value || []).filter((p) => !ids.has(p.id))
+    const ids = new Set((props.points || []).map((p: any) => p.id))
+    extraPoints.value = (extraPoints.value || []).filter((p: any) => !ids.has(p.id))
     renderPoints()
   },
   { deep: true }
