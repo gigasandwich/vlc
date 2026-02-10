@@ -109,7 +109,7 @@ async function onSubmit() {
 
   const emailKey = normalizeEmailKey(email.value)
   const cfg = await getAuthConfig().catch(() => ({
-    tokenExpirationMinutes: 180,
+    tokenExpirationSeconds: 180,
     loginAttemptLimit: 3,
   }))
 
@@ -204,7 +204,7 @@ async function onSubmit() {
 
     emit('success', {
       user: res.user,
-      sessionExpirationMinutes: cfg.tokenExpirationMinutes,
+      sessionExpirationSeconds: cfg.tokenExpirationSeconds,
     })
   }
   catch (err: any) {

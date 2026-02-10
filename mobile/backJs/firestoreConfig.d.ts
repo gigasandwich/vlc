@@ -1,5 +1,5 @@
 export type AuthConfig = {
-  tokenExpirationMinutes: number
+  tokenExpirationSeconds: number
   loginAttemptLimit: number
 }
 
