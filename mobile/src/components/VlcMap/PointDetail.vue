@@ -89,14 +89,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { initializeApp, getApps } from 'firebase/app'
-import { getFirestore, collection, query, orderBy, onSnapshot } from 'firebase/firestore'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import { addPhotoToPoint } from '../../../backJs/firestorePoints.js'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import { getFirebaseConfig, assertFirebaseConfig } from '../../../backJs/firebaseConfig.js'
+import { compressFileToDataUrl, addPhotoToPoint, initPhotosListener } from '@/composables/usePhoto'
 
 type PointData = {
   id: string | number
@@ -216,32 +209,7 @@ function triggerFile() {
   fileInput.value?.click()
 }
 
-async function compressFileToDataUrl(file: File) {
-  return await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const img = new Image()
-      img.onload = () => {
-        const maxW = 1200
-        const maxH = 1200
-        let { width, height } = img
-        let ratio = Math.min(maxW / width, maxH / height, 1)
-        const canvas = document.createElement('canvas')
-        canvas.width = Math.round(width * ratio)
-        canvas.height = Math.round(height * ratio)
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return reject(new Error('Canvas context not available'))
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.75)
-        resolve(dataUrl)
-      }
-      img.onerror = reject
-      img.src = String(reader.result)
-    }
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
+// compressFileToDataUrl provided by composable
 
 async function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
@@ -261,30 +229,14 @@ async function onFileChange(e: Event) {
   }
 }
 
-function initPhotosListener() {
-  try {
-    const config = getFirebaseConfig()
-    assertFirebaseConfig(config)
-    const app = !getApps().length ? initializeApp(config) : getApps()[0]
-    const db = getFirestore(app)
-    const photosCol = collection(db, 'points', String(props.point.id), 'photos')
-    const q = query(photosCol, orderBy('uploadedAt', 'desc'))
-    photosUnsub = onSnapshot(q, (snap: any) => {
-      const items: any[] = []
-      snap.forEach((doc: any) => {
-        const d = doc.data() || {}
-        items.push({ id: doc.id, data: d.data ?? null, uploadedAt: d.uploadedAt ?? null })
-      })
-      photosList.value = items
-      // reset to first (most recent) when list updates
-      currentIndex.value = 0
-      photoUrl.value = currentPhoto.value
-    }, (err: any) => {
-      console.debug('photo onSnapshot error', err)
-    })
-  } catch (err) {
-    console.debug('initPhotosListener error', err)
-  }
+function initPhotosListenerLocal() {
+  // use composable initPhotosListener
+  if (typeof photosUnsub === 'function') photosUnsub()
+  photosUnsub = initPhotosListener(String(props.point.id), (items: any[]) => {
+    photosList.value = items
+    currentIndex.value = 0
+    photoUrl.value = currentPhoto.value
+  })
 }
 
 async function submitPhoto() {
@@ -312,7 +264,7 @@ function cancelSelected() {
 }
 
 onMounted(() => {
-  initPhotosListener()
+  initPhotosListenerLocal()
 })
 
 onBeforeUnmount(() => {
@@ -321,7 +273,7 @@ onBeforeUnmount(() => {
 
 watch(() => props.point?.id, (v: any, old: any) => {
   if (typeof photosUnsub === 'function') photosUnsub()
-  initPhotosListener()
+  initPhotosListenerLocal()
 })
 
 function prevPhoto() {
