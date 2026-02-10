@@ -4,6 +4,7 @@ declare module '@/backJs/router.js' {
   export function createFirestorePoint(params: {
     coordinates: { latitude: number; longitude: number }
     point_type_id: number
+    photos?: string[]
   }): Promise<any>
 
   export function getFirebaseConfig(): {
