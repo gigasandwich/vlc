@@ -18,27 +18,39 @@ function App() {
   const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
-    const jwt = localStorage.getItem('jwt');
-    if (jwt) {
-      fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:1234'}/auth/me`, {
-        headers: { Authorization: `Bearer ${jwt}` }
-      })
-        .then(r => r.json())
-        .then(j => {
-          if (j.status === 'success') {
-            setUser(j.data);
-          } else {
+    const checkToken = () => {
+      const jwt = localStorage.getItem('jwt');
+      if (jwt) {
+        fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:1234'}/auth/me`, {
+          headers: { Authorization: `Bearer ${jwt}` }
+        })
+          .then(r => r.json())
+          .then(j => {
+            if (j.status === 'success') {
+              setUser(j.data);
+            } else {
+              setSessionExpired(true);
+              localStorage.removeItem('jwt');
+              setUser(null);
+            }
+          })
+          .catch(() => {
             setSessionExpired(true);
             localStorage.removeItem('jwt');
             setUser(null);
-          }
-        })
-        .catch(() => {
-          setSessionExpired(true);
-          localStorage.removeItem('jwt');
-          setUser(null);
-        });
-    }
+          });
+      } else {
+        setUser(null);
+      }
+    };
+
+    // Check on mount
+    checkToken();
+
+    // Check every 5 seconds
+    const interval = setInterval(checkToken, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {

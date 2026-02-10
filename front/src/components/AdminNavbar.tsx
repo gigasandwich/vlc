@@ -187,11 +187,11 @@ export default function AdminNavbar({ user }: AdminNavbarProps) {
             </li>
 
             {/* Config */}
-            <li>
+            {/* <li>
               <Link to="/admin/configs" className="block md:inline py-2 px-3 text-gray-300 rounded hover:bg-gray-600 md:hover:bg-transparent md:border-0 md:hover:text-blue-400 md:p-0 md:py-0 no-underline transition-colors duration-200">
                 Configurations
               </Link>
-            </li>
+            </li> */}
 
             {/* Sync Button */}
             <li className="w-full md:w-auto">
