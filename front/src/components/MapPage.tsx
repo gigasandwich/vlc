@@ -18,6 +18,7 @@ type PointType = 'circle' | 'square' | 'triangle' | 'all';
 interface BackendPointData {
   point_state_label: string;
   id: number;
+  level: number;
   date?: string;
   surface?: number;
   budget?: number;
@@ -67,6 +68,55 @@ const mapTypeFromLabel = (label?: string | null): PointType => {
   if (l.includes('peu')) return 'circle';
   if (l.includes('tres') || l.includes('très')) return 'triangle';
   return 'square';
+};
+
+const getTypeStyleAndIcon = (label?: string | null) => {
+  if (!label) {
+    return {
+      iconColor: 'text-gray-400',
+      badgeColor: 'bg-gray-100 text-gray-700',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    };
+  }
+  const l = label.toLowerCase();
+  
+  if (l.includes('peu')) {
+    return {
+      iconColor: 'text-blue-500',
+      badgeColor: 'bg-blue-100 text-blue-800',
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    };
+  }
+  
+  if (l.includes('tres') || l.includes('très')) {
+    return {
+      iconColor: 'text-red-500',
+      badgeColor: 'bg-red-100 text-red-800',
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+        </svg>
+      )
+    };
+  }
+  
+  return {
+    iconColor: 'text-orange-500',
+    badgeColor: 'bg-orange-100 text-orange-800',
+    icon: (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+      </svg>
+    )
+  };
 };
 
 // --- 4. COMPOSANT MAP ---
@@ -155,6 +205,15 @@ const MapPage: React.FC = () => {
                   <span className="font-medium">Date de signalement:</span>
                 </div>
                 <span className="ml-5 text-right">{point.backendData.date ? formatDate(point.backendData.date) : '-'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  {getTypeStyleAndIcon(point.backendData.typeLabel).icon}
+                  <span className="font-medium">Niveau:</span>
+                </div>
+                <span className={`ml-5 text-right px-3 py-1 rounded-full text-sm font-semibold ${getTypeStyleAndIcon(point.backendData.typeLabel).badgeColor}`}>
+                  {point.backendData.level} - {point.backendData.typeLabel ?? '-'}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">

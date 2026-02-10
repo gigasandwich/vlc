@@ -6,6 +6,7 @@ import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.map.Point;
 import mg.serve.vlc.model.map.PointHistoric;
 import mg.serve.vlc.model.map.PointState;
+import mg.serve.vlc.model.map.PointType;
 import mg.serve.vlc.model.user.User;
 import mg.serve.vlc.repository.point.FirebasePointHistoricRepository;
 import mg.serve.vlc.repository.point.FirebasePointRepository;
@@ -117,6 +118,7 @@ public class PointSyncService {
         local.setSurface(remote.getSurface());
         local.setBudget(remote.getBudget());
         local.setFbId(remote.getFbId());
+        local.setLevel(remote.getLevel());
         local.setCoordinates(remote.getCoordinates().getX(), remote.getCoordinates().getY());
         local.setUser(remote.getUser());
         if (remote.getPointState() != null) {
@@ -126,7 +128,11 @@ public class PointSyncService {
             defaultState.setId(1);
             local.setPointState(defaultState);
         }
-        local.setPointType(remote.getPointType());
+        if (remote.getPointType() != null) {
+            local.setPointType(remote.getPointType());
+        } else if (remote.getLevel() != null) {
+            local.setPointType(PointSyncService.getPointTypeByLevel(remote.getLevel()));
+        }
         local.setFactories(remote.getFactories());
         ((PointRepository) RepositoryProvider.jpaPointRepository).save(local);
         logger.info("Created local point: {}", remote.getFbId());
@@ -160,10 +166,15 @@ public class PointSyncService {
         local.setDeletedAt(remote.getDeletedAt());
         local.setSurface(remote.getSurface());
         local.setBudget(remote.getBudget());
+        local.setLevel(remote.getLevel());
         local.setCoordinates(remote.getCoordinates().getX(), remote.getCoordinates().getY());
         local.setUser(remote.getUser());
         local.setPointState(remote.getPointState());
-        local.setPointType(remote.getPointType());
+        if (remote.getPointType() != null) {
+            local.setPointType(remote.getPointType());
+        } else if (remote.getLevel() != null) {
+            local.setPointType(PointSyncService.getPointTypeByLevel(remote.getLevel()));
+        }
         local.setFactories(remote.getFactories());
         ((PointRepository) RepositoryProvider.jpaPointRepository).save(local);
         logger.info("Overwrote local point: {}", remote.getFbId());
@@ -258,11 +269,43 @@ public class PointSyncService {
                Objects.equals(p1.getSurface(), p2.getSurface()) &&
                Objects.equals(p1.getBudget(), p2.getBudget()) &&
                Objects.equals(p1.getDeletedAt(), p2.getDeletedAt()) &&
+               Objects.equals(p1.getLevel(), p2.getLevel()) &&
                Objects.equals(p1.getPointState(), p2.getPointState()) &&
                Objects.equals(p1.getPointType(), p2.getPointType()) &&
                Objects.equals(p1.getFactories(), p2.getFactories()) &&
                (p1.getCoordinates() != null && p2.getCoordinates() != null &&
                 p1.getCoordinates().getX() == p2.getCoordinates().getX() &&
                 p1.getCoordinates().getY() == p2.getCoordinates().getY());
+    }
+
+    public static PointType getPointTypeByLevel(int level) {
+        String label;
+        if (level >= 1 && level <= 3) {
+            label = "peu grave";
+        } else if (level >= 4 && level <= 7) {
+            label = "grave";
+        } else if (level >= 8 && level <= 10) {
+            label = "tres grave";
+        } else {
+            return null;
+        }
+
+        try {
+            if (RepositoryProvider.pointTypeRepository != null) {
+                PointType existing = RepositoryProvider.pointTypeRepository.findByLabel(label);
+                if (existing != null) 
+                    return existing;
+
+                PointType pt = new PointType();
+                pt.setLabel(label);
+                return RepositoryProvider.pointTypeRepository.save(pt);
+            }
+        } catch (Exception e) {
+            logger.warn("Unable to resolve PointType by level, returning transient instance", e);
+        }
+
+        PointType fallback = new PointType();
+        fallback.setLabel(label);
+        return fallback;
     }
 }

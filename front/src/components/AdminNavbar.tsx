@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { backendURL } from '../constant';
+import SyncResultsModal from '../pages/admin/SyncResultsModal';
 
 interface AdminNavbarProps {
   user: any;
@@ -9,14 +10,21 @@ interface AdminNavbarProps {
 export default function AdminNavbar({ user }: AdminNavbarProps) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [usersDropdownOpen, setUsersDropdownOpen] = useState(false);
+  const [pointsDropdownOpen, setPointsDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncResults, setSyncResults] = useState<any>(null);
+  const usersDropdownRef = useRef<HTMLDivElement>(null);
+  const pointsDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (usersDropdownRef.current && !usersDropdownRef.current.contains(event.target as Node)) {
         setUsersDropdownOpen(false);
+      }
+      if (pointsDropdownRef.current && !pointsDropdownRef.current.contains(event.target as Node)) {
+        setPointsDropdownOpen(false);
       }
     };
 
@@ -37,7 +45,8 @@ export default function AdminNavbar({ user }: AdminNavbarProps) {
       });
       const data = await response.json();
       if (response.ok && data.status === 'success') {
-        alert('Synchronisation terminée avec succès');
+        setSyncResults(data.data);
+        setShowSyncModal(true);
       } else {
         alert(data.error || 'Erreur lors de la synchronisation');
       }
@@ -53,7 +62,8 @@ export default function AdminNavbar({ user }: AdminNavbarProps) {
   }
 
   return (
-    <nav className="bg-gray-800 fixed w-full z-20 top-0 start-0 border-b border-gray-600">
+    <>
+      <nav className="bg-gray-800 fixed w-full z-20 top-0 start-0 border-b border-gray-600">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4 w-full">
         <div className="flex items-center flex-1 space-x-6">
           <Link to="/" className="flex items-center space-x-2 rtl:space-x-reverse no-underline -ml-2">
@@ -94,7 +104,7 @@ export default function AdminNavbar({ user }: AdminNavbarProps) {
           <ul className="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-600 rounded-lg bg-gray-700 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-gray-800 md:items-center list-none m-0">
             
             {/* Users Dropdown */}
-            <li className="relative" ref={dropdownRef}>
+            <li className="relative" ref={usersDropdownRef}>
               <button 
                 onClick={() => setUsersDropdownOpen(!usersDropdownOpen)}
                 className="flex items-center justify-between w-full md:w-auto bg-gray-600 md:bg-transparent py-2 px-3 md:py-0 md:px-0 md:p-0 rounded md:rounded-none font-medium text-lg text-gray-300 hover:bg-gray-500 md:hover:bg-transparent md:border-0 md:hover:text-blue-400 no-underline transition-colors duration-200"
@@ -139,19 +149,49 @@ export default function AdminNavbar({ user }: AdminNavbarProps) {
               )}
             </li>
 
-            {/* Points */}
-            <li>
-              <Link to="/admin/points" className="block md:inline py-2 px-3 text-gray-300 rounded hover:bg-gray-600 md:hover:bg-transparent md:border-0 md:hover:text-blue-400 md:p-0 md:py-0 no-underline transition-colors duration-200">
+            {/* Points Dropdown */}
+            <li className="relative" ref={pointsDropdownRef}>
+              <button 
+                onClick={() => setPointsDropdownOpen(!pointsDropdownOpen)}
+                className="flex items-center justify-between w-full md:w-auto bg-gray-600 md:bg-transparent py-2 px-3 md:py-0 md:px-0 md:p-0 rounded md:rounded-none font-medium text-lg text-gray-300 hover:bg-gray-500 md:hover:bg-transparent md:border-0 md:hover:text-blue-400 no-underline transition-colors duration-200"
+              >
                 Gestion des Points
-              </Link>
+                <svg className={`w-3 h-3 md:w-4 md:h-4 ms-1.5 transition-transform duration-200 ${pointsDropdownOpen ? 'rotate-180' : ''}`} aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 9-7 7-7-7"/>
+                </svg>
+              </button>
+              {pointsDropdownOpen && (
+                <div className="absolute z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-48 mt-2 top-full left-0">
+                  <ul className="py-1 text-sm font-medium list-none m-0">
+                    <li>
+                      <Link 
+                        to="/admin/points" 
+                        className="block py-2 px-4 text-gray-300 hover:bg-gray-700 hover:text-white no-underline transition-colors duration-150"
+                        onClick={() => setPointsDropdownOpen(false)}
+                      >
+                        Vue d'ensemble
+                      </Link>
+                    </li>
+                    <li>
+                      <Link 
+                        to="/admin/points/price" 
+                        className="block py-2 px-4 text-gray-300 hover:bg-gray-700 hover:text-white no-underline transition-colors duration-150"
+                        onClick={() => setPointsDropdownOpen(false)}
+                      >
+                        Modification prix
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              )}
             </li>
 
             {/* Config */}
-            <li>
+            {/* <li>
               <Link to="/admin/configs" className="block md:inline py-2 px-3 text-gray-300 rounded hover:bg-gray-600 md:hover:bg-transparent md:border-0 md:hover:text-blue-400 md:p-0 md:py-0 no-underline transition-colors duration-200">
                 Configurations
               </Link>
-            </li>
+            </li> */}
 
             {/* Sync Button */}
             <li className="w-full md:w-auto">
@@ -168,5 +208,11 @@ export default function AdminNavbar({ user }: AdminNavbarProps) {
         </div>
       </div>
     </nav>
+      <SyncResultsModal 
+        isOpen={showSyncModal}
+        onClose={() => setShowSyncModal(false)}
+        syncResults={syncResults}
+      />
+    </>
   );
 }

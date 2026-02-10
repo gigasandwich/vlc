@@ -12,6 +12,7 @@ import java.util.*;
 public class PointUpdateDTO {
     private Double surface;
     private Double budget;
+    private Integer level;
     private Integer pointStateId;
     private Integer pointTypeId;
     private LocalDateTime updatedAt;

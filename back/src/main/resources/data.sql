@@ -55,12 +55,12 @@ INSERT INTO point_type (label) VALUES
 ('grave'),
 ('tres grave');
 
-INSERT INTO point (date_, surface, budget, coordinates, user_id, point_state_id, point_type_id) VALUES
-(NOW(), null, null, ST_GeomFromText('POINT(47.5260 -18.9095)', 4326), 2, 1, (SELECT id FROM point_type WHERE label='peu grave')),
-(NOW() - INTERVAL '2 days', null, null, ST_GeomFromText('POINT(47.5235 -18.9110)', 4326), 3, 1, (SELECT id FROM point_type WHERE label='grave')),
-(NOW() - INTERVAL '7 days', null, null, ST_GeomFromText('POINT(47.5280 -18.9120)', 4326), 2, 1, (SELECT id FROM point_type WHERE label='grave')),
-(NOW() - INTERVAL '14 days', null, null, ST_GeomFromText('POINT(47.5210 -18.9070)', 4326), 3, 1, (SELECT id FROM point_type WHERE label='tres grave')),
-(NOW() - INTERVAL '1 days', null, null, ST_GeomFromText('POINT(47.5255 -18.9130)', 4326), 2, 1, (SELECT id FROM point_type WHERE label='peu grave'));
+-- INSERT INTO point (date_, surface, budget, coordinates, user_id, point_state_id, point_type_id) VALUES
+-- (NOW(), null, null, ST_GeomFromText('POINT(47.5260 -18.9095)', 4326), 2, 1, (SELECT id FROM point_type WHERE label='peu grave')),
+-- (NOW() - INTERVAL '2 days', null, null, ST_GeomFromText('POINT(47.5235 -18.9110)', 4326), 3, 1, (SELECT id FROM point_type WHERE label='grave')),
+-- (NOW() - INTERVAL '7 days', null, null, ST_GeomFromText('POINT(47.5280 -18.9120)', 4326), 2, 1, (SELECT id FROM point_type WHERE label='grave')),
+-- (NOW() - INTERVAL '14 days', null, null, ST_GeomFromText('POINT(47.5210 -18.9070)', 4326), 3, 1, (SELECT id FROM point_type WHERE label='tres grave')),
+-- (NOW() - INTERVAL '1 days', null, null, ST_GeomFromText('POINT(47.5255 -18.9130)', 4326), 2, 1, (SELECT id FROM point_type WHERE label='peu grave'));
 
 INSERT INTO factory (label) VALUES
 ('Factory A'),
@@ -68,5 +68,12 @@ INSERT INTO factory (label) VALUES
 
 UPDATE point_state SET progress=0 WHERE label='nouveau';
 
-INSERT INTO point (date_, surface, budget, coordinates, user_id, point_state_id, point_type_id) VALUES
-(NOW() - INTERVAL '14 days', null, null, ST_GeomFromText('POINT(47.5210 -18.9070)', 4326), 3, 1, (SELECT id FROM point_type WHERE label='tres grave'));
+-- INSERT INTO point (date_, surface, budget, coordinates, user_id, point_state_id, point_type_id, level_) VALUES
+-- (NOW() - INTERVAL '14 days', null, null, ST_GeomFromText('POINT(47.5210 -18.9070)', 4326), 3, 1, (SELECT id FROM point_type WHERE label='tres grave'), 10);
+
+INSERT INTO config (key, value_, type, date_) VALUES
+('PRICE', '1000', 'double', '2026-02-09:00:00:00');
+INSERT INTO config (key, value_, type, date_) VALUES
+('PRICE', '2000', 'double', '2026-02-09:12:00:00');
+INSERT INTO config (key, value_, type, date_) VALUES
+('PRICE', '5000', 'double', '2026-02-10:00:00:00');
