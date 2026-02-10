@@ -1,13 +1,18 @@
 import { computed, reactive } from 'vue'
 
-const state = reactive({
+type BootState = {
+  minSplashDone: boolean
+  pointsLoading: boolean
+}
+
+const state = reactive<BootState>({
   minSplashDone: false,
   pointsLoading: false,
 })
 
-let minSplashTimerId = null
+let minSplashTimerId: ReturnType<typeof setTimeout> | null = null
 
-function startMinSplash(ms = 3000) {
+function startMinSplash(ms: number = 3000) {
   if (state.minSplashDone) return
   if (minSplashTimerId != null) return
 
@@ -17,15 +22,17 @@ function startMinSplash(ms = 3000) {
   }, ms)
 }
 
-function setPointsLoading(v) {
+function setPointsLoading(v: boolean) {
   state.pointsLoading = !!v
 }
 
 const showSplash = computed(() => !state.minSplashDone || state.pointsLoading)
 
-export default {
+const bootStore = {
   state,
   startMinSplash,
   setPointsLoading,
   showSplash,
 }
+
+export default bootStore

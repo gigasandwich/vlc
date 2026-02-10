@@ -9,7 +9,7 @@
 import { IonApp, IonRouterOutlet } from '@ionic/vue';
 import { onMounted } from 'vue'
 import SplashScreen from '@/components/Splash/SplashScreen.vue'
-import bootStore from '@/stores/bootStore'
+import bootStore from '@/stores/bootStore.ts'
 
 onMounted(() => {
   bootStore.startMinSplash(3000)

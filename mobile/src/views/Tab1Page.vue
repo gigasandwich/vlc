@@ -10,7 +10,7 @@
 import { IonPage, IonContent, onIonViewDidEnter } from '@ionic/vue'
 import { ref } from 'vue'
 import { VlcMap } from '@/components/VlcMap'
-import bootStore from '@/stores/bootStore'
+import bootStore from '@/stores/bootStore.ts'
 
 import { fetchFirestorePoints } from '@/backJs/router.js'
 
