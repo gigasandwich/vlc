@@ -50,6 +50,62 @@ public class PriceController {
         }
     }
 
+    public static Config getPriceAtDateOrThrow(LocalDateTime referenceDate) throws Exception {
+        if (referenceDate == null) {
+            throw new Exception("Reference date cannot be null");
+        }
+        
+        List<Config> prices = RepositoryProvider.configRepository.findAll()
+                .stream()
+                .filter(c -> c.getKey() != null && c.getKey().equalsIgnoreCase("PRICE"))
+                .collect(Collectors.toList());
+
+        if (prices.isEmpty()) {
+            throw new Exception("No price found in database");
+        }
+
+        // Find latest price on or before the reference date by sorting
+        List<Config> validPrices = prices.stream()
+                .filter(c -> c.getDate() != null && !c.getDate().isAfter(referenceDate))
+                .sorted((a, b) -> a.getDate().compareTo(b.getDate()))
+                .collect(Collectors.toList());
+
+        if (validPrices.isEmpty()) {
+            throw new Exception("No price available for the specified date. The earliest price available is from " + 
+                prices.stream()
+                    .map(Config::getDate)
+                    .min((a, b) -> a.compareTo(b))
+                    .map(Object::toString)
+                    .orElse("unknown"));
+        }
+
+        // Take the last one (latest date on or before reference date)
+        Config priceAtDate = validPrices.get(validPrices.size() - 1);
+
+        if (priceAtDate == null) {
+            throw new Exception("No price found for the specified date");
+        }
+
+        return priceAtDate;
+    }
+
+    @GetMapping("/at")
+    public ApiResponse getPriceAtDate(@RequestParam("date") String dateStr) {
+        try {
+            LocalDateTime referenceDate = LocalDateTime.parse(dateStr);
+            Config priceAtDate = getPriceAtDateOrThrow(referenceDate);
+            
+            Double priceValue = Double.parseDouble(priceAtDate.getValue());
+            Map<String, Object> resultMap = new HashMap<>();
+            resultMap.put("price", priceValue);
+            resultMap.put("date", priceAtDate.getDate());
+            return new ApiResponse("success", resultMap, "Price at date retrieved");
+        } catch (Exception e) {
+            logger.error("Error retrieving price at date", e);
+            return new ApiResponse("error", null, "Error: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/history")
     public ApiResponse getPriceHistory() {
         try {

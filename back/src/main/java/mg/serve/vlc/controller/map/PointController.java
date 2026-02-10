@@ -1,5 +1,6 @@
 package mg.serve.vlc.controller.map;
 
+import mg.serve.vlc.controller.PriceController;
 import mg.serve.vlc.controller.response.ApiResponse;
 import mg.serve.vlc.dto.PointDTO;
 import mg.serve.vlc.dto.PointUpdateDTO;
@@ -7,6 +8,7 @@ import mg.serve.vlc.dto.PointsSummaryDTO;
 import mg.serve.vlc.dto.WorkTreatmentDTO;
 import mg.serve.vlc.dto.PointInProgressDTO;
 import mg.serve.vlc.exception.BusinessLogicException;
+import mg.serve.vlc.model.Config;
 import mg.serve.vlc.model.map.*;
 import mg.serve.vlc.model.user.*;
 import mg.serve.vlc.repository.point.*;
@@ -300,9 +302,29 @@ public class PointController {
             if (dto.getSurface() != null) {
                 point.setSurface(dto.getSurface());
             }
-            if (dto.getBudget() != null) {
+            
+            if (dto.getLevel() != null) {
+                throw new BusinessLogicException("Can't update level");
+            }
+
+            // Auto-calculate budget once
+            if (dto.getSurface() != null && noRowInHistoric) {
+                Double surface = dto.getSurface() != null ? dto.getSurface() : point.getSurface();
+                Integer level = point.getLevel();
+                
+                if (surface != null && level != null) {
+                    // Get price effective at the specified update date (or now if not specified)
+                    LocalDateTime referenceDate = dto.getUpdatedAt() != null ? dto.getUpdatedAt() : LocalDateTime.now();
+                    Double currentPrice = getLatestPrice(referenceDate);
+                    if (currentPrice != null) {
+                        Double calculatedBudget = surface * level * currentPrice;
+                        point.setBudget(calculatedBudget);
+                    }
+                }
+            } else if (dto.getBudget() != null) {
                 point.setBudget(dto.getBudget());
             }
+            
             if (dto.getPointStateId() != null) {
                 if (dto.getPointStateId() < point.getPointState().getId()) {
                     throw new BusinessLogicException("Cannot set point state to an earlier state");
@@ -382,6 +404,16 @@ public class PointController {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
+        }
+    }
+
+    private Double getLatestPrice(LocalDateTime referenceDate) throws BusinessLogicException {
+        try {
+            LocalDateTime dateToUse = referenceDate != null ? referenceDate : LocalDateTime.now();
+            Config priceConfig = PriceController.getPriceAtDateOrThrow(dateToUse);
+            return Double.parseDouble(priceConfig.getValue());
+        } catch (Exception e) {
+            throw new BusinessLogicException("Cannot calculate budget: " + e.getMessage());
         }
     }
 

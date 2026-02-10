@@ -50,7 +50,7 @@ public class SecurityConfig {
                     "/points/factories", "/points/pointStates", "/points/pointTypes",
                     "/points/inProgress","/points/work-delay",
                     "/points/detailled",
-                    "/prices/current", "/prices/history"
+                    "/prices/current", "/prices/history", "/prices/at"
                 ).permitAll()
 
                 .requestMatchers(

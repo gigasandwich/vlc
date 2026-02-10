@@ -35,7 +35,7 @@ const BottomNav = ({ user }: BottomNavProps) => {
     <nav className="py-2 fixed bottom-4 left-1/2 transform -translate-x-1/2 w-1/2 bg-white border border-gray-200 rounded-l-full rounded-r-full shadow-[0_-4px_15px_rgba(0,0,0,0.02)] z-[2000] flex justify-around items-center h-16">
       <NavItem to="/map" label="Carte" icon={IconMap} />
       <NavItem to="/dashboard" label="Tableau" icon={IconDash} />
-      <NavItem to="/profile" label="Profil" icon={IconUser} />
+      <NavItem to="/profile" label="Connexion" icon={IconUser} />
     </nav>
   );
 };

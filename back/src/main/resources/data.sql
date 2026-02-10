@@ -72,4 +72,12 @@ INSERT INTO point (date_, surface, budget, coordinates, user_id, point_state_id,
 (NOW() - INTERVAL '14 days', null, null, ST_GeomFromText('POINT(47.5210 -18.9070)', 4326), 3, 1, (SELECT id FROM point_type WHERE label='tres grave'), 10);
 
 INSERT INTO config (key, value_, type, date_) VALUES
-('PRICE', '1000', 'double', '2026-09-02');
+('PRICE', '1000', 'double', '2026-02-09:00:00:00');
+
+
+INSERT INTO config (key, value_, type, date_) VALUES
+('PRICE', '2000', 'double', '2026-02-09:12:00:00');
+
+
+INSERT INTO config (key, value_, type, date_) VALUES
+('PRICE', '5000', 'double', '2026-02-10:00:00:00');
