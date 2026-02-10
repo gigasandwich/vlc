@@ -16,23 +16,23 @@ const BottomNav = ({ user }: BottomNavProps) => {
       to={to}
       className={({ isActive }: { isActive: boolean }) =>
         `flex-1 flex flex-col items-center justify-center py-2 transition-all duration-200 ${
-          isActive ? 'text-green-600 bg-green-50/50' : 'text-gray-400 hover:text-gray-600'
+          isActive ? 'text-black bg-black/5' : 'text-gray-500 hover:text-black'
         }`
       }
     >
       {({ isActive } : { isActive: boolean }) => (
         <>
-          <div className={`p-1.5 rounded-full transition-transform duration-200 ${isActive ? '-translate-y-1 bg-green-100 text-green-600' : ''}`}>
+          <div className={`p-1.5 rounded-full transition-transform duration-200 ${isActive ? '-translate-y-1 bg-black/10 text-black' : ''}`}>
             <Icon />
           </div>
-          <span className={`mb-2 font-medium text-[16px] ${isActive ? 'opacity-100' : 'opacity-70'}`}>{label}</span>
+          <span className={`mb-2 font-medium text-[15px] ${isActive ? 'opacity-100' : 'opacity-70'}`}>{label}</span>
         </>
       )}
     </NavLink>
   );
 
   return (
-    <nav className="py-2 fixed bottom-4 left-1/2 transform -translate-x-1/2 w-1/2 bg-white border border-gray-200 rounded-l-full rounded-r-full shadow-[0_-4px_15px_rgba(0,0,0,0.02)] z-[2000] flex justify-around items-center h-16">
+    <nav className="py-2 fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[70%] max-w-[520px] bg-white border border-black/10 rounded-full shadow-[0_10px_24px_rgba(0,0,0,0.08)] z-[2000] flex justify-around items-center h-16 px-3">
       <NavItem to="/map" label="Carte" icon={IconMap} />
       <NavItem to="/dashboard" label="Tableau" icon={IconDash} />
       <NavItem to="/profile" label="Connexion" icon={IconUser} />
