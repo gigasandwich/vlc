@@ -32,7 +32,7 @@
         <div class="vlc-confirm__body">
           <div class="vlc-confirm__photos">
             <label class="vlc-photo-input">
-              <input id="photo-input" type="file" accept="image/*" capture="environment" multiple @change="onPhotoFilesSelected" />
+              <input id="photo-input" type="file" accept="image/*" capture="camera" multiple @change="onPhotoFilesSelected" />
               <span class="vlc-photo-input__btn">Ajouter une photo</span>
             </label>
 
@@ -105,6 +105,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { createFirestorePoint } from '@/backJs/router.js'
+import { compressFileToDataUrl, addPhotoToPoint } from '@/composables/usePhoto'
 import authStore from '@/stores/authStore'
 import { assertUserRole, fetchUserProfileByFirebaseUid } from '@backjs/firestoreUsers'
 import PointDetail from './PointDetail.vue'
@@ -158,70 +159,23 @@ const pendingPlacement = ref<{
 // photos selected for the pending placement (client-side only)
 const selectedPhotos = ref<Array<{ id: string; dataUrl: string }>>([])
 
-function onPhotoFilesSelected(ev: Event) {
+async function onPhotoFilesSelected(ev: Event) {
   const input = ev.target as HTMLInputElement
   const files = input.files
   if (!files || files.length === 0) return
 
   // Read files, compress and store data URLs
   for (const f of Array.from(files)) {
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      try {
-        const dataUrl = String(e.target?.result || '')
-        // compress to reasonable size before storing
-        const compressed = await compressDataUrl(dataUrl, 1024, 0.7)
-        selectedPhotos.value.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, dataUrl: compressed })
-      } catch (err) {
-        // fallback to original
-        const dataUrl = String(e.target?.result || '')
-        selectedPhotos.value.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, dataUrl })
-      }
+    try {
+      const compressed = await compressFileToDataUrl(f) 
+      selectedPhotos.value.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, dataUrl: compressed })
+    } catch (err) {
+      // fallback: read original as dataUrl
     }
-    reader.readAsDataURL(f)
   }
 
   // reset input so the same file can be re-selected if needed
   input.value = ''
-}
-
-/**
- * Compress a data URL image by drawing it to canvas and exporting as JPEG.
- * @param {string} dataUrl
- * @param {number} maxWidth
- * @param {number} quality 0..1
- * @returns {Promise<string>} compressed data URL
- */
-function compressDataUrl(dataUrl: string, maxWidth = 1024, quality = 0.7): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => {
-      try {
-        let w = img.width
-        let h = img.height
-        if (w > maxWidth) {
-          const ratio = maxWidth / w
-          w = Math.round(maxWidth)
-          h = Math.round(h * ratio)
-        }
-        const canvas = document.createElement('canvas')
-        canvas.width = w
-        canvas.height = h
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return reject(new Error('Canvas not supported'))
-        // draw white background to avoid black for PNG transparency when converting to JPEG
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, w, h)
-        ctx.drawImage(img, 0, 0, w, h)
-        const out = canvas.toDataURL('image/jpeg', quality)
-        resolve(out)
-      } catch (err) {
-        reject(err)
-      }
-    }
-    img.onerror = (e) => reject(new Error('Image load error'))
-    img.src = dataUrl
-  })
 }
 
 function removePhoto(idx: number) {
@@ -327,18 +281,31 @@ async function confirmPendingPlacement() {
   const { lat, lng, typeId } = pendingPlacement.value
 
   try {
-    const photosForUpload = (selectedPhotos.value || []).map((p) => p.dataUrl)
     const created = await createFirestorePoint({
       coordinates: { latitude: lat, longitude: lng },
       point_type_id: typeId,
-      photos: photosForUpload,
     })
 
+    // Upload compressed photos (if any) using addPhotoToPoint so stored photos match compression output
+    const pointId = (created as any)?.fbId ?? (created as any)?.id ?? null
+    if (pointId && Array.isArray(selectedPhotos.value) && selectedPhotos.value.length > 0) {
+  const uploads = selectedPhotos.value.map((p: { id: string; dataUrl: string }) => addPhotoToPoint(String(pointId), p.dataUrl))
+  const settled = await Promise.allSettled(uploads)
+  const failed = settled.filter((r: PromiseSettledResult<unknown>) => r.status !== 'fulfilled')
+      if (failed.length > 0) {
+        console.warn('Some photo uploads failed', failed)
+        placementStatus.value = 'Point ajouté (certaines photos ont échoué)'
+      } else {
+        placementStatus.value = 'Point et photos ajoutés.'
+      }
+    } else {
+      placementStatus.value = 'Point ajouté.'
+    }
+
     extraPoints.value.push(created as FirestorePoint)
-  pendingPlacement.value = null
-  // clear selected photos after successful upload
-  selectedPhotos.value = []
-    placementStatus.value = 'Point ajouté.'
+    pendingPlacement.value = null
+    // clear selected photos after successful upload attempt
+    selectedPhotos.value = []
     renderPoints()
     setTimeout(() => {
       placementStatus.value = null
