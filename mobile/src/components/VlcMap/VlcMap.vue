@@ -33,6 +33,10 @@
           </span>
         </div>
 
+        <div class="vlc-confirm__body">
+          <!-- Photo input removed -->
+        </div>
+
         <div class="vlc-confirm__actions">
           <button type="button" class="vlc-confirm__btn" :disabled="isPlacing" @click="cancelPendingPlacement">
             Annuler
@@ -164,6 +168,8 @@ const pendingPlacement = ref<{
   level: number
 } | null>(null)
 
+// Photo upload flow removed from VlcMap (handled elsewhere or disabled)
+
 const placementShapeLabel = computed(() => {
   if (placementShape.value === 'circle') return 'Peu grave'
   if (placementShape.value === 'square') return 'Grave'
@@ -265,12 +271,12 @@ async function confirmPendingPlacement() {
     const created = await createFirestorePoint({
       coordinates: { latitude: lat, longitude: lng },
       point_type_id: typeId,
-      level_: level,
     })
+
+    placementStatus.value = 'Point ajouté.'
 
     extraPoints.value.push(created as FirestorePoint)
     pendingPlacement.value = null
-    placementStatus.value = 'Point ajouté.'
     renderPoints()
     setTimeout(() => {
       placementStatus.value = null
@@ -623,8 +629,8 @@ watch(
   () => props.points,
   () => {
     // Drop locally-added points once they appear in the server list.
-    const ids = new Set((props.points || []).map((p) => p.id))
-    extraPoints.value = (extraPoints.value || []).filter((p) => !ids.has(p.id))
+    const ids = new Set((props.points || []).map((p: any) => p.id))
+    extraPoints.value = (extraPoints.value || []).filter((p: any) => !ids.has(p.id))
     renderPoints()
   },
   { deep: true }
