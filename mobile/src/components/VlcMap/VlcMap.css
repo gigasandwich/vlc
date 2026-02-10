@@ -106,7 +106,7 @@
   position: absolute;
   left: 16px;
   right: 16px;
-  bottom: 96px;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   z-index: 950;
   pointer-events: none;
 }
@@ -129,7 +129,7 @@
   position: absolute;
   left: 16px;
   right: 16px;
-  bottom: 138px;
+  bottom: calc(120px + env(safe-area-inset-bottom, 0px));
   z-index: 980;
   pointer-events: auto;
   background: rgba(255, 255, 255, 0.97);

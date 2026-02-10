@@ -3,6 +3,29 @@
   flex-direction: column;
   gap: 12px;
 }
+
+.form-logo {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+}
+
+.form-logo-circle {
+  width: 84px;
+  height: 84px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  box-shadow: var(--app-shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-user-icon {
+  color: var(--app-primary);
+}
+
 .form-header {
   text-align: center;
   padding: 8px 0 6px;
@@ -10,25 +33,33 @@
 .form-title {
   margin: 0;
   font-size: 20px;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 900;
+  color: var(--app-text);
+  letter-spacing: 0.01em;
 }
 .form-sub {
   margin: 6px 0 0;
-  color: #64748b;
+  color: var(--app-muted);
   font-size: 14px;
 }
 .fields { padding: 6px 0 0; display:flex; flex-direction:column; gap:12px }
 .field { display:flex; flex-direction:column; gap:6px }
-.label-text { font-size:13px; color:#475569 }
+.label-text { font-size:13px; color: var(--app-muted) }
 input[type="email"], input[type="password"] {
   width:100%;
-  padding:12px 14px;
-  border:1px solid #e5e7eb;
-  border-radius:10px;
+  padding:13px 14px;
+  border:1px solid var(--app-border);
+  border-radius: 999px;
   font-size:15px;
-  background:#fff;
-  color: #0f172a; /* ensure input text is dark/black */
+  background: var(--app-card);
+  color: var(--app-text);
+  box-shadow: 0 1px 0 rgba(2, 6, 23, 0.02);
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 input::placeholder {
   color: #94a3b8;
@@ -40,15 +71,21 @@ input::placeholder {
   align-items:center;
   justify-content:center;
   padding:14px 16px;
-  background:#6d28d9; /* violet */
-  color:#fff;
-  border:0;
-  border-radius:12px;
-  font-weight:700;
+  background: linear-gradient(180deg, rgba(37, 99, 235, 1), rgba(29, 78, 216, 1));
+  color: var(--app-primary-contrast);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  font-weight: 900;
   font-size:16px;
-  box-shadow:0 6px 18px rgba(109,40,217,0.18);
+  box-shadow: 0 14px 26px rgba(37, 99, 235, 0.22);
+  transition: transform 120ms ease, filter 120ms ease;
 }
-.submit-btn[disabled] { opacity:0.7 }
+.submit-btn:active {
+  transform: translateY(1px);
+  filter: brightness(0.98);
+}
+
+.submit-btn[disabled] { opacity:0.72 }
 .form-error { color:#ef4444; font-size:13px; margin-top:8px; text-align:center }
 
 @media (max-width: 480px) {
