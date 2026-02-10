@@ -121,10 +121,9 @@ export async function fetchFirestorePoints() {
  * Create a new point in `points` collection.
  * @param {{ latitude: number, longitude: number }} coordinates
  * @param {number} point_type_id
- * @param {number} level_
  * @returns {Promise<{ id: string } & Record<string, any>>}
  */
-export async function createFirestorePoint({ coordinates, point_type_id, level_,photos }) {
+export async function createFirestorePoint({ coordinates, point_type_id, photos }) {
   const user = await ensureSignedIn()
   let localUserId = null
   let localUser = null
@@ -179,7 +178,6 @@ export async function createFirestorePoint({ coordinates, point_type_id, level_,
     // Will be set to Firestore document id (see below)
     fbId: null,
     date_,
-    level_: Number.isFinite(Number(level_)) ? Number(level_) : 1,
     surface: 0,
     budget: 0,
     coordinates: {
@@ -198,15 +196,18 @@ export async function createFirestorePoint({ coordinates, point_type_id, level_,
       label: typeLabel,
     },
     factories: [],
-    level_:1,
     // photos: optional array of data URLs (base64) uploaded on client-side
 }
   // Generate a document id first, so we can store it in `fbId`
   const ref = doc(collection(db, 'points'))
   payload.fbId = ref.id
   await setDoc(ref, payload)
-  // Note: photo uploading is intentionally NOT handled here anymore.
-  // Callers should upload compressed photos after the point is created using `addPhotoToPoint(pointId, dataUrl)`.
+  // If photos were provided (array of base64 data URLs), store each as a document in the photos subcollection
+  if (Array.isArray(photos) && photos.length > 0) {
+    for (const p of photos) {
+      addPhotoToPoint(ref.id,p)
+    }
+  }
   return payload
 }
 
@@ -265,7 +266,6 @@ export async function addPhotoToPoint(pointId, dataUrl) {
         pointTypeId: 1,
         pointType: { id: 1, label: 'peu grave' },
         factories: [],
-        level_:1,
       }
 
       try {

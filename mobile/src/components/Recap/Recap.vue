@@ -2,12 +2,7 @@
   <div class="recap-root">
     <div class="recap-cards">
       <div class="card">
-        <div class="card-icon card-icon--blue">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-        </div>
+        <div class="card-icon">📍</div>
         <div class="card-body">
           <div class="card-label">Points signalés</div>
           <div class="card-value">{{ nbPoints }}</div>
@@ -15,13 +10,7 @@
       </div>
 
       <div class="card">
-        <div class="card-icon card-icon--purple">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <path d="M3 9h18"/>
-            <path d="M9 21V9"/>
-          </svg>
-        </div>
+        <div class="card-icon">📐</div>
         <div class="card-body">
           <div class="card-label">Surface totale</div>
           <div class="card-value">{{ formattedTotalSurface }}</div>
@@ -29,11 +18,7 @@
       </div>
 
       <div class="card">
-        <div class="card-icon card-icon--green">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
-        </div>
+        <div class="card-icon">📈</div>
         <div class="card-body">
           <div class="card-label">Avancement moyen</div>
           <div class="card-value">{{ formattedAvgProgress }}</div>
@@ -41,12 +26,7 @@
       </div>
 
       <div class="card">
-        <div class="card-icon card-icon--orange">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-            <line x1="1" y1="10" x2="23" y2="10"/>
-          </svg>
-        </div>
+        <div class="card-icon">💳</div>
         <div class="card-body">
           <div class="card-label">Budget total</div>
           <div class="card-value">{{ formattedTotalBudget }}</div>
@@ -61,9 +41,9 @@
           <thead>
             <tr>
               <th class="py-2 pr-4">Point</th>
-              <th class="py-2 pr-4">Nouveau → En cours</th>
-              <th class="py-2 pr-4">En cours → Terminé</th>
-              <th class="py-2 pr-4">Nouveau → Terminé</th>
+              <th class="py-2 pr-4">Nouveau ➡ En cours</th>
+              <th class="py-2 pr-4">En cours ➡ Terminé</th>
+              <th class="py-2 pr-4">Nouveau ➡ Terminé</th>
             </tr>
           </thead>
           <tbody>

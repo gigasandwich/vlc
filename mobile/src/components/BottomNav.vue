@@ -75,19 +75,20 @@ onMounted(() => {
 <style scoped>
 .bottom-nav {
   position: fixed;
-  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-  left: 12px;
-  right: 12px;
-  background: #ffffff;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92%, 440px);
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.18);
   z-index: 2000;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  height: 62px;
-  padding: 6px 8px;
-  border-radius: 18px;
-  border: 1px solid rgba(37, 99, 235, 0.14);
-  box-shadow: 0 8px 20px rgba(2, 6, 23, 0.08);
+  height: 64px;
+  padding: 8px;
 }
 
 .bottom-nav-item {
@@ -96,53 +97,55 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  padding: 8px;
   border-radius: 12px;
   text-decoration: none;
-  color: rgba(37, 99, 235, 0.75);
+  color: #475569;
   transition: all 200ms ease;
 }
 
 .bottom-nav-item:hover {
-  color: #1d4ed8;
+  color: #0f172a;
 }
 
 .bottom-nav-item--active {
-  color: #2563eb;
+  color: #16a34a;
+  background: rgba(34, 197, 94, 0.05);
 }
 
 .bottom-nav-item--active .bottom-nav-icon {
-  background: rgba(37, 99, 235, 0.12);
-  color: #2563eb;
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  background: #dcfce7;
+  color: #16a34a;
+  border-radius: 50%;
+  padding: 6px;
 }
 
 .bottom-nav-icon {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: rgba(37, 99, 235, 0.05);
+  background: #f1f5f9;
   color: inherit;
-  transition: all 200ms ease;
-  margin-bottom: 2px;
+  transition: transform 200ms ease;
+  margin-bottom: 4px;
 }
 
 .bottom-nav-icon svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 
 .bottom-nav-label {
-  font-weight: 600;
-  font-size: 11px;
-  opacity: 0.9;
+  font-weight: 500;
+  font-size: 13px;
+  opacity: 0.95;
 }
 
 .bottom-nav-item--active .bottom-nav-label {
   opacity: 1;
-  font-weight: 700;
 }
 </style>
