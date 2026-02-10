@@ -79,6 +79,9 @@ public class FirebasePointRepository implements PointRepository {
         if (data.get("id") != null) {
             point.setId(((Long) data.get("id")).intValue());
         }
+        if (data.get("level_") != null) {
+            point.setLevel(((Number) data.get("level_")).intValue());
+        }
         if (data.get("date_") != null) {
             point.setDate(parseTimestamp(data.get("date_")));
         }

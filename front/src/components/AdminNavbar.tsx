@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { backendURL } from '../constant';
+import SyncResultsModal from '../pages/admin/SyncResultsModal';
 
 interface AdminNavbarProps {
   user: any;
@@ -11,6 +12,8 @@ export default function AdminNavbar({ user }: AdminNavbarProps) {
   const [usersDropdownOpen, setUsersDropdownOpen] = useState(false);
   const [pointsDropdownOpen, setPointsDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncResults, setSyncResults] = useState<any>(null);
   const usersDropdownRef = useRef<HTMLDivElement>(null);
   const pointsDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +45,8 @@ export default function AdminNavbar({ user }: AdminNavbarProps) {
       });
       const data = await response.json();
       if (response.ok && data.status === 'success') {
-        alert('Synchronisation terminée avec succès');
+        setSyncResults(data.data);
+        setShowSyncModal(true);
       } else {
         alert(data.error || 'Erreur lors de la synchronisation');
       }
@@ -58,7 +62,8 @@ export default function AdminNavbar({ user }: AdminNavbarProps) {
   }
 
   return (
-    <nav className="bg-gray-800 fixed w-full z-20 top-0 start-0 border-b border-gray-600">
+    <>
+      <nav className="bg-gray-800 fixed w-full z-20 top-0 start-0 border-b border-gray-600">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4 w-full">
         <div className="flex items-center flex-1 space-x-6">
           <Link to="/" className="flex items-center space-x-2 rtl:space-x-reverse no-underline -ml-2">
@@ -203,5 +208,11 @@ export default function AdminNavbar({ user }: AdminNavbarProps) {
         </div>
       </div>
     </nav>
+      <SyncResultsModal 
+        isOpen={showSyncModal}
+        onClose={() => setShowSyncModal(false)}
+        syncResults={syncResults}
+      />
+    </>
   );
 }
