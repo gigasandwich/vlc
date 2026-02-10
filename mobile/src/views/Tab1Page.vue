@@ -10,6 +10,7 @@
 import { IonPage, IonContent, onIonViewDidEnter } from '@ionic/vue'
 import { ref } from 'vue'
 import { VlcMap } from '@/components/VlcMap'
+import bootStore from '@/stores/bootStore'
 
 import { fetchFirestorePoints } from '@/backJs/router.js'
 
@@ -19,6 +20,7 @@ const errorMessage = ref<string | null>(null)
 
 async function refreshPoints() {
   isLoading.value = true
+  bootStore.setPointsLoading(true)
   errorMessage.value = null
   try {
     points.value = await fetchFirestorePoints()
@@ -28,6 +30,7 @@ async function refreshPoints() {
     points.value = []
   } finally {
     isLoading.value = false
+    bootStore.setPointsLoading(false)
   }
 }
 
