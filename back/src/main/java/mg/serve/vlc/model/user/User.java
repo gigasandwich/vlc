@@ -147,8 +147,12 @@ public class User {
         }
 
         // Business logic
-        this.setPassword(password);
-        this.setUsername(username);
+        if (password != null && !password.isEmpty()) {
+            this.setPassword(password);
+        }
+        if (username != null && !username.isEmpty()) {
+            this.setUsername(username);
+        }
 
         // Persistence
         User updated = RepositoryProvider.getRepository(UserRepository.class).save(this);
