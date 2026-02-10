@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import LoginUser from './pages/auth/LoginUser';
 import RecapGlob from './pages/dashboard/recapGlob';
 import MapPage from './components/MapPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPoints from './pages/admin/AdminPoints';
 import ResetBlockingPage from './pages/admin/ResetBlockingPage';
 import BottomNav from './components/BottomNav';
@@ -11,6 +10,7 @@ import UserInfo from './components/UserInfo';
 import './App.css';
 import Signup from './pages/auth/Signup';
 import UserManagement from './pages/admin/UserManagement';
+import AdminNavbar from './components/AdminNavbar';
 
 function App() {
   const [user, setUser] = useState<any>(null);
@@ -50,8 +50,9 @@ function App() {
   return (
     <BrowserRouter>
       <div className="h-screen w-screen flex flex-col bg-gray-50 font-sans overflow-hidden">
-        {user && <UserInfo user={user} />}
-        <div className="flex-1 relative overflow-hidden">
+        {user && user.role === 'admin' && <AdminNavbar user={user} />}
+        {user && user.role !== 'admin' && <UserInfo user={user} />}
+        <div className={`flex-1 relative overflow-hidden ${user && user.role === 'admin' ? 'mt-16' : ''}`}>
           <Routes>
             <Route path="/" element={<MapPage />} />
             <Route path="/map" element={<MapPage />} />
@@ -61,10 +62,11 @@ function App() {
                 <RecapGlob onResponse={() => {}} />
               </div>
             } />
-            <Route path="/admin" element={user && user.role === 'admin' ? <AdminDashboard /> : <Navigate to="/profile" replace />} />
+            <Route path="/admin" element={<Navigate to="/" replace />} />
             <Route path="/admin/points" element={user && user.role === 'admin' ? <AdminPoints /> : <Navigate to="/profile" replace />} />
             <Route path="/admin/reset-blocking" element={user && user.role === 'admin' ? <ResetBlockingPage /> : <Navigate to="/profile" replace />} />
             <Route path="/admin/users" element={user && user.role === 'admin' ? <UserManagement /> : <Navigate to="/profile" replace />} />
+            <Route path="/admin/configs" element={user && user.role === 'admin' ? <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-50"><h2 className="text-2xl font-bold text-gray-800 mb-6">Configurations</h2><p>Fonctionnalité à venir...</p></div> : <Navigate to="/profile" replace />} />
             <Route path="/signup" element={
               <div className="h-full w-full bg-gray-50 flex items-center justify-center p-4 overflow-y-auto">
                 <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg border border-gray-200">
