@@ -45,6 +45,7 @@
           :placement-shape="placementShape"
           @select-shape="onSelectShape"
           @close="isLegendOpen = false"
+          @click="(e:any) => e.stopPropagation()"
         />
 
         <FilterChooser
@@ -61,7 +62,7 @@
           type="button"
           class="vlc-add-open-btn vlc-glow"
           title="Ajouter un point"
-          @pointerdown.prevent.stop="isLegendOpen = true"
+          @click.prevent.stop="isLegendOpen = true"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:#fff">
             <rect x="10" y="4" width="4" height="16" rx="2" />
@@ -74,7 +75,7 @@
           type="button"
           class="vlc-filter-open-btn"
           title="Ouvrir les filtres"
-          @pointerdown.prevent.stop="isFilterOpen = true"
+          @click.prevent.stop="isFilterOpen = true"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#334155">
             <path d="M3 4h18l-7 8v6l-4 2v-8L3 4z" />

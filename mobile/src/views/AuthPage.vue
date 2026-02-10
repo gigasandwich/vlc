@@ -2,19 +2,22 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Authentification</ion-title>
+        <ion-title>
+          <img class="nav-logo" src="/vlc_logo.png" alt="VLC" />
+        </ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content :fullscreen="true">
       <ion-header collapse="condense">
         <ion-toolbar>
-          <ion-title size="large">Authentification</ion-title>
+          <ion-title size="large">
+            <img class="nav-logo nav-logo--large" src="/vlc_logo.png" alt="VLC" />
+          </ion-title>
         </ion-toolbar>
       </ion-header>
 
-      <div style="padding:16px; max-width:720px; margin:0 auto;">
-        <!-- Reuse the Auth component created earlier -->
+      <div class="auth-page-content">
         <Auth />
       </div>
     </ion-content>
@@ -25,3 +28,24 @@
 import { Auth } from '@/components/Auth'
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue'
 </script>
+
+<style scoped>
+.auth-page-content {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.nav-logo {
+  height: 50px;
+  width: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.nav-logo--large {
+  height: 32px;
+}
+</style>
