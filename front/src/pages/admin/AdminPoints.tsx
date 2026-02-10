@@ -184,7 +184,7 @@ export default function AdminPoints() {
                 <th className="px-6 py-3 font-semibold">Date de creation</th>
                 <th className="px-6 py-3 font-semibold text-right">Surface</th>
                 <th className="px-6 py-3 font-semibold text-right">Budget</th>
-                <th className="px-6 py-3 font-semibold">Type</th>        
+                <th className="px-6 py-3 font-semibold">Niveau / Type</th>        
                 <th className="px-6 py-3 font-semibold">Entreprises</th>                
                 <th className="px-6 py-3 font-semibold">Etat</th>
                 <th className="px-6 py-3 font-semibold">Actions</th>
@@ -198,7 +198,7 @@ export default function AdminPoints() {
                   <td className="px-6 py-4">{formatDate(p.date)}</td>
                   <td className="px-6 py-4 text-right">{Number.isFinite(Number(p.surface)) ? formatNumber(Number(p.surface)) : ''}</td>
                   <td className="px-6 py-4 text-right">{Number.isFinite(Number(p.budget)) ? formatNumber(Number(p.budget)) : ''}</td>
-                  <td className="px-6 py-4">{capitalize(p.typeLabel)}</td>
+                  <td className="px-6 py-4">{p.level} / {capitalize(p.typeLabel)}</td>
                   <td className="px-6 py-4">{p.factoryLabels ? p.factoryLabels.split(',').map((s: any) => capitalize(s.trim())).join(', ') : ''}</td>
                   <td className="px-6 py-4">{capitalize(p.stateLabel)}</td>
                   <td className="px-6 py-4">

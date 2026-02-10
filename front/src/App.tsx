@@ -48,7 +48,7 @@ function App() {
   }, [sessionExpired]);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="h-screen w-screen flex flex-col bg-gray-50 font-sans overflow-hidden">
         {user && user.role === 'admin' && <AdminNavbar user={user} />}
         {user && user.role !== 'admin' && <UserInfo user={user} />}

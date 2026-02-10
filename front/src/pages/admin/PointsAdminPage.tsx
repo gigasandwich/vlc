@@ -91,7 +91,7 @@ export default function PointsAdminPage() {
           surface: parseFloat(formData.surface),
           budget: parseFloat(formData.budget),
           pointStateId: parseInt(formData.pointStateId),
-          pointTypeId: parseInt(formData.pointTypeId),
+          // pointTypeId: parseInt(formData.pointTypeId),
           factoryIds: formData.factoryIds
         })
       });
@@ -132,9 +132,9 @@ export default function PointsAdminPage() {
               <tr>
                 <th className="px-4 py-2">ID</th>
                 <th className="px-4 py-2">Date</th>
-                <th className="px-4 py-2">Surface</th>
-                <th className="px-4 py-2">Budget</th>
-                <th className="px-4 py-2">Type</th>        
+                <th className="px-4 py-2">Surface (m2)</th>
+                <th className="px-4 py-2">Budget (Ar)</th>
+                <th className="px-4 py-2">Niveau/Type awd</th>        
                 <th className="px-4 py-2">Entreprises</th>                
                 <th className="px-4 py-2">Etat</th>
                 <th className="px-4 py-2">Actions</th>
@@ -147,7 +147,7 @@ export default function PointsAdminPage() {
                   <td className="px-4 py-2">{p.date}</td>
                   <td className="px-4 py-2">{p.surface}</td>
                   <td className="px-4 py-2">{p.budget}</td>
-                  <td className="px-4 py-2">{p.typeLabel}</td>
+                  <td className="px-4 py-2">{p.level} / {p.typeLabel}</td>
                   <td className="px-4 py-2">{p.factoryLabels}</td>
                   <td className="px-4 py-2">{p.stateLabel}</td>
                   <td className="px-4 py-2">
@@ -197,19 +197,6 @@ export default function PointsAdminPage() {
                   <option value="">Select State</option>
                   {pointStates.map((s: any) => (
                     <option key={s.id} value={s.id}>{s.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium">Point Type</label>
-                <select
-                  value={formData.pointTypeId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, pointTypeId: e.target.value }))}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Select Type</option>
-                  {pointTypes.map((t: any) => (
-                    <option key={t.id} value={t.id}>{t.label}</option>
                   ))}
                 </select>
               </div>

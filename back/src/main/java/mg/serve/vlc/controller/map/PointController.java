@@ -85,6 +85,8 @@ public class PointController {
                 map.put("budget", p.getBudget());
                 map.put("lat", lat);
                 map.put("lon", lon);
+                map.put("lon", lon);
+                map.put("level", p.getLevel());
                 map.put("stateId", p.getPointState() != null ? p.getPointState().getId() : null);
                 map.put("stateLabel", stateLabel);
                 map.put("stateProgress", stateProgress);

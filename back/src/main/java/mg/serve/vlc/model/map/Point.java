@@ -48,6 +48,9 @@ public class Point {
     @Column(length = 50, unique = true)
     private String fbId;
 
+    @Column(name = "level_")
+    private Integer level;
+
     @Column(
         name = "coordinates",
         nullable = false,
@@ -150,6 +153,7 @@ public class Point {
         pointMap.put("surface", this.surface);
         pointMap.put("budget", this.budget);
         pointMap.put("coordinates", Map.of("longitude", this.coordinates.getX(), "latitude", this.coordinates.getY()));
+        pointMap.put("level", this.level);
         if (this.user != null) {
             pointMap.put("user", this.user.toMap());
         }
