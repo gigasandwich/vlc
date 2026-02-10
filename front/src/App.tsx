@@ -9,6 +9,7 @@ import ResetBlockingPage from './pages/admin/ResetBlockingPage';
 import BottomNav from './components/BottomNav';
 import UserInfo from './components/UserInfo';
 import './App.css';
+import Signup from './pages/auth/Signup';
 
 function App() {
   const [user, setUser] = useState<any>(null);
@@ -62,6 +63,18 @@ function App() {
             <Route path="/admin" element={user && user.role === 'admin' ? <AdminDashboard /> : <Navigate to="/profile" replace />} />
             <Route path="/admin/points" element={user && user.role === 'admin' ? <AdminPoints /> : <Navigate to="/profile" replace />} />
             <Route path="/admin/reset-blocking" element={user && user.role === 'admin' ? <ResetBlockingPage /> : <Navigate to="/profile" replace />} />
+            <Route path="/signup" element={
+              <div className="h-full w-full bg-gray-50 flex items-center justify-center p-4 overflow-y-auto">
+                <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+                  <Signup onResponse={(_, type) => {
+                    if (type === 'success') {
+                      // Redirect to profile/login after successful signup
+                      window.location.href = '/profile';
+                    }
+                  }} />
+                </div>
+              </div>
+            } />
             <Route path="/profile" element={
               <div className="h-full w-full bg-gray-50 flex items-center justify-center p-4 overflow-y-auto">
                 <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg border border-gray-200">
