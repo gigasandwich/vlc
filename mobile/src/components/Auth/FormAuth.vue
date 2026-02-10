@@ -1,5 +1,23 @@
 <template>
   <form class="form-auth" @submit.prevent="onSubmit" novalidate>
+    <div class="form-logo" aria-hidden="true">
+      <div class="form-logo-circle">
+        <svg
+          class="form-user-icon"
+          viewBox="0 0 24 24"
+          width="44"
+          height="44"
+          focusable="false"
+          aria-hidden="true"
+        >
+          <path
+            fill="currentColor"
+            d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z"
+          />
+        </svg>
+      </div>
+    </div>
+
     <header class="form-header">
       <h2 class="form-title">{{ mode === 'login' ? 'Se connecter' : 'Sign-in'}}</h2>
     </header>
