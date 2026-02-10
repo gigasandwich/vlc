@@ -55,6 +55,18 @@
 
         <div class="point-detail-row">
           <div class="point-detail-label">
+            <svg class="point-detail-icon" style="color: #2563eb;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v6"></path>
+              <circle cx="12" cy="16.5" r="1"></circle>
+            </svg>
+            <span>Niveau:</span>
+          </div>
+          <span class="point-detail-value">{{ levelDisplay }}</span>
+        </div>
+
+        <div class="point-detail-row">
+          <div class="point-detail-label">
             <svg class="point-detail-icon" style="color: #8b5cf6;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M21 6H3m18 0v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6m18 0V4a2 2 0 00-2-2H5a2 2 0 00-2 2v2"></path>
             </svg>
@@ -163,6 +175,14 @@ const pointStateName = computed(() => {
   if (props.point.stateLabel) return props.point.stateLabel
   if (props.point.state_label) return props.point.state_label
   return '-'
+})
+
+const levelDisplay = computed(() => {
+  const lvl = props.point.level_ ?? props.point.level ?? null
+  if (lvl == null) return '-'
+  const typeName = pointTypeName.value
+  if (typeName && typeName !== '-') return `${lvl} (${typeName})`
+  return String(lvl)
 })
 
 const factoriesLabel = computed(() => {

@@ -16,13 +16,13 @@ const BottomNav = ({ user }: BottomNavProps) => {
       to={to}
       className={({ isActive }: { isActive: boolean }) =>
         `flex-1 flex flex-col items-center justify-center py-2 transition-all duration-200 ${
-          isActive ? 'text-black bg-black/5' : 'text-gray-500 hover:text-black'
-        }`
+          isActive ? 'text-black' : 'text-gray-500 hover:text-black'
+        } no-underline`
       }
     >
       {({ isActive } : { isActive: boolean }) => (
         <>
-          <div className={`p-1.5 rounded-full transition-transform duration-200 ${isActive ? '-translate-y-1 bg-black/10 text-black' : ''}`}>
+          <div className={`p-1.5 rounded-full transition-transform duration-200 ${isActive ? '-translate-y-1 shadow-[0_6px_12px_rgba(0,0,0,0.12)] text-black' : ''}`}>
             <Icon />
           </div>
           <span className={`mb-2 font-medium text-[15px] ${isActive ? 'opacity-100' : 'opacity-70'}`}>{label}</span>
