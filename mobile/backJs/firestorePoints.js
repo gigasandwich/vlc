@@ -1,7 +1,7 @@
 import { assertFirebaseConfig, getFirebaseConfig } from './firebaseConfig.js'
 import { initializeApp, getApps } from 'firebase/app'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
-import { collection, doc, getDocs, getFirestore, setDoc, Timestamp } from 'firebase/firestore'
+import { collection, doc, getDocs, getDoc, getFirestore, setDoc, Timestamp } from 'firebase/firestore'
 
 function logDevError(label, err, extra = undefined) {
   try {
@@ -198,46 +198,12 @@ export async function createFirestorePoint({ coordinates, point_type_id, photos 
     factories: [],
     // photos: optional array of data URLs (base64) uploaded on client-side
 }
-
-  try {
-    // Generate a document id first, so we can store it in `fbId`
-    const ref = doc(collection(db, 'points'))
-    payload.fbId = ref.id
-    await setDoc(ref, payload)
-    // If photos were provided (array of base64 data URLs), store each as a document in the photos subcollection
-    if (Array.isArray(photos) && photos.length > 0) {
-      try {
-        for (const p of photos) {
-          // create a doc under points/{ref.id}/photos/{photoId}
-          const photoRef = doc(collection(db, 'points', ref.id, 'photos'))
-          await setDoc(photoRef, {
-            data: p,
-            uploadedAt: Timestamp.fromDate(new Date()),
-            id: photoRef.id,
-           // include owner fb uid so rules can validate ownership
-           userFbId: user?.uid ?? null,
-          })
-        }
-      } catch (err) {
-        logDevError('[Firestore] Write photos failed', err, { pointId: ref.id })
-        // don't block point creation on photo failures, but propagate an error if you prefer
-      }
-    }
-  } catch (err) {
-    const code = err?.code || err?.name
-    const msg = err?.message || String(err)
-    if (code === 'unauthenticated') {
-      throw new Error('Veuillez vous connecter.')
-    }
-    if (code === 'permission-denied' || /insufficient permissions/i.test(msg)) {
-      const authInfo = getAuthDebug()
-      logDevError('[Firestore] Write permission denied', err, { authInfo, payload })
-      throw new Error('Connexion refusée : pas de permission.')
-    }
-    logDevError('[Firestore] Write failed', err, { payload })
-    throw new Error('Erreur de connexion. Réessaie plus tard.')
-  }
-
+  // Generate a document id first, so we can store it in `fbId`
+  const ref = doc(collection(db, 'points'))
+  payload.fbId = ref.id
+  await setDoc(ref, payload)
+  // Note: photo uploading is intentionally NOT handled here anymore.
+  // Callers should upload compressed photos after the point is created using `addPhotoToPoint(pointId, dataUrl)`.
   return payload
 }
 
@@ -250,6 +216,71 @@ export async function addPhotoToPoint(pointId, dataUrl) {
   const user = await ensureSignedIn()
 
   try {
+    // Ensure parent point exists. If not, create a minimal point document similar to createFirestorePoint.
+    const pointRef = doc(db, 'points', String(pointId))
+    const pd = await getDoc(pointRef)
+    if (!pd.exists()) {
+      // build a minimal payload for the point so it adheres to expected schema
+      const now = new Date()
+      const date_ = Timestamp.fromDate(now)
+      const safeIntId = Math.floor(now.getTime() / 1000)
+
+      // try to get local user info for stored user map
+      let localUserId = null
+      let localUser = null
+      try {
+        const u = JSON.parse(localStorage.getItem('user') || 'null')
+        localUser = u
+        const id = Number(u?.id)
+        if (Number.isFinite(id)) localUserId = id
+      } catch {
+        // ignore
+      }
+
+      const userMap = {
+        id: localUserId ?? null,
+        email: localUser?.email ?? null,
+        username: localUser?.username ?? null,
+        password: null,
+        userStateId: localUser?.userStateId ?? null,
+        userState: localUser?.userState ?? null,
+        fbId: user?.uid ?? localUser?.fbId ?? null,
+        updatedAt: Timestamp.fromDate(now),
+        roles: Array.isArray(localUser?.roles) ? localUser.roles : [],
+      }
+
+      const payload = {
+        id: safeIntId,
+        fbId: String(pointId),
+        date_,
+        surface: 0,
+        budget: 0,
+        coordinates: { longitude: 0, latitude: 0 },
+        user: userMap,
+        pointStateId: 1,
+        pointState: { id: 1, label: 'nouveau' },
+        pointTypeId: 1,
+        pointType: { id: 1, label: 'peu grave' },
+        factories: [],
+      }
+
+      try {
+        await setDoc(pointRef, payload)
+      } catch (err) {
+        // If creating the point fails due to rules, log and rethrow a permission error
+        const code = err?.code || err?.name
+        const msg = err?.message || String(err)
+        if (code === 'permission-denied' || /insufficient permissions/i.test(msg)) {
+          const authInfo = getAuthDebug()
+          logDevError('[Firestore] Create point permission denied while adding photo', err, { authInfo, pointId })
+          throw new Error('Connexion refusée : pas de permission pour créer le point.')
+        }
+        logDevError('[Firestore] Failed to create parent point', err, { pointId })
+        throw new Error('Impossible de créer le point parent.')
+      }
+    }
+
+    // Now add the photo document under the point's photos subcollection
     const photoRef = doc(collection(db, 'points', String(pointId), 'photos'))
     await setDoc(photoRef, {
       data: dataUrl,
