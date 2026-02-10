@@ -5,6 +5,9 @@ const STORAGE_KEY = 'vlc_auth'
 const state = reactive({
 	// raw firebase user object (in-memory only)
 	auth: null,
+	// app-level session
+	sessionStartedAt: null,
+	sessionExpiresAt: null,
 	// persisted fields
 	accessToken: null,
 	uid: null,
@@ -25,6 +28,8 @@ const state = reactive({
 function saveToStorage() {
 	try {
 		const toSave = {
+			sessionStartedAt: state.sessionStartedAt,
+			sessionExpiresAt: state.sessionExpiresAt,
 			accessToken: state.accessToken,
 			uid: state.uid,
 			displayName: state.displayName,
@@ -51,6 +56,8 @@ function loadFromStorage() {
 		const raw = localStorage.getItem(STORAGE_KEY)
 		if (!raw) return
 		const obj = JSON.parse(raw)
+		state.sessionStartedAt = obj.sessionStartedAt || null
+		state.sessionExpiresAt = obj.sessionExpiresAt || null
 		state.accessToken = obj.accessToken || null
 		state.uid = obj.uid || null
 		state.displayName = obj.displayName || null
@@ -103,6 +110,8 @@ function setUser(firebaseUser) {
 
 function clearUser() {
 	state.auth = null
+	state.sessionStartedAt = null
+	state.sessionExpiresAt = null
 	state.accessToken = null
 	state.uid = null
 	state.displayName = null
@@ -124,7 +133,29 @@ function clearUser() {
 	}
 }
 
-const isAuthenticated = computed(() => !!state.uid)
+function setSession(expirationMinutes) {
+	const mins = Number(expirationMinutes)
+	if (!Number.isFinite(mins) || mins <= 0) {
+		state.sessionStartedAt = Date.now()
+		state.sessionExpiresAt = null
+		saveToStorage()
+		return
+	}
+	state.sessionStartedAt = Date.now()
+	state.sessionExpiresAt = Date.now() + mins * 60 * 1000
+	saveToStorage()
+}
+
+function isSessionExpired() {
+	if (!state.uid) return false
+	// If session info is missing, treat as expired to force re-login after update.
+	if (!state.sessionExpiresAt) return true
+	const exp = Number(state.sessionExpiresAt)
+	if (!Number.isFinite(exp)) return true
+	return Date.now() >= exp
+}
+
+const isAuthenticated = computed(() => !!state.uid && !isSessionExpired())
 
 // initialize from storage
 loadFromStorage()
@@ -132,6 +163,8 @@ loadFromStorage()
 export default {
 	state,
 	setUser,
+	setSession,
+	isSessionExpired,
 	clearUser,
 	isAuthenticated,
 }

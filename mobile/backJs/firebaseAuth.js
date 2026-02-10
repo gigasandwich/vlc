@@ -47,13 +47,10 @@ const auth = getAuth()
 }
 */
 
-/**
- * Sign in an existing user with email and password.
- * @param {string} email
- * @param {string} password
- * @returns {Promise<{user?: import('firebase/auth').User, error?: any}>}
- */
-export async function login(email, password) {
+
+export async function login(email, password, maxAttempts = 3) {
+  const MAX_ATTEMPTS = Math.max(1, Number(maxAttempts))
+  
   try {
     const userCredential = await signInWithEmailAndPassword(
       auth,
@@ -61,7 +58,47 @@ export async function login(email, password) {
       password
     )
     return { user: userCredential.user }
-  } catch (error) {
+  } catch (error) { // On login failure, attempt++
+    console.error('[Auth] Login failed:', error?.message)
+    
+    const emailKey = String(email || '').trim().toLowerCase()
+    if (emailKey) {
+      try {
+        // Lazy import (avoid circular dependencies)
+        const { incrementAttemptByEmail, disableUserByEmail } = await import('./firestoreUsers.js')
+        
+        console.log('[Auth] Incrementing attempt for:', emailKey)
+        const result = await incrementAttemptByEmail(emailKey)
+        const attempt = Number(result?.attempt)
+        console.log('[Auth] New attempt count:', attempt)
+        
+        // Disable user if max attempts exceeded
+        if (Number.isFinite(attempt) && attempt >= MAX_ATTEMPTS) {
+          console.warn('[Auth] Max attempts reached, disabling user:', emailKey)
+          try {
+            await disableUserByEmail(emailKey)
+          } catch (disableErr) {
+            console.error('[Auth] Failed to disable user after max attempts', disableErr)
+          }
+          return { error, disabled: true, attempt }
+        }
+        
+        // Add attempt info to error for UI feedback
+        return { 
+          error: {
+            ...error,
+            attempt,
+            attemptsRemaining: Math.max(0, MAX_ATTEMPTS - attempt)
+          },
+          disabled: false
+        }
+      } catch (trackErr) {
+        console.error('[Auth] Error tracking login attempt:', trackErr?.message, trackErr)
+        // Still return the original error even if tracking failed
+        return { error }
+      }
+    }
+    
     return { error }
   }
 }

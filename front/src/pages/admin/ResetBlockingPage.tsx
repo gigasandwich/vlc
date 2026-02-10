@@ -99,7 +99,7 @@ export default function ResetBlockingPage() {
                 )}
               </div>
               <button
-                onClick={() => resetBlock(user.id)}
+                onClick={() => resetBlock(user.fbId)}
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
               >
                 Reinitialiser

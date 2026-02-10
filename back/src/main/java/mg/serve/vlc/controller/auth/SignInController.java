@@ -4,21 +4,15 @@ import lombok.RequiredArgsConstructor;
 import mg.serve.vlc.controller.response.ApiResponse;
 import mg.serve.vlc.exception.BusinessLogicException;
 import mg.serve.vlc.model.user.User;
-import mg.serve.vlc.model.UserLog;
-import mg.serve.vlc.repository.user.UserRepository;
 import mg.serve.vlc.security.*;
-import mg.serve.vlc.util.RepositoryProvider;
+import mg.serve.vlc.service.FirestoreUserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.Operation;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.persistence.EntityNotFoundException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -27,6 +21,9 @@ import java.util.*;
 public class SignInController {
     @Autowired
     private final JwtService jwtService;
+    
+    @Autowired
+    private final FirestoreUserService firestoreUserService;
 
     /*
     curl -X POST http://localhost:1234/auth/sign-in \
@@ -75,40 +72,35 @@ public class SignInController {
         }
     }
 
-    @PostMapping("/reset-block/{userId}")
+    @PostMapping("/reset-block/{fbId}")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ApiResponse> resetBlock(@PathVariable Integer userId, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<ApiResponse> resetBlock(@PathVariable String fbId, @RequestHeader("Authorization") String authHeader) {
         try {
-            // Control
+            // Control - user must be admin
             User userFrom = jwtService.getUserFromAuthHeader(authHeader);
             if (!userFrom.isAdmin()) {
                 throw new BusinessLogicException("Only admins can reset user blocks");
             }
 
-            User userToReset = RepositoryProvider.getRepository(UserRepository.class).findById(userId)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+            // Get user from Firestore
+            Map<String, Object> userToReset = firestoreUserService.getUserByFbId(fbId);
+            if (userToReset == null) {
+                throw new BusinessLogicException("User not found");
+            }
 
-            if (userToReset.getUserStateId() != 3) {
+            // Check if user is blocked
+            Object attemptObj = userToReset.get("attempt");
+            long attempt = attemptObj instanceof Long ? (Long) attemptObj : 0L;
+            if (attempt < 3) {
                 throw new BusinessLogicException("User is not blocked");
             }
 
-            // Business logic
-            userToReset.setUserStateId(1);
-
-            UserLog log = new UserLog();
-            log.setAction(RepositoryProvider.actionRepository.findByLabel("LOGIN_ATTEMPT_RESET")
-                    .orElseThrow(() -> new EntityNotFoundException("Action 'reset' not found")));
-            log.setDate(LocalDateTime.now());
-            log.setState(1.0);
-            log.setUserFrom(userFrom);
-            log.setUserTo(userToReset);
-
-            // Persistence
-            RepositoryProvider.getRepository(UserRepository.class).save(userToReset);
-            RepositoryProvider.userLogRepository.save(log);
-            userToReset.saveHistoric();
+            // Reset block in Firestore
+            firestoreUserService.deblockUser(fbId);
 
             return ResponseEntity.ok(new ApiResponse("success", null, "User block reset successfully"));
+        } catch (BusinessLogicException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse("error", null, e.getMessage()));
         }

@@ -45,7 +45,14 @@
 <script setup lang="ts">
 import { ref, watch, toRef, onMounted } from 'vue'
 import { login } from '@backjs/firebaseAuth'
-import { assertUserRole, fetchUserProfileByFirebaseUid } from '@backjs/firestoreUsers'
+import {
+  assertUserNotDisabled,
+  assertUserRole,
+  fetchUserProfileByEmail,
+  fetchUserProfileByFirebaseUid,
+  resetAttemptByFirebaseUid,
+} from '@backjs/firestoreUsers'
+import { getAuthConfig } from '@backjs/firestoreConfig'
 
 const props = defineProps<{ mode?: 'login' | 'register' }>()
 const emit = defineEmits<{
@@ -75,18 +82,75 @@ onMounted(() => {
   requestAnimationFrame(() => emailInput.value?.focus())
 })
 
+function normalizeEmailKey(v: string) {
+  return String(v || '').trim().toLowerCase()
+}
+
 async function onSubmit() {
   error.value = null
 
+  const emailKey = normalizeEmailKey(email.value)
+  const cfg = await getAuthConfig().catch(() => ({
+    tokenExpirationMinutes: 180,
+    loginAttemptLimit: 3,
+  }))
+
+  // Best-effort: block disabled users before even trying Firebase login
+  if (emailKey) {
+    try {
+      const profileByEmail = await fetchUserProfileByEmail(emailKey)
+      if (profileByEmail) {
+        assertUserNotDisabled(profileByEmail)
+      }
+    } catch (e: any) {
+      if (String(e?.message || '') === 'Compte bloqué') {
+        error.value = 'Compte bloqué.'
+        return
+      }
+      // ignore (rules may forbid pre-auth lookup)
+    }
+  }
+
   loading.value = true
   try {
+    // cfg already loaded above, reuse it
+
     // 1) Firebase login (email/password). Anonymous is not used.
-    const res = await login(email.value, password.value)
-    if (res.error) throw res.error
+    const maxAttempts = Math.max(1, Number(cfg.loginAttemptLimit || 3))
+    const res = await login(email.value, password.value, maxAttempts)
+    
+    // Handle login failure with attempt tracking
+    if (res.error) {
+      console.error('[Auth] Login error:', res.error?.message, 'Disabled:', res.disabled, 'Attempt:', res.error?.attempt)
+      
+      // Check if account is disabled
+      if (res.disabled === true) {
+        error.value = 'Compte bloqué.'
+        return
+      }
+
+      // Show attempt tracking feedback - ALWAYS SHOW MESSAGE
+      const attempt = Number(res?.error?.attempt)
+      const attemptsRemaining = Number(res?.error?.attemptsRemaining)
+      
+      if (Number.isFinite(attemptsRemaining)) {
+        if (attemptsRemaining <= 0) {
+          error.value = 'Compte bloqué après trop de tentatives.'
+        } else if (attemptsRemaining <= 2) {
+          error.value = `${res.error?.message || 'Connexion refusée'} (${attemptsRemaining} tentative${attemptsRemaining > 1 ? 's' : ''} restante${attemptsRemaining > 1 ? 's' : ''})`
+        } else {
+          error.value = res.error?.message || 'Connexion refusée'
+        }
+      } else {
+        error.value = res.error?.message || 'Connexion refusée'
+      }
+      return
+    }
 
     // 2) Role check using Firestore `users` collection
     const firebaseUser = res.user
     const profile = await fetchUserProfileByFirebaseUid(firebaseUser?.uid)
+    assertUserNotDisabled(profile)
     assertUserRole(profile)
 
     const roles = Array.isArray(profile?.roles) ? profile.roles : []
@@ -111,7 +175,19 @@ async function onSubmit() {
       // ignore
     }
 
-    emit('success', res)
+    // Reset attempt counter after successful login
+    try {
+      if (firebaseUser?.uid) {
+        await resetAttemptByFirebaseUid(firebaseUser.uid)
+      }
+    } catch {
+      // ignore
+    }
+
+    emit('success', {
+      user: res.user,
+      sessionExpirationMinutes: cfg.tokenExpirationMinutes,
+    })
   }
   catch (err: any) {
     error.value = err?.message || 'Connexion refusée'
