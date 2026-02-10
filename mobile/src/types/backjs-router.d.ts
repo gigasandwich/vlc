@@ -5,6 +5,7 @@ declare module '@/backJs/router.js' {
     coordinates: { latitude: number; longitude: number }
     point_type_id: number
     level_?: number
+    photos?: string[]
   }): Promise<any>
 
   export function getFirebaseConfig(): {
