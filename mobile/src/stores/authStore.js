@@ -133,16 +133,16 @@ function clearUser() {
 	}
 }
 
-function setSession(expirationMinutes) {
-	const mins = Number(expirationMinutes)
-	if (!Number.isFinite(mins) || mins <= 0) {
+function setSession(expirationSeconds) {
+	const secs = Number(expirationSeconds)
+	if (!Number.isFinite(secs) || secs <= 0) {
 		state.sessionStartedAt = Date.now()
 		state.sessionExpiresAt = null
 		saveToStorage()
 		return
 	}
 	state.sessionStartedAt = Date.now()
-	state.sessionExpiresAt = Date.now() + mins * 60 * 1000
+	state.sessionExpiresAt = Date.now() + secs * 1000
 	saveToStorage()
 }
 

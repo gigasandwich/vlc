@@ -7,6 +7,24 @@
       </div>
 
       <div class="point-detail-content">
+              <div class="point-detail-photo-row">
+                <div v-if="currentPhoto" style="text-align:center;margin-bottom:8px;position:relative;">
+                  <button v-if="photosList.length > 1" @click.stop="prevPhoto" :disabled="currentIndex===0" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);z-index:2;background:rgba(255,255,255,0.8);border:none;padding:6px;border-radius:4px;">◀</button>
+                  <img :src="currentPhoto" alt="point photo" style="max-width:100%;max-height:260px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;" />
+                  <button v-if="photosList.length > 1" @click.stop="nextPhoto" :disabled="currentIndex>=photosList.length-1" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:2;background:rgba(255,255,255,0.8);border:none;padding:6px;border-radius:4px;">▶</button>
+                </div>
+                <div style="text-align:center;margin-bottom:8px;">
+                  <button type="button" class="point-detail-add-photo" @click="triggerFile">Choisir une photo</button>
+                  <input ref="fileInput" type="file" accept="image/*" capture="camera" style="display:none" @change="onFileChange" />
+                  <div v-if="selectedPreview" style="margin-top:8px;">
+                    <img :src="selectedPreview" alt="preview" style="max-width:120px;max-height:90px;object-fit:cover;border-radius:4px;border:1px solid #e2e8f0;display:block;margin:0 auto 8px;" />
+                    <div style="display:flex;gap:8px;justify-content:center;">
+                      <button type="button" class="point-detail-submit-photo" @click="submitPhoto" :disabled="uploading">{{ uploading ? 'Envoi...' : 'Envoyer' }}</button>
+                      <button type="button" class="point-detail-cancel-photo" @click="cancelSelected" :disabled="uploading">Annuler</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
         <div class="point-detail-progress-section">
           <div class="progress-label">Progression: <span class="progress-value">{{ progress }}%</span></div>
           <div class="progress-bar">
@@ -70,7 +88,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { compressFileToDataUrl, addPhotoToPoint, initPhotosListener } from '@/composables/usePhoto'
 
 type PointData = {
   id: string | number
@@ -173,6 +192,97 @@ const formatNumber = (num: number | null | undefined) => {
   if (num == null) return '-';
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
+
+// Photo state & file handling
+const photosList = ref<Array<any>>([])
+const currentIndex = ref<number>(0)
+const currentPhoto = computed(() => photosList.value[currentIndex.value]?.data ?? null)
+
+const photoUrl = ref<string | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+let photosUnsub: any = null
+const selectedFile = ref<File | null>(null)
+const selectedPreview = ref<string | null>(null)
+const uploading = ref<boolean>(false)
+
+function triggerFile() {
+  fileInput.value?.click()
+}
+
+// compressFileToDataUrl provided by composable
+
+async function onFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const f = input?.files?.[0]
+  if (!f) return
+  selectedFile.value = f
+  // Create a preview quickly (no compression) for user to confirm
+  try {
+    const reader = new FileReader()
+    reader.onload = () => {
+      selectedPreview.value = String(reader.result)
+    }
+    reader.readAsDataURL(f)
+  } catch (err) {
+    console.error('Failed to preview file', err)
+    selectedPreview.value = null
+  }
+}
+
+function initPhotosListenerLocal() {
+  // use composable initPhotosListener
+  if (typeof photosUnsub === 'function') photosUnsub()
+  photosUnsub = initPhotosListener(String(props.point.id), (items: any[]) => {
+    photosList.value = items
+    currentIndex.value = 0
+    photoUrl.value = currentPhoto.value
+  })
+}
+
+async function submitPhoto() {
+  if (!selectedFile.value) return
+  uploading.value = true
+  try {
+    const dataUrl = await compressFileToDataUrl(selectedFile.value)
+    await addPhotoToPoint(String(props.point.id), dataUrl)
+    // success: clear selected preview/file; onSnapshot will update displayed photo
+    selectedFile.value = null
+    selectedPreview.value = null
+  } catch (err) {
+    console.error('Failed to upload photo', err)
+    alert('Erreur lors de l\'envoi de la photo')
+  } finally {
+    uploading.value = false
+    if (fileInput.value) fileInput.value.value = ''
+  }
+}
+
+function cancelSelected() {
+  selectedFile.value = null
+  selectedPreview.value = null
+  if (fileInput.value) fileInput.value.value = ''
+}
+
+onMounted(() => {
+  initPhotosListenerLocal()
+})
+
+onBeforeUnmount(() => {
+  if (typeof photosUnsub === 'function') photosUnsub()
+})
+
+watch(() => props.point?.id, (v: any, old: any) => {
+  if (typeof photosUnsub === 'function') photosUnsub()
+  initPhotosListenerLocal()
+})
+
+function prevPhoto() {
+  if (currentIndex.value > 0) currentIndex.value -= 1
+}
+
+function nextPhoto() {
+  if (currentIndex.value < photosList.value.length - 1) currentIndex.value += 1
+}
 </script>
 
 <style scoped>
