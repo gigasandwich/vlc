@@ -9,7 +9,7 @@
     <main class="vlc-map-main">
       <div ref="mapEl" class="vlc-leaflet" />
 
-      <div v-if="isLoading || errorMessage || placementStatus || placementError" class="vlc-map-status">
+      <div v-if="isLoading || errorMessage || placementStatus || placementError || geoStatus || geoError" class="vlc-map-status">
         <div v-if="isLoading" class="vlc-map-status__line">Chargement des points…</div>
         <div v-else-if="errorMessage" class="vlc-map-status__line vlc-map-status__line--error">
           {{ errorMessage }}
@@ -17,6 +17,10 @@
         <div v-if="placementStatus" class="vlc-map-status__line">{{ placementStatus }}</div>
         <div v-if="placementError" class="vlc-map-status__line vlc-map-status__line--error">
           {{ placementError }}
+        </div>
+        <div v-if="geoStatus" class="vlc-map-status__line">{{ geoStatus }}</div>
+        <div v-if="geoError" class="vlc-map-status__line vlc-map-status__line--error">
+          {{ geoError }}
         </div>
       </div>
 
@@ -61,6 +65,7 @@
           v-if="isLegendOpen"
           :placement-shape="placementShape"
           @select-shape="onSelectShape"
+          @select-level="onSelectLevel"
           @close="isLegendOpen = false"
           @click="(e:any) => e.stopPropagation()"
         />
@@ -96,6 +101,22 @@
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#334155">
             <path d="M3 4h18l-7 8v6l-4 2v-8L3 4z" />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          class="vlc-locate-btn"
+          title="Ma position"
+          @click.prevent.stop="centerOnUser"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="7" />
+            <circle cx="12" cy="12" r="2" />
+            <line x1="12" y1="2" x2="12" y2="5" />
+            <line x1="12" y1="19" x2="12" y2="22" />
+            <line x1="2" y1="12" x2="5" y2="12" />
+            <line x1="19" y1="12" x2="22" y2="12" />
           </svg>
         </button>
       </div>
@@ -137,6 +158,7 @@ const isLoading = computed(() => !!props.isLoading)
 const errorMessage = computed(() => props.errorMessage || null)
 
 const placementShape = ref<PlacementType>('none')
+const placementLevel = ref<number>(1)
 const filterShape = ref<PointType>('all')
 const filterMine = ref(false)
 
@@ -147,6 +169,8 @@ const extraPoints = ref<FirestorePoint[]>([])
 const selectedPoint = ref<FirestorePoint | null>(null)
 const placementStatus = ref<string | null>(null)
 const placementError = ref<string | null>(null)
+const geoStatus = ref<string | null>(null)
+const geoError = ref<string | null>(null)
 
 const isPlacing = ref(false)
 
@@ -155,6 +179,7 @@ const pendingPlacement = ref<{
   lng: number
   typeId: number
   shape: PlacementType
+  level: number
 } | null>(null)
 
 // photos selected for the pending placement (client-side only)
@@ -279,12 +304,13 @@ async function confirmPendingPlacement() {
   placementError.value = null
   isPlacing.value = true
 
-  const { lat, lng, typeId } = pendingPlacement.value
+  const { lat, lng, typeId, level } = pendingPlacement.value
 
   try {
     const created = await createFirestorePoint({
       coordinates: { latitude: lat, longitude: lng },
       point_type_id: typeId,
+      level_: level,
     })
 
     // Upload compressed photos (if any) using addPhotoToPoint so stored photos match compression output
@@ -324,6 +350,11 @@ async function confirmPendingPlacement() {
 
 function onSelectShape(shape: PlacementType | 'none') {
   placementShape.value = shape as PlacementType
+  placementLevel.value = levelFromShape(placementShape.value)
+}
+
+function onSelectLevel(level: number) {
+  placementLevel.value = clampLevel(level)
 }
 
 function onSetFilterShape(shape: PointType | 'all') {
@@ -352,6 +383,84 @@ declare global {
 let L: any = null
 let map: any = null
 let pointsLayer: any = null
+let userMarker: any = null
+
+const userLocation = ref<{ lat: number; lng: number } | null>(null)
+
+function createUserLocationIcon() {
+  const svg = `
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="7" fill="rgba(37, 99, 235, 0.12)" />
+      <circle cx="12" cy="12" r="2" fill="#2563eb" />
+      <line x1="12" y1="2" x2="12" y2="5" />
+      <line x1="12" y1="19" x2="12" y2="22" />
+      <line x1="2" y1="12" x2="5" y2="12" />
+      <line x1="19" y1="12" x2="22" y2="12" />
+    </svg>
+  `
+
+  return L.divIcon({
+    className: '',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    html: svg,
+  })
+}
+
+function setUserLocation(lat: number, lng: number) {
+  userLocation.value = { lat, lng }
+  if (!map || !L) return
+
+  if (!userMarker) {
+    userMarker = L.marker([lat, lng], { icon: createUserLocationIcon() }).addTo(map)
+  } else {
+    userMarker.setLatLng([lat, lng])
+  }
+}
+
+function requestUserLocation(focus = false) {
+  if (!navigator.geolocation) {
+    geoError.value = 'Localisation indisponible.'
+    return
+  }
+
+  geoStatus.value = 'Activez la localisation pour voir votre position.'
+  geoError.value = null
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      geoStatus.value = null
+      geoError.value = null
+      const lat = Number(pos.coords.latitude)
+      const lng = Number(pos.coords.longitude)
+      setUserLocation(lat, lng)
+      if (focus && map) {
+        map.setView([lat, lng], Math.max(map.getZoom(), 16))
+      }
+    },
+    (err) => {
+      geoStatus.value = null
+      if (err?.code === 1) {
+        geoError.value = 'Autorisez la localisation dans les réglages.'
+      } else {
+        geoError.value = 'Impossible d\'obtenir votre position.'
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 30000,
+    }
+  )
+}
+
+function centerOnUser() {
+  if (userLocation.value && map) {
+    map.setView([userLocation.value.lat, userLocation.value.lng], Math.max(map.getZoom(), 16))
+    return
+  }
+  requestUserLocation(true)
+}
 
 function ensureLeafletAssets() {
   // CSS
@@ -416,6 +525,9 @@ onMounted(async () => {
   pointsLayer = L.layerGroup().addTo(map)
   renderPoints()
 
+  // Ask for location access when the map opens
+  requestUserLocation(false)
+
   map.on('click', async (e: any) => {
     if (!e?.latlng) return
     if (placementShape.value === 'none') return
@@ -447,6 +559,7 @@ onMounted(async () => {
       lng: Number(e.latlng.lng),
       typeId,
       shape: placementShape.value,
+      level: placementLevel.value,
     }
   })
 })
@@ -456,6 +569,20 @@ function shapeToTypeId(shape: PlacementType): number | null {
   if (shape === 'square') return 2
   if (shape === 'triangle') return 3
   return null
+}
+
+function clampLevel(val: number): number {
+  const num = Number(val)
+  if (!Number.isFinite(num)) return 1
+  if (num < 1) return 1
+  if (num > 10) return 10
+  return Math.round(num)
+}
+
+function levelFromShape(shape: PlacementType): number {
+  if (shape === 'square') return 6
+  if (shape === 'triangle') return 9
+  return 2
 }
 
 function normalizeLatLng(point: FirestorePoint): { lat: number; lng: number } | null {

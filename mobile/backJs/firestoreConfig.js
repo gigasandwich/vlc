@@ -134,14 +134,14 @@ export async function getConfigInt(key, defaultValue = null) {
 
 /**
  * Convenience: fetch auth-related configuration.
- * All values are in minutes unless specified otherwise.
+ * tokenExpirationSeconds is in seconds.
  */
 export async function getAuthConfig() {
-  const tokenExpirationMinutes = await getConfigInt('TOKEN_EXPIRATION', 180)
+  const tokenExpirationSeconds = await getConfigInt('TOKEN_EXPIRATION', 180)
   const loginAttemptLimit = await getConfigInt('LOGIN_ATTEMPT_LIMIT', 3)
 
   return {
-    tokenExpirationMinutes,
+    tokenExpirationSeconds,
     loginAttemptLimit,
   }
 }

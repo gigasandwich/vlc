@@ -22,7 +22,7 @@ declare const authStore: {
     [key: string]: any
   }
   setUser: (firebaseUser: any) => void
-  setSession: (expirationMinutes: number | string | null | undefined) => void
+  setSession: (expirationSeconds: number | string | null | undefined) => void
   isSessionExpired: () => boolean
   clearUser: () => void
   isAuthenticated: ComputedRef<boolean>
