@@ -15,7 +15,7 @@
                 </div>
                 <div style="text-align:center;margin-bottom:8px;">
                   <button type="button" class="point-detail-add-photo" @click="triggerFile">Choisir une photo</button>
-                  <input ref="fileInput" type="file" accept="image/*" capture="camera" style="display:none" @change="onFileChange" />
+                  <input ref="fileInput" type="file" accept="image/*" capture="environment" style="display:none" @change="onFileChange" />
                   <div v-if="selectedPreview" style="margin-top:8px;">
                     <img :src="selectedPreview" alt="preview" style="max-width:120px;max-height:90px;object-fit:cover;border-radius:4px;border:1px solid #e2e8f0;display:block;margin:0 auto 8px;" />
                     <div style="display:flex;gap:8px;justify-content:center;">
